@@ -15,10 +15,12 @@ export function StudentListItem({ student, onClick }) {
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={nameStyle}>{student.name}</div>
-        <div style={tierRowStyle}>
-          <TierIcon size={12} color={tier.color} />
-          <span style={{ fontSize: 12, color: tier.color, fontWeight: 500 }}>{tier.name}</span>
-        </div>
+        {tier.name && (
+          <div style={tierRowStyle}>
+            <TierIcon size={12} color={tier.color} />
+            <span style={{ fontSize: 12, color: tier.color, fontWeight: 500 }}>{tier.name}</span>
+          </div>
+        )}
       </div>
       <div style={{ textAlign: 'right' }}>
         <div style={pointsStyle}>{student.points}</div>

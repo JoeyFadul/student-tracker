@@ -7,7 +7,7 @@ export function TierBadge({ tier, points }) {
     <div style={{ ...rowStyle, background: tier.bg }}>
       <TierIcon size={24} color={tier.color} />
       <div style={{ flex: 1 }}>
-        <div style={{ ...tierNameStyle, color: tier.color }}>{tier.name}</div>
+        {tier.name && <div style={{ ...tierNameStyle, color: tier.color }}>{tier.name}</div>}
         <div style={{ ...pointsStyle, color: tier.color }}>
           {points} <span style={{ fontSize: 14, fontWeight: 500 }}>dollars</span>
         </div>
