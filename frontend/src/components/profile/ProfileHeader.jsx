@@ -1,4 +1,5 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
+import { Camera } from 'lucide-react';
 import { getTier } from '../../lib/tiers';
 import { DEFAULT_AVATAR } from '../../lib/avatars';
 import { TierBadge } from './TierBadge';
@@ -6,6 +7,7 @@ import { TierBadge } from './TierBadge';
 export function ProfileHeader({ student, onPhotoUpload, uploading }) {
   const tier = getTier(student.points);
   const fileInputRef = useRef(null);
+  const [hovered, setHovered] = useState(false);
   const isPhotoUrl = student.photo?.startsWith('http');
 
   return (
@@ -14,17 +16,20 @@ export function ProfileHeader({ student, onPhotoUpload, uploading }) {
         <div
           style={{ ...avatarStyle, background: tier.bg, cursor: 'pointer', position: 'relative', overflow: 'hidden' }}
           onClick={() => !uploading && fileInputRef.current?.click()}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
           title="Click to upload photo"
         >
           {isPhotoUrl
             ? <img src={student.photo} alt={student.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             : (student.photo || DEFAULT_AVATAR)
           }
-          {uploading && (
-            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
-              ⏳
-            </div>
-          )}
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: (uploading || hovered) ? 1 : 0, transition: 'opacity 0.15s' }}>
+            {uploading
+              ? <span style={{ fontSize: 20 }}>⏳</span>
+              : <Camera size={22} color="#fff" />
+            }
+          </div>
           <input
             ref={fileInputRef}
             type="file"

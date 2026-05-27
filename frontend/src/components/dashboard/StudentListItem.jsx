@@ -22,7 +22,7 @@ export function StudentListItem({ student, onClick }) {
       </div>
       <div style={{ textAlign: 'right' }}>
         <div style={pointsStyle}>{student.points}</div>
-        <div style={pointsLabelStyle}>talents</div>
+        <div style={pointsLabelStyle}>dollars</div>
       </div>
     </button>
   );

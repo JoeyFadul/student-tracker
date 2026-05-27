@@ -1,4 +1,4 @@
-// PointsAdjuster: lets the teacher grant or revoke a configurable number of talents.
+// PointsAdjuster: lets the teacher grant or revoke a configurable number of dollars.
 
 import { useState } from 'react';
 import { Plus, Minus } from 'lucide-react';
@@ -17,7 +17,7 @@ export function PointsAdjuster({ onAdjust }) {
   };
 
   return (
-    <Card title="Adjust talents">
+    <Card title="Adjust dollars">
       <input
         type="text"
         placeholder="Reason (optional)"
