@@ -16,6 +16,8 @@ export function StudentProfile({
   onGrantPoints,
   onSaveNotes,
   onDelete,
+  onPhotoUpload,
+  uploadingPhoto,
 }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
@@ -32,7 +34,7 @@ export function StudentProfile({
           <ArrowLeft size={18} /> Back to class
         </button>
 
-        <ProfileHeader student={student} />
+        <ProfileHeader student={student} onPhotoUpload={onPhotoUpload} uploading={uploadingPhoto} />
 
         <PointsAdjuster
           onAdjust={(delta, reason) => onGrantPoints(student.id, delta, reason)}

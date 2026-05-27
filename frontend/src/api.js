@@ -51,5 +51,8 @@ export function createApiClient(idToken) {
         headers,
         body: JSON.stringify({ delta, reason }),
       }).then(handleResponse),
+
+    getPhotoUploadUrl: (id) =>
+      fetch(`${API_URL}/students/${id}/photo-upload`, { headers }).then(handleResponse),
   };
 }

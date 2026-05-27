@@ -1,15 +1,37 @@
+import { useRef } from 'react';
 import { getTier } from '../../lib/tiers';
 import { DEFAULT_AVATAR } from '../../lib/avatars';
 import { TierBadge } from './TierBadge';
 
-export function ProfileHeader({ student }) {
+export function ProfileHeader({ student, onPhotoUpload, uploading }) {
   const tier = getTier(student.points);
+  const fileInputRef = useRef(null);
+  const isPhotoUrl = student.photo?.startsWith('http');
 
   return (
     <div style={cardStyle}>
       <div style={topRowStyle}>
-        <div style={{ ...avatarStyle, background: tier.bg }}>
-          {student.photo || DEFAULT_AVATAR}
+        <div
+          style={{ ...avatarStyle, background: tier.bg, cursor: 'pointer', position: 'relative', overflow: 'hidden' }}
+          onClick={() => !uploading && fileInputRef.current?.click()}
+          title="Click to upload photo"
+        >
+          {isPhotoUrl
+            ? <img src={student.photo} alt={student.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            : (student.photo || DEFAULT_AVATAR)
+          }
+          {uploading && (
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
+              ⏳
+            </div>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={e => { const f = e.target.files?.[0]; if (f) onPhotoUpload(f); e.target.value = ''; }}
+          />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={nameStyle}>{student.name}</div>

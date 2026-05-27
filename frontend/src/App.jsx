@@ -5,6 +5,7 @@
 import { useState, useCallback } from 'react';
 import { useAuth } from './hooks/useAuth';
 import { useStudents } from './hooks/useStudents';
+import { createApiClient } from './api';
 import { LoginScreen } from './components/login/LoginScreen';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { StudentProfile } from './components/profile/StudentProfile';
@@ -13,6 +14,7 @@ export function App() {
   const auth = useAuth();
   const studentsApi = useStudents(auth.idToken);
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   // ---- Navigation ----
   const openStudent = useCallback(async (id) => {
@@ -49,6 +51,22 @@ export function App() {
     await studentsApi.deleteStudent(id);
   }, [studentsApi]);
 
+  const handlePhotoUpload = useCallback(async (file) => {
+    if (!selectedStudent) return;
+    setUploadingPhoto(true);
+    try {
+      const api = createApiClient(auth.idToken);
+      const { url, publicUrl } = await api.getPhotoUploadUrl(selectedStudent.id);
+      await fetch(url, { method: 'PUT', body: file, headers: { 'Content-Type': 'image/jpeg' } });
+      const updated = await studentsApi.updateStudent(selectedStudent.id, { photo: publicUrl });
+      setSelectedStudent(prev => prev ? { ...prev, photo: updated.photo } : prev);
+    } catch (err) {
+      studentsApi.setError(err.message);
+    } finally {
+      setUploadingPhoto(false);
+    }
+  }, [selectedStudent, auth.idToken, studentsApi]);
+
   // ---- Render ----
   if (auth.initializing) {
     return <FullPageMessage>Loading…</FullPageMessage>;
@@ -71,6 +89,8 @@ export function App() {
         onGrantPoints={handleGrantPoints}
         onSaveNotes={handleSaveNotes}
         onDelete={handleDeleteStudent}
+        onPhotoUpload={handlePhotoUpload}
+        uploadingPhoto={uploadingPhoto}
       />
     );
   }
