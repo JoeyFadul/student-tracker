@@ -77,9 +77,9 @@ Review the changeset carefully before confirming — some resource replacements 
 The frontend reads from `frontend/.env` (not committed — create it locally):
 
 ```
-VITE_API_URL=https://wv0tgll987.execute-api.us-east-1.amazonaws.com
-VITE_USER_POOL_ID=REDACTED_USER_POOL_ID
-VITE_USER_POOL_CLIENT_ID=REDACTED_USER_POOL_CLIENT_ID
+VITE_API_URL=<ApiURL from stack outputs>
+VITE_USER_POOL_ID=<UserPoolId from stack outputs>
+VITE_USER_POOL_CLIENT_ID=<UserPoolClientId from stack outputs>
 ```
 
 To get these values from the live stack at any time:
@@ -97,7 +97,7 @@ Cognito self-signup is disabled. Create teacher accounts manually:
 
 ```bash
 aws cognito-idp admin-create-user \
-  --user-pool-id REDACTED_USER_POOL_ID \
+  --user-pool-id <UserPoolId from stack outputs> \
   --username teacher@school.edu \
   --user-attributes Name=email,Value=teacher@school.edu Name=email_verified,Value=true \
   --temporary-password TempPass123!
