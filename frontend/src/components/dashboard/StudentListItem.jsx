@@ -7,8 +7,11 @@ export function StudentListItem({ student, onClick }) {
 
   return (
     <button onClick={() => onClick(student.id)} style={itemStyle}>
-      <div style={{ ...avatarStyle, background: tier.bg }}>
-        {student.photo || DEFAULT_AVATAR}
+      <div style={{ ...avatarStyle, background: tier.bg, overflow: 'hidden' }}>
+        {student.photo?.startsWith('http')
+          ? <img src={student.photo} alt={student.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          : (student.photo || DEFAULT_AVATAR)
+        }
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={nameStyle}>{student.name}</div>
