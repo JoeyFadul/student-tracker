@@ -41,3 +41,16 @@ export function suggestYearLabel(now = new Date()) {
   const year = now.getFullYear();
   return month >= 6 ? `${year}–${year + 1}` : `${year - 1}–${year}`;
 }
+
+export function deriveYearOptions(now = new Date()) {
+  const month = now.getMonth();
+  const year = now.getFullYear();
+  // Academic year start: if we're in July or later, this year; else last year.
+  const academicStart = month >= 6 ? year : year - 1;
+  const options = [];
+  for (let i = -1; i <= 2; i++) {
+    const start = academicStart + i;
+    options.push(`${start}–${start + 1}`);
+  }
+  return options;
+}

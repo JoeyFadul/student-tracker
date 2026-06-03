@@ -1,28 +1,30 @@
 import { useEffect, useState } from 'react';
-import { Calendar, AlertTriangle } from 'lucide-react';
+import { Calendar, ChevronDown, AlertTriangle } from 'lucide-react';
 import { theme } from '../../theme';
 import { Sheet } from '../ui/Sheet';
 import { Button } from '../ui/Button';
-import { suggestYearLabel } from '../../hooks/useSchoolYear';
+import { suggestYearLabel, deriveYearOptions } from '../../hooks/useSchoolYear';
 
 export function StartYearSheet({ open, onClose, onStart, replacingYear }) {
   const [label, setLabel] = useState('');
+  const [options, setOptions] = useState([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (open) {
+      const opts = deriveYearOptions();
+      setOptions(opts);
       setLabel(suggestYearLabel());
       setError('');
     }
   }, [open]);
 
   const submit = async () => {
-    const trimmed = label.trim();
-    if (!trimmed) { setError('Please enter a label'); return; }
+    if (!label) { setError('Pick a school year'); return; }
     setBusy(true); setError('');
     try {
-      await onStart(trimmed);
+      await onStart(label);
       onClose();
     } catch (err) {
       setError(err.message);
@@ -42,17 +44,21 @@ export function StartYearSheet({ open, onClose, onStart, replacingYear }) {
         </div>
       )}
 
-      <label style={labelStyle}>Year label</label>
-      <div style={inputWrapStyle}>
-        <Calendar size={16} color={theme.colors.textMuted} style={iconStyle} />
-        <input
-          type="text"
+      <label style={labelStyle}>School year</label>
+      <div style={selectWrapStyle}>
+        <Calendar size={16} color={theme.colors.textMuted} style={leftIconStyle} />
+        <span style={selectValueStyle}>{label}</span>
+        <ChevronDown size={16} color={theme.colors.textMuted} style={rightIconStyle} />
+        <select
           value={label}
           onChange={e => setLabel(e.target.value)}
-          placeholder="2025–2026"
-          autoFocus
-          style={inputStyle}
-        />
+          style={selectOverlayStyle}
+          aria-label="Select school year"
+        >
+          {options.map(opt => (
+            <option key={opt} value={opt}>{opt}</option>
+          ))}
+        </select>
       </div>
 
       {error && <div style={errorStyle}>{error}</div>}
@@ -79,12 +85,18 @@ const labelStyle = {
   letterSpacing: 0.5,
 };
 
-const inputWrapStyle = {
+const selectWrapStyle = {
   position: 'relative',
+  display: 'flex',
+  alignItems: 'center',
+  background: theme.colors.surfaceAlt,
+  borderRadius: theme.radius.md,
   marginBottom: 14,
+  minHeight: 50,
+  padding: '0 16px 0 40px',
 };
 
-const iconStyle = {
+const leftIconStyle = {
   position: 'absolute',
   left: 14,
   top: '50%',
@@ -92,18 +104,32 @@ const iconStyle = {
   pointerEvents: 'none',
 };
 
-const inputStyle = {
-  width: '100%',
-  padding: '14px 16px 14px 40px',
+const rightIconStyle = {
+  position: 'absolute',
+  right: 14,
+  top: '50%',
+  transform: 'translateY(-50%)',
+  pointerEvents: 'none',
+};
+
+const selectValueStyle = {
   fontSize: theme.font.sizes.body,
-  border: 'none',
-  borderRadius: theme.radius.md,
-  boxSizing: 'border-box',
-  fontFamily: theme.font.family,
-  background: theme.colors.surfaceAlt,
+  fontWeight: 600,
   color: theme.colors.text,
-  outline: 'none',
+  fontFamily: theme.font.family,
+};
+
+const selectOverlayStyle = {
+  position: 'absolute',
+  inset: 0,
+  opacity: 0,
+  cursor: 'pointer',
+  border: 'none',
+  background: 'transparent',
+  fontFamily: theme.font.family,
+  fontSize: theme.font.sizes.body,
   WebkitAppearance: 'none',
+  appearance: 'none',
 };
 
 const warnStyle = {
