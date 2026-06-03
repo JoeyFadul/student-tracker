@@ -177,6 +177,7 @@ export function App() {
         <Dashboard
           students={studentsApi.students}
           loading={studentsApi.loading}
+          yearLoading={schoolYear.loading}
           error={studentsApi.error}
           activeYear={schoolYear.active}
           onDismissError={() => studentsApi.setError('')}

@@ -10,6 +10,7 @@ import { BulkGrantEntry } from './BulkGrantEntry';
 import { BulkSelectFooter } from './BulkSelectFooter';
 import { BulkGrantSheet } from './BulkGrantSheet';
 import { NoYearEmptyState } from './NoYearEmptyState';
+import { DashboardSkeleton } from './DashboardSkeleton';
 import { ErrorBanner } from '../ui/ErrorBanner';
 import { AddStudentModal } from '../modals/AddStudentModal';
 import { usePressable } from '../../hooks/usePressable';
@@ -17,6 +18,7 @@ import { usePressable } from '../../hooks/usePressable';
 export function Dashboard({
   students,
   loading,
+  yearLoading,
   error,
   activeYear,
   onDismissError,
@@ -70,6 +72,17 @@ export function Dashboard({
   const bottomPadding = selectMode
     ? 140
     : `calc(${theme.tabBarHeight}px + 24px + ${theme.safeBottom})`;
+
+  if (yearLoading) {
+    return (
+      <div style={pageStyle}>
+        <div style={containerStyle}>
+          <ScreenHeader title="Students" subtitle="" />
+          <DashboardSkeleton />
+        </div>
+      </div>
+    );
+  }
 
   if (!activeYear) {
     return (
