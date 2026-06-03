@@ -1,6 +1,5 @@
-import { ArrowUpDown } from 'lucide-react';
+import { ArrowUpDown, ChevronDown } from 'lucide-react';
 import { theme } from '../../theme';
-import { usePressable } from '../../hooks/usePressable';
 
 export const SORT_OPTIONS = [
   { key: 'recent',     label: 'Recent' },
@@ -11,26 +10,23 @@ export const SORT_OPTIONS = [
 
 export function SortControl({ value, onChange }) {
   const current = SORT_OPTIONS.find(o => o.key === value) || SORT_OPTIONS[0];
-  const { handlers, pressedStyle } = usePressable();
-
-  const next = () => {
-    const idx = SORT_OPTIONS.findIndex(o => o.key === value);
-    onChange(SORT_OPTIONS[(idx + 1) % SORT_OPTIONS.length].key);
-  };
 
   return (
-    <button
-      onClick={next}
-      {...handlers}
-      style={{
-        ...buttonStyle,
-        ...pressedStyle,
-      }}
-      title="Tap to cycle sort order"
-    >
-      <ArrowUpDown size={14} />
-      <span>{current.label}</span>
-    </button>
+    <div style={wrapStyle}>
+      <ArrowUpDown size={14} color={theme.colors.text} style={{ pointerEvents: 'none' }} />
+      <span style={labelStyle}>{current.label}</span>
+      <ChevronDown size={14} color={theme.colors.textMuted} style={{ pointerEvents: 'none' }} />
+      <select
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        style={selectOverlayStyle}
+        aria-label="Sort students"
+      >
+        {SORT_OPTIONS.map(o => (
+          <option key={o.key} value={o.key}>{o.label}</option>
+        ))}
+      </select>
+    </div>
   );
 }
 
@@ -45,21 +41,34 @@ export function sortStudents(students, key) {
   }
 }
 
-const buttonStyle = {
+const wrapStyle = {
+  position: 'relative',
   display: 'flex',
   alignItems: 'center',
   gap: 6,
-  padding: '0 14px',
+  padding: '0 12px',
   borderRadius: theme.radius.pill,
-  border: 'none',
   background: theme.colors.surfaceAlt,
-  color: theme.colors.text,
+  minHeight: 44,
+  flexShrink: 0,
+};
+
+const labelStyle = {
   fontSize: theme.font.sizes.footnote,
   fontWeight: 600,
+  color: theme.colors.text,
+  fontFamily: theme.font.family,
+};
+
+const selectOverlayStyle = {
+  position: 'absolute',
+  inset: 0,
+  opacity: 0,
   cursor: 'pointer',
   fontFamily: theme.font.family,
-  minHeight: 44,
-  WebkitTapHighlightColor: 'transparent',
-  transition: 'transform 0.1s ease',
-  flexShrink: 0,
+  fontSize: theme.font.sizes.body,
+  WebkitAppearance: 'none',
+  appearance: 'none',
+  border: 'none',
+  background: 'transparent',
 };
