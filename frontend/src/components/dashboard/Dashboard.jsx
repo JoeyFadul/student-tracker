@@ -1,12 +1,14 @@
 import { useState, useMemo } from 'react';
-import { CheckCircle2 } from 'lucide-react';
+import { X } from 'lucide-react';
 import { theme } from '../../theme';
 import { ScreenHeader } from '../ui/ScreenHeader';
 import { SearchBar } from './SearchBar';
 import { SortControl, sortStudents } from './SortControl';
 import { StudentList } from './StudentList';
 import { AddStudentButton } from './AddStudentButton';
-import { BulkActionBar } from './BulkActionBar';
+import { BulkGrantEntry } from './BulkGrantEntry';
+import { BulkSelectFooter } from './BulkSelectFooter';
+import { BulkGrantSheet } from './BulkGrantSheet';
 import { ErrorBanner } from '../ui/ErrorBanner';
 import { AddStudentModal } from '../modals/AddStudentModal';
 import { usePressable } from '../../hooks/usePressable';
@@ -25,6 +27,7 @@ export function Dashboard({
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState(new Set());
+  const [showGrantSheet, setShowGrantSheet] = useState(false);
 
   const filteredAndSorted = useMemo(() => {
     const filtered = search
@@ -32,6 +35,11 @@ export function Dashboard({
       : students;
     return sortStudents(filtered, sortKey);
   }, [students, search, sortKey]);
+
+  const selectedStudents = useMemo(
+    () => students.filter(s => selectedIds.has(s.id)),
+    [students, selectedIds]
+  );
 
   const handleStudentClick = (id) => {
     if (selectMode) {
@@ -48,25 +56,28 @@ export function Dashboard({
   const exitSelectMode = () => {
     setSelectMode(false);
     setSelectedIds(new Set());
+    setShowGrantSheet(false);
   };
 
-  const handleBulkGrant = async (delta, reason) => {
+  const handleGrant = async (delta, reason) => {
     await onBulkGrant([...selectedIds], delta, reason);
     exitSelectMode();
   };
 
+  const bottomPadding = selectMode
+    ? 140
+    : `calc(${theme.tabBarHeight}px + 24px + ${theme.safeBottom})`;
+
   return (
     <div style={pageStyle}>
-      <div style={{ ...containerStyle, paddingBottom: selectMode ? 380 : `calc(${theme.tabBarHeight}px + 24px + ${theme.safeBottom})` }}>
+      <div style={{ ...containerStyle, paddingBottom: bottomPadding }}>
         <ScreenHeader
-          title="Students"
-          subtitle={`${students.length} ${students.length === 1 ? 'student' : 'students'}`}
-          action={
-            <SelectToggle
-              active={selectMode}
-              onClick={() => selectMode ? exitSelectMode() : setSelectMode(true)}
-            />
+          title={selectMode ? 'Select students' : 'Students'}
+          subtitle={selectMode
+            ? `${selectedIds.size} ${selectedIds.size === 1 ? 'selected' : 'selected'}`
+            : `${students.length} ${students.length === 1 ? 'student' : 'students'}`
           }
+          action={selectMode ? <CancelButton onClick={exitSelectMode} /> : null}
         />
 
         <ErrorBanner message={error} onDismiss={onDismissError} />
@@ -75,6 +86,10 @@ export function Dashboard({
           <SearchBar value={search} onChange={setSearch} />
           <SortControl value={sortKey} onChange={setSortKey} />
         </div>
+
+        {!selectMode && students.length > 0 && (
+          <BulkGrantEntry onClick={() => setSelectMode(true)} />
+        )}
 
         <StudentList
           students={filteredAndSorted}
@@ -89,12 +104,19 @@ export function Dashboard({
       {!selectMode && <AddStudentButton onClick={() => setShowAddModal(true)} />}
 
       {selectMode && (
-        <BulkActionBar
-          selectedCount={selectedIds.size}
+        <BulkSelectFooter
+          count={selectedIds.size}
           onCancel={exitSelectMode}
-          onGrant={handleBulkGrant}
+          onContinue={() => setShowGrantSheet(true)}
         />
       )}
+
+      <BulkGrantSheet
+        open={showGrantSheet}
+        selected={selectedStudents}
+        onBack={() => setShowGrantSheet(false)}
+        onGrant={handleGrant}
+      />
 
       {showAddModal && (
         <AddStudentModal
@@ -106,21 +128,16 @@ export function Dashboard({
   );
 }
 
-function SelectToggle({ active, onClick }) {
+function CancelButton({ onClick }) {
   const { handlers, pressedStyle } = usePressable();
   return (
     <button
       onClick={onClick}
       {...handlers}
-      style={{
-        ...selectToggleStyle,
-        ...pressedStyle,
-        background: active ? theme.colors.accentSoft : 'transparent',
-        color: active ? theme.colors.accentDark : theme.colors.textMuted,
-      }}
+      style={{ ...cancelStyle, ...pressedStyle }}
+      aria-label="Cancel selection"
     >
-      <CheckCircle2 size={16} />
-      <span>{active ? 'Done' : 'Select'}</span>
+      <X size={18} color={theme.colors.text} />
     </button>
   );
 }
@@ -144,18 +161,17 @@ const controlsRowStyle = {
   alignItems: 'center',
 };
 
-const selectToggleStyle = {
+const cancelStyle = {
+  width: 36,
+  height: 36,
+  borderRadius: 18,
+  background: theme.colors.surface,
+  border: 'none',
   display: 'flex',
   alignItems: 'center',
-  gap: 6,
-  padding: '8px 14px',
-  borderRadius: theme.radius.pill,
-  border: 'none',
-  fontSize: theme.font.sizes.footnote,
-  fontWeight: 600,
+  justifyContent: 'center',
   cursor: 'pointer',
-  fontFamily: theme.font.family,
-  transition: 'transform 0.1s ease, background 0.15s ease',
+  boxShadow: theme.shadow.sm,
   WebkitTapHighlightColor: 'transparent',
-  minHeight: 36,
+  transition: 'transform 0.1s ease',
 };
