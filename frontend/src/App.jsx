@@ -9,12 +9,14 @@ import { createApiClient } from './api';
 import { LoginScreen } from './components/login/LoginScreen';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { StudentProfile } from './components/profile/StudentProfile';
+import { Toast } from './components/ui/Toast';
 
 export function App() {
   const auth = useAuth();
   const studentsApi = useStudents(auth.idToken);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [toast, setToast] = useState(null);
 
   // ---- Navigation ----
   const openStudent = useCallback(async (id) => {
@@ -33,6 +35,20 @@ export function App() {
     try {
       const fresh = await studentsApi.grantPoints(id, delta, reason);
       setSelectedStudent(fresh);
+      const verb = delta > 0 ? 'Granted' : 'Revoked';
+      setToast({
+        message: `${verb} ${Math.abs(delta)} ${Math.abs(delta) === 1 ? 'dollar' : 'dollars'} for ${fresh.name}`,
+        actionLabel: 'Undo',
+        onAction: async () => {
+          setToast(null);
+          try {
+            const undone = await studentsApi.grantPoints(id, -delta, `Undo: ${reason || (delta > 0 ? 'Points awarded' : 'Points removed')}`);
+            setSelectedStudent(undone);
+          } catch (err) {
+            studentsApi.setError(err.message);
+          }
+        },
+      });
     } catch (err) {
       studentsApi.setError(err.message);
     }
@@ -81,30 +97,45 @@ export function App() {
     );
   }
 
+  const toastEl = toast && (
+    <Toast
+      message={toast.message}
+      actionLabel={toast.actionLabel}
+      onAction={toast.onAction}
+      onDismiss={() => setToast(null)}
+    />
+  );
+
   if (selectedStudent) {
     return (
-      <StudentProfile
-        student={selectedStudent}
-        onBack={closeStudent}
-        onGrantPoints={handleGrantPoints}
-        onSaveNotes={handleSaveNotes}
-        onDelete={handleDeleteStudent}
-        onPhotoUpload={handlePhotoUpload}
-        uploadingPhoto={uploadingPhoto}
-      />
+      <>
+        <StudentProfile
+          student={selectedStudent}
+          onBack={closeStudent}
+          onGrantPoints={handleGrantPoints}
+          onSaveNotes={handleSaveNotes}
+          onDelete={handleDeleteStudent}
+          onPhotoUpload={handlePhotoUpload}
+          uploadingPhoto={uploadingPhoto}
+        />
+        {toastEl}
+      </>
     );
   }
 
   return (
-    <Dashboard
-      students={studentsApi.students}
-      loading={studentsApi.loading}
-      error={studentsApi.error}
-      onDismissError={() => studentsApi.setError('')}
-      onSelectStudent={openStudent}
-      onCreateStudent={studentsApi.createStudent}
-      onSignOut={auth.signOut}
-    />
+    <>
+      <Dashboard
+        students={studentsApi.students}
+        loading={studentsApi.loading}
+        error={studentsApi.error}
+        onDismissError={() => studentsApi.setError('')}
+        onSelectStudent={openStudent}
+        onCreateStudent={studentsApi.createStudent}
+        onSignOut={auth.signOut}
+      />
+      {toastEl}
+    </>
   );
 }
 

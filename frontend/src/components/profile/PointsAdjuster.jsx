@@ -6,6 +6,10 @@ import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 
 const PRESET_AMOUNTS = [1, 5, 10];
+const PRESET_REASONS = [
+  'Kindness', 'Effort', 'Helping', 'Homework',
+  'Participation', 'Listening', 'Cleanup', 'Teamwork',
+];
 
 export function PointsAdjuster({ onAdjust }) {
   const [amount, setAmount] = useState(5);
@@ -25,6 +29,19 @@ export function PointsAdjuster({ onAdjust }) {
         onChange={e => setReason(e.target.value)}
         style={reasonInputStyle}
       />
+
+      <div style={reasonPresetsStyle}>
+        {PRESET_REASONS.map(r => (
+          <button
+            key={r}
+            onClick={() => setReason(r)}
+            style={getReasonChipStyle(reason === r)}
+            type="button"
+          >
+            {r}
+          </button>
+        ))}
+      </div>
 
       <div style={amountRowStyle}>
         <span style={{ fontSize: 14, color: '#78716c' }}>Amount:</span>
@@ -73,6 +90,24 @@ const reasonInputStyle = {
   boxSizing: 'border-box',
   fontFamily: 'inherit',
 };
+
+const reasonPresetsStyle = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: 6,
+  marginBottom: 12,
+};
+
+const getReasonChipStyle = (selected) => ({
+  padding: '4px 10px',
+  borderRadius: 14,
+  border: selected ? '1.5px solid #1c1917' : '1px solid #e7e2d8',
+  background: selected ? '#1c1917' : '#fff',
+  color: selected ? '#fff' : '#57534e',
+  fontSize: 12,
+  cursor: 'pointer',
+  fontFamily: 'inherit',
+});
 
 const amountRowStyle = {
   display: 'flex',

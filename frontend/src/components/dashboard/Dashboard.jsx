@@ -4,6 +4,7 @@
 import { useState, useMemo } from 'react';
 import { DashboardHeader } from './DashboardHeader';
 import { SearchBar } from './SearchBar';
+import { SortControl, sortStudents } from './SortControl';
 import { StudentList } from './StudentList';
 import { AddStudentButton } from './AddStudentButton';
 import { ErrorBanner } from '../ui/ErrorBanner';
@@ -19,13 +20,15 @@ export function Dashboard({
   onSignOut,
 }) {
   const [search, setSearch] = useState('');
+  const [sortKey, setSortKey] = useState('recent');
   const [showAddModal, setShowAddModal] = useState(false);
 
-  const filtered = useMemo(() => {
-    if (!search) return students;
-    const lower = search.toLowerCase();
-    return students.filter(s => s.name.toLowerCase().includes(lower));
-  }, [students, search]);
+  const filteredAndSorted = useMemo(() => {
+    const filtered = search
+      ? students.filter(s => s.name.toLowerCase().includes(search.toLowerCase()))
+      : students;
+    return sortStudents(filtered, sortKey);
+  }, [students, search, sortKey]);
 
   return (
     <div style={pageStyle}>
@@ -33,8 +36,9 @@ export function Dashboard({
         <DashboardHeader onSignOut={onSignOut} />
         <ErrorBanner message={error} onDismiss={onDismissError} />
         <SearchBar value={search} onChange={setSearch} />
+        <SortControl value={sortKey} onChange={setSortKey} />
         <StudentList
-          students={filtered}
+          students={filteredAndSorted}
           loading={loading}
           onSelectStudent={onSelectStudent}
           searchTerm={search}

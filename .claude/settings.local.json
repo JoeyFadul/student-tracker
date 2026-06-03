@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip3 install *)",
+      "Bash(npm run *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(git -C /Users/joeyfadul/code/student-tracker add frontend/src/api.js frontend/src/App.jsx frontend/src/components/profile/ProfileHeader.jsx frontend/src/components/profile/StudentProfile.jsx)",
+      "Bash(git -C /Users/joeyfadul/code/student-tracker commit -m ' *)",
+      "Bash(git -C /Users/joeyfadul/code/student-tracker push)",
+      "Bash(git *)",
+      "Bash(./deploy-frontend.sh)"
+    ]
+  }
+}
