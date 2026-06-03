@@ -63,7 +63,7 @@ export function Dashboard({
 
   return (
     <div style={pageStyle}>
-      <div style={containerStyle}>
+      <div style={{ ...containerStyle, paddingBottom: selectMode ? 360 : 100 }}>
         <DashboardHeader onSignOut={onSignOut} />
         <ErrorBanner message={error} onDismiss={onDismissError} />
         <TopReasonsCard api={api} refreshKey={topReasonsRefresh} />
