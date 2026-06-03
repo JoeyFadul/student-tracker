@@ -12,6 +12,8 @@ import { Dashboard } from './components/dashboard/Dashboard';
 import { StudentProfile } from './components/profile/StudentProfile';
 import { StatsScreen } from './components/stats/StatsScreen';
 import { SettingsScreen } from './components/settings/SettingsScreen';
+import { ClassroomDetailScreen } from './components/settings/ClassroomDetailScreen';
+import { SchoolYearDetailScreen } from './components/settings/SchoolYearDetailScreen';
 import { YearArchive } from './components/archive/YearArchive';
 import { TabBar } from './components/ui/TabBar';
 import { Toast } from './components/ui/Toast';
@@ -30,6 +32,7 @@ export function App() {
   const studentsApi = useStudents(api, cid);
   const schoolYear = useSchoolYear(api, cid);
   const [activeTab, setActiveTab] = useState('students');
+  const [settingsScreen, setSettingsScreen] = useState(null); // null | 'classroom' | 'schoolyear'
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [toast, setToast] = useState(null);
@@ -209,18 +212,36 @@ export function App() {
       {activeTab === 'stats' && (
         <StatsScreen students={studentsApi.students} api={api} classroomId={cid} activeYear={schoolYear.active} />
       )}
-      {activeTab === 'settings' && (
+      {activeTab === 'settings' && settingsScreen === null && (
         <SettingsScreen
-          api={api}
           onSignOut={auth.signOut}
+          activeClassroom={classrooms.active}
+          activeYearLabel={schoolYear.active?.label}
+          onOpenClassroom={() => setSettingsScreen('classroom')}
+          onOpenSchoolYear={() => setSettingsScreen('schoolyear')}
+        />
+      )}
+      {activeTab === 'settings' && settingsScreen === 'classroom' && (
+        <ClassroomDetailScreen
+          api={api}
           classroomsState={classrooms}
+          onBack={() => setSettingsScreen(null)}
+        />
+      )}
+      {activeTab === 'settings' && settingsScreen === 'schoolyear' && (
+        <SchoolYearDetailScreen
           schoolYear={schoolYear}
           onStartYear={handleStartYear}
           onEndYear={handleEndYear}
-          onOpenArchive={setArchiveYear}
+          onOpenArchive={(y) => { setSettingsScreen(null); setArchiveYear(y); }}
+          onBack={() => setSettingsScreen(null)}
         />
       )}
-      <TabBar tabs={TABS} active={activeTab} onChange={setActiveTab} />
+      <TabBar
+        tabs={TABS}
+        active={activeTab}
+        onChange={(t) => { setActiveTab(t); setSettingsScreen(null); }}
+      />
       {toastEl}
     </>
   );

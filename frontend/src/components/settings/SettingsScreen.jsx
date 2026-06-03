@@ -1,48 +1,40 @@
-import { LogOut } from 'lucide-react';
+import { LogOut, School, Calendar } from 'lucide-react';
 import { theme } from '../../theme';
 import { ScreenHeader } from '../ui/ScreenHeader';
-import { SchoolYearSection } from './SchoolYearSection';
-import { ClassroomSection } from './ClassroomSection';
+import { SettingsRow } from './SettingsRow';
 import { usePressable } from '../../hooks/usePressable';
 
 export function SettingsScreen({
-  api,
   onSignOut,
-  classroomsState,
-  schoolYear,
-  onStartYear,
-  onEndYear,
-  onOpenArchive,
+  activeClassroom,
+  activeYearLabel,
+  onOpenClassroom,
+  onOpenSchoolYear,
 }) {
-  const isOwner = classroomsState.active?.role === 'owner';
-
   return (
     <div style={pageStyle}>
       <div style={containerStyle}>
         <ScreenHeader title="Settings" />
 
-        <ClassroomSection
-          api={api}
-          classrooms={classroomsState.classrooms}
-          active={classroomsState.active}
-          onSwitch={classroomsState.setActiveId}
-          onCreate={classroomsState.createClassroom}
-          onRename={classroomsState.renameClassroom}
-          onDelete={classroomsState.deleteClassroom}
-          isOwner={isOwner}
-        />
-
-        {classroomsState.active && (
-          <div style={{ marginTop: 18 }}>
-            <SchoolYearSection
-              active={schoolYear.active}
-              years={schoolYear.years}
-              onStart={onStartYear}
-              onEnd={onEndYear}
-              onOpenArchive={onOpenArchive}
+        <div style={groupStyle}>
+          <SettingsRow
+            icon={<School size={18} color={theme.colors.accentDark} />}
+            label="Classroom"
+            value={activeClassroom?.classroomName || '—'}
+            onClick={onOpenClassroom}
+            isFirst
+            isLast={!activeClassroom}
+          />
+          {activeClassroom && (
+            <SettingsRow
+              icon={<Calendar size={18} color={theme.colors.accentDark} />}
+              label="School year"
+              value={activeYearLabel || 'No active year'}
+              onClick={onOpenSchoolYear}
+              isLast
             />
-          </div>
-        )}
+          )}
+        </div>
 
         <SignOutRow onClick={onSignOut} />
       </div>
@@ -72,6 +64,14 @@ const containerStyle = {
   padding: `20px 16px calc(${theme.tabBarHeight}px + 24px + ${theme.safeBottom})`,
 };
 
+const groupStyle = {
+  background: theme.colors.surface,
+  borderRadius: theme.radius.xl,
+  boxShadow: theme.shadow.md,
+  marginBottom: 18,
+  overflow: 'hidden',
+};
+
 const signOutStyle = {
   width: '100%',
   background: theme.colors.surface,
@@ -90,5 +90,4 @@ const signOutStyle = {
   cursor: 'pointer',
   transition: 'transform 0.1s ease',
   WebkitTapHighlightColor: 'transparent',
-  marginTop: 18,
 };
