@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { theme } from '../../theme';
 
-export function Sheet({ open, onClose, title, children }) {
+export function Sheet({ open, onClose, title, children, position = 'bottom' }) {
   const [mounted, setMounted] = useState(open);
   const [visible, setVisible] = useState(false);
 
@@ -25,22 +25,48 @@ export function Sheet({ open, onClose, title, children }) {
 
   if (!mounted) return null;
 
+  const isTop = position === 'top';
+  const enterTransform = isTop ? 'translateY(-100%)' : 'translateY(100%)';
+
   return (
-    <div style={{ ...backdropStyle, opacity: visible ? 1 : 0 }} onClick={onClose}>
+    <div
+      style={{
+        ...backdropStyle,
+        alignItems: isTop ? 'flex-start' : 'flex-end',
+        opacity: visible ? 1 : 0,
+      }}
+      onClick={onClose}
+    >
       <div
         style={{
           ...sheetStyle,
-          transform: visible ? 'translateY(0)' : 'translateY(100%)',
+          borderTopLeftRadius: isTop ? 0 : 28,
+          borderTopRightRadius: isTop ? 0 : 28,
+          borderBottomLeftRadius: isTop ? 28 : 0,
+          borderBottomRightRadius: isTop ? 28 : 0,
+          boxShadow: isTop ? '0 8px 32px rgba(28, 25, 23, 0.18)' : theme.shadow.sheet,
+          paddingTop: isTop ? 'env(safe-area-inset-top)' : 0,
+          transform: visible ? 'translateY(0)' : enterTransform,
         }}
         onClick={e => e.stopPropagation()}
       >
-        <div style={handleWrapStyle}>
-          <div style={handleStyle} />
-        </div>
-        {title && <div style={titleStyle}>{title}</div>}
-        <div style={{ padding: '0 20px 20px', paddingBottom: `calc(20px + ${theme.safeBottom})` }}>
+        {!isTop && (
+          <div style={handleWrapStyle}>
+            <div style={handleStyle} />
+          </div>
+        )}
+        {title && <div style={{ ...titleStyle, paddingTop: isTop ? 18 : 6 }}>{title}</div>}
+        <div style={{
+          padding: '0 20px 20px',
+          paddingBottom: isTop ? 20 : `calc(20px + ${theme.safeBottom})`,
+        }}>
           {children}
         </div>
+        {isTop && (
+          <div style={handleBottomWrapStyle}>
+            <div style={handleStyle} />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -52,7 +78,6 @@ const backdropStyle = {
   background: 'rgba(28, 25, 23, 0.4)',
   zIndex: 200,
   display: 'flex',
-  alignItems: 'flex-end',
   justifyContent: 'center',
   transition: 'opacity 0.22s ease',
 };
@@ -61,9 +86,6 @@ const sheetStyle = {
   width: '100%',
   maxWidth: 560,
   background: theme.colors.surface,
-  borderTopLeftRadius: 28,
-  borderTopRightRadius: 28,
-  boxShadow: theme.shadow.sheet,
   transition: 'transform 0.28s cubic-bezier(0.16, 1, 0.3, 1)',
   maxHeight: '92dvh',
   overflowY: 'auto',
@@ -71,6 +93,12 @@ const sheetStyle = {
 
 const handleWrapStyle = {
   padding: '10px 0 6px',
+  display: 'flex',
+  justifyContent: 'center',
+};
+
+const handleBottomWrapStyle = {
+  padding: '6px 0 12px',
   display: 'flex',
   justifyContent: 'center',
 };

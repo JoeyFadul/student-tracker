@@ -39,7 +39,7 @@ export function AddStudentModal({ onClose, onCreate }) {
   };
 
   return (
-    <Modal title="New student" onClose={onClose}>
+    <Modal title="New student" onClose={onClose} position="top">
       <form onSubmit={handleSubmit}>
         <Input
           label="Name"
