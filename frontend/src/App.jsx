@@ -2,7 +2,7 @@
 // vs profile) and wires the hooks to the feature components. Most logic lives in hooks;
 // most rendering lives in components. This file is mostly just glue.
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useAuth } from './hooks/useAuth';
 import { useStudents } from './hooks/useStudents';
 import { createApiClient } from './api';
@@ -14,6 +14,7 @@ import { Toast } from './components/ui/Toast';
 export function App() {
   const auth = useAuth();
   const studentsApi = useStudents(auth.idToken);
+  const api = useMemo(() => auth.idToken ? createApiClient(auth.idToken) : null, [auth.idToken]);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [toast, setToast] = useState(null);
@@ -69,10 +70,9 @@ export function App() {
   }, [studentsApi]);
 
   const handlePhotoUpload = useCallback(async (file) => {
-    if (!selectedStudent) return;
+    if (!selectedStudent || !api) return;
     setUploadingPhoto(true);
     try {
-      const api = createApiClient(auth.idToken);
       const { url, publicUrl } = await api.getPhotoUploadUrl(selectedStudent.id);
       await fetch(url, { method: 'PUT', body: file, headers: { 'Content-Type': 'image/jpeg' } });
       const updated = await studentsApi.updateStudent(selectedStudent.id, { photo: publicUrl });
@@ -82,7 +82,20 @@ export function App() {
     } finally {
       setUploadingPhoto(false);
     }
-  }, [selectedStudent, auth.idToken, studentsApi]);
+  }, [selectedStudent, api, studentsApi]);
+
+  const handleBulkGrant = useCallback(async (ids, delta, reason) => {
+    try {
+      await studentsApi.bulkGrantPoints(ids, delta, reason);
+      const verb = delta > 0 ? 'Granted' : 'Revoked';
+      const noun = Math.abs(delta) === 1 ? 'dollar' : 'dollars';
+      setToast({
+        message: `${verb} ${Math.abs(delta)} ${noun} to ${ids.length} ${ids.length === 1 ? 'student' : 'students'}`,
+      });
+    } catch (err) {
+      studentsApi.setError(err.message);
+    }
+  }, [studentsApi]);
 
   // ---- Render ----
   if (auth.initializing) {
@@ -130,10 +143,12 @@ export function App() {
         students={studentsApi.students}
         loading={studentsApi.loading}
         error={studentsApi.error}
+        api={api}
         onDismissError={() => studentsApi.setError('')}
         onSelectStudent={openStudent}
         onCreateStudent={studentsApi.createStudent}
         onSignOut={auth.signOut}
+        onBulkGrant={handleBulkGrant}
       />
       {toastEl}
     </>

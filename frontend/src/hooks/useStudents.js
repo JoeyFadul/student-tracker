@@ -57,6 +57,11 @@ export function useStudents(idToken) {
     return fresh;
   }, [api]);
 
+  const bulkGrantPoints = useCallback(async (ids, delta, reason) => {
+    await api.bulkGrantPoints(ids, delta, reason);
+    setStudents(prev => prev.map(s => ids.includes(s.id) ? { ...s, points: s.points + delta } : s));
+  }, [api]);
+
   return {
     students,
     loading,
@@ -68,5 +73,6 @@ export function useStudents(idToken) {
     deleteStudent,
     grantPoints,
     deleteEvent,
+    bulkGrantPoints,
   };
 }

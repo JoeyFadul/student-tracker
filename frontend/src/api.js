@@ -60,5 +60,15 @@ export function createApiClient(idToken) {
         method: 'DELETE',
         headers,
       }).then(handleResponse),
+
+    bulkGrantPoints: (ids, delta, reason) =>
+      fetch(`${API_URL}/students/bulk-points`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ ids, delta, reason }),
+      }).then(handleResponse),
+
+    getTopReasons: (days = 30) =>
+      fetch(`${API_URL}/analytics/top-reasons?days=${days}`, { headers }).then(handleResponse),
   };
 }

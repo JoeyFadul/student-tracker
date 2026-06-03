@@ -1,6 +1,6 @@
 import { StudentListItem } from './StudentListItem';
 
-export function StudentList({ students, loading, onSelectStudent, searchTerm }) {
+export function StudentList({ students, loading, onSelectStudent, searchTerm, selectable, selectedIds }) {
   if (loading && students.length === 0) {
     return <div style={messageStyle}>Loading…</div>;
   }
@@ -20,6 +20,8 @@ export function StudentList({ students, loading, onSelectStudent, searchTerm }) 
           key={student.id}
           student={student}
           onClick={onSelectStudent}
+          selectable={selectable}
+          selected={selectedIds?.has(student.id)}
         />
       ))}
     </div>

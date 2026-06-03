@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react';
-import { Camera } from 'lucide-react';
+import { Camera, Flame } from 'lucide-react';
 import { getTier } from '../../lib/tiers';
 import { DEFAULT_AVATAR } from '../../lib/avatars';
+import { computeStreak } from '../../lib/streaks';
 import { TierBadge } from './TierBadge';
 
 export function ProfileHeader({ student, onPhotoUpload, uploading }) {
@@ -9,6 +10,7 @@ export function ProfileHeader({ student, onPhotoUpload, uploading }) {
   const fileInputRef = useRef(null);
   const [hovered, setHovered] = useState(false);
   const isPhotoUrl = student.photo?.startsWith('http');
+  const streak = computeStreak(student.history);
 
   return (
     <div style={cardStyle}>
@@ -41,6 +43,12 @@ export function ProfileHeader({ student, onPhotoUpload, uploading }) {
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={nameStyle}>{student.name}</div>
           <div style={gradeStyle}>{student.grade}</div>
+          {streak > 1 && (
+            <div style={streakStyle}>
+              <Flame size={14} color="#dc2626" />
+              <span>{streak} day streak</span>
+            </div>
+          )}
         </div>
       </div>
       <TierBadge tier={tier} points={student.points} />
@@ -83,4 +91,14 @@ const nameStyle = {
 const gradeStyle = {
   fontSize: 14,
   color: '#78716c',
+};
+
+const streakStyle = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 4,
+  marginTop: 6,
+  fontSize: 13,
+  fontWeight: 600,
+  color: '#dc2626',
 };
