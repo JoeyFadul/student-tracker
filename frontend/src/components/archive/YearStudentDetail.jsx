@@ -73,7 +73,7 @@ export function YearStudentDetail({ classroomId, year, student, api, onBack }) {
 
 const pageStyle = {
   minHeight: '100vh',
-  background: theme.colors.bg,
+  background: 'transparent',
   fontFamily: theme.font.family,
 };
 

@@ -141,11 +141,12 @@ const pointsBlockStyle = {
 };
 
 const pointsValueStyle = {
-  fontSize: 56,
+  fontSize: 64,
   fontWeight: 800,
   color: theme.colors.accent,
-  letterSpacing: '-0.03em',
+  letterSpacing: '-0.04em',
   lineHeight: 1,
+  fontFamily: theme.font.display,
 };
 
 const pointsLabelStyle = {

@@ -12,6 +12,14 @@ html, body {
   overscroll-behavior-y: contain;
 }
 
+body {
+  background:
+    radial-gradient(ellipse 70% 50% at 100% 0%, rgba(252, 178, 144, 0.45) 0%, rgba(252, 178, 144, 0) 60%),
+    radial-gradient(ellipse 60% 40% at 0% 100%, rgba(253, 220, 200, 0.35) 0%, rgba(253, 220, 200, 0) 60%),
+    #FBF7F1;
+  background-attachment: fixed;
+}
+
 input, textarea, select, button {
   font-family: inherit;
 }
@@ -25,5 +33,5 @@ button {
 }
 
 @media (display-mode: standalone) {
-  body { background: #FBF7F1; }
+  body { background-color: #FBF7F1; }
 }

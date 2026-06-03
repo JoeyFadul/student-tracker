@@ -58,7 +58,7 @@ export function CreateClassroomScreen({ onCreate, onSignOut, hint }) {
 
 const pageStyle = {
   minHeight: '100vh',
-  background: theme.colors.bg,
+  background: 'transparent',
   fontFamily: theme.font.family,
   display: 'flex',
   alignItems: 'center',

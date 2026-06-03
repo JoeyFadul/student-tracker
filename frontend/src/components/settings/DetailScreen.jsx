@@ -27,7 +27,7 @@ export function DetailScreen({ title, onBack, children }) {
 
 const pageStyle = {
   minHeight: '100vh',
-  background: theme.colors.bg,
+  background: 'transparent',
   fontFamily: theme.font.family,
 };
 

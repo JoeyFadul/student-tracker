@@ -54,7 +54,7 @@ function SignOutRow({ onClick }) {
 
 const pageStyle = {
   minHeight: '100vh',
-  background: theme.colors.bg,
+  background: 'transparent',
   fontFamily: theme.font.family,
 };
 

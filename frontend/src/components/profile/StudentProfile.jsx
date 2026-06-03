@@ -98,7 +98,7 @@ function NavBar({ onBack, onDelete }) {
 
 const pageStyle = {
   minHeight: '100vh',
-  background: theme.colors.bg,
+  background: 'transparent',
   fontFamily: theme.font.family,
 };
 

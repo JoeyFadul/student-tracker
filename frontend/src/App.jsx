@@ -254,7 +254,7 @@ function FullPageMessage({ children }) {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: theme.colors.bg,
+      background: 'transparent',
       color: theme.colors.textMuted,
       fontFamily: theme.font.family,
     }}>

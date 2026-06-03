@@ -121,10 +121,11 @@ const pointsWrapStyle = {
 
 const pointsStyle = {
   fontSize: theme.font.sizes.title3,
-  fontWeight: 700,
+  fontWeight: 800,
   color: theme.colors.text,
   lineHeight: 1,
-  letterSpacing: '-0.02em',
+  letterSpacing: '-0.025em',
+  fontFamily: theme.font.display,
 };
 
 const pointsLabelStyle = {
