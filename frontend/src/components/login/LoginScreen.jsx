@@ -91,38 +91,39 @@ export function LoginScreen({ onSignIn, onSubmitNewPassword }) {
 
 const containerStyle = {
   minHeight: '100vh',
-  background: '#faf7f2',
+  background: '#FBF7F1',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  padding: 16,
-  fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+  padding: 20,
+  fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif',
 };
 
 const cardStyle = {
   width: '100%',
   maxWidth: 380,
-  background: '#fff',
-  padding: 28,
-  borderRadius: 20,
-  border: '1px solid #e7e2d8',
+  background: '#FFFFFF',
+  padding: 32,
+  borderRadius: 24,
+  boxShadow: '0 2px 8px rgba(28, 25, 23, 0.06), 0 1px 2px rgba(28, 25, 23, 0.04)',
 };
 
 const titleStyle = {
-  fontSize: 24,
+  fontSize: 32,
   fontWeight: 700,
   color: '#1c1917',
-  margin: '0 0 6px',
+  margin: '0 0 4px',
+  letterSpacing: '-0.02em',
 };
 
 const subtitleStyle = {
-  fontSize: 14,
-  color: '#78716c',
-  margin: '0 0 20px',
+  fontSize: 15,
+  color: '#78716C',
+  margin: '0 0 24px',
 };
 
 const hintStyle = {
-  fontSize: 13,
-  color: '#78716c',
-  marginBottom: 12,
+  fontSize: 14,
+  color: '#78716C',
+  marginBottom: 14,
 };

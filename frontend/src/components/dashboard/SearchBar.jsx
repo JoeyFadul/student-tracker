@@ -1,9 +1,10 @@
 import { Search } from 'lucide-react';
+import { theme } from '../../theme';
 
 export function SearchBar({ value, onChange, placeholder = 'Search students…' }) {
   return (
-    <div style={{ position: 'relative', marginBottom: 16 }}>
-      <Search size={18} color="#a8a29e" style={iconStyle} />
+    <div style={wrapStyle}>
+      <Search size={18} color={theme.colors.textFaint} style={iconStyle} />
       <input
         type="text"
         placeholder={placeholder}
@@ -15,6 +16,11 @@ export function SearchBar({ value, onChange, placeholder = 'Search students…' 
   );
 }
 
+const wrapStyle = {
+  position: 'relative',
+  flex: 1,
+};
+
 const iconStyle = {
   position: 'absolute',
   left: 14,
@@ -25,12 +31,15 @@ const iconStyle = {
 
 const inputStyle = {
   width: '100%',
-  padding: '12px 12px 12px 42px',
-  fontSize: 15,
-  border: '1px solid #e7e2d8',
-  borderRadius: 12,
-  background: '#fff',
+  padding: '12px 14px 12px 42px',
+  fontSize: theme.font.sizes.body,
+  border: 'none',
+  borderRadius: theme.radius.pill,
+  background: theme.colors.surfaceAlt,
+  color: theme.colors.text,
   boxSizing: 'border-box',
   outline: 'none',
-  fontFamily: 'inherit',
+  fontFamily: theme.font.family,
+  minHeight: 44,
+  WebkitAppearance: 'none',
 };

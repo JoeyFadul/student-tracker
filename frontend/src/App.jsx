@@ -1,25 +1,32 @@
-// App: the top-level component. Owns the high-level routing state (login vs dashboard
-// vs profile) and wires the hooks to the feature components. Most logic lives in hooks;
-// most rendering lives in components. This file is mostly just glue.
-
 import { useState, useCallback, useMemo } from 'react';
+import { Users, BarChart3, Settings } from 'lucide-react';
 import { useAuth } from './hooks/useAuth';
 import { useStudents } from './hooks/useStudents';
 import { createApiClient } from './api';
+import { theme } from './theme';
 import { LoginScreen } from './components/login/LoginScreen';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { StudentProfile } from './components/profile/StudentProfile';
+import { StatsScreen } from './components/stats/StatsScreen';
+import { SettingsScreen } from './components/settings/SettingsScreen';
+import { TabBar } from './components/ui/TabBar';
 import { Toast } from './components/ui/Toast';
+
+const TABS = [
+  { key: 'students', label: 'Students', icon: Users },
+  { key: 'stats',    label: 'Stats',    icon: BarChart3 },
+  { key: 'settings', label: 'Settings', icon: Settings },
+];
 
 export function App() {
   const auth = useAuth();
   const studentsApi = useStudents(auth.idToken);
   const api = useMemo(() => auth.idToken ? createApiClient(auth.idToken) : null, [auth.idToken]);
+  const [activeTab, setActiveTab] = useState('students');
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [toast, setToast] = useState(null);
 
-  // ---- Navigation ----
   const openStudent = useCallback(async (id) => {
     try {
       const full = await studentsApi.getStudent(id);
@@ -31,7 +38,6 @@ export function App() {
 
   const closeStudent = useCallback(() => setSelectedStudent(null), []);
 
-  // ---- Mutations on the selected student. After each, refresh the local copy. ----
   const handleGrantPoints = useCallback(async (id, delta, reason) => {
     try {
       const fresh = await studentsApi.grantPoints(id, delta, reason);
@@ -97,7 +103,6 @@ export function App() {
     }
   }, [studentsApi]);
 
-  // ---- Render ----
   if (auth.initializing) {
     return <FullPageMessage>Loading…</FullPageMessage>;
   }
@@ -139,17 +144,24 @@ export function App() {
 
   return (
     <>
-      <Dashboard
-        students={studentsApi.students}
-        loading={studentsApi.loading}
-        error={studentsApi.error}
-        api={api}
-        onDismissError={() => studentsApi.setError('')}
-        onSelectStudent={openStudent}
-        onCreateStudent={studentsApi.createStudent}
-        onSignOut={auth.signOut}
-        onBulkGrant={handleBulkGrant}
-      />
+      {activeTab === 'students' && (
+        <Dashboard
+          students={studentsApi.students}
+          loading={studentsApi.loading}
+          error={studentsApi.error}
+          onDismissError={() => studentsApi.setError('')}
+          onSelectStudent={openStudent}
+          onCreateStudent={studentsApi.createStudent}
+          onBulkGrant={handleBulkGrant}
+        />
+      )}
+      {activeTab === 'stats' && (
+        <StatsScreen students={studentsApi.students} api={api} />
+      )}
+      {activeTab === 'settings' && (
+        <SettingsScreen email={auth.email} onSignOut={auth.signOut} />
+      )}
+      <TabBar tabs={TABS} active={activeTab} onChange={setActiveTab} />
       {toastEl}
     </>
   );
@@ -162,9 +174,9 @@ function FullPageMessage({ children }) {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: '#faf7f2',
-      color: '#78716c',
-      fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+      background: theme.colors.bg,
+      color: theme.colors.textMuted,
+      fontFamily: theme.font.family,
     }}>
       {children}
     </div>

@@ -47,6 +47,7 @@ export function useAuth() {
 
   return {
     idToken,
+    email: cognitoUser?.getUsername?.() || null,
     isAuthenticated: !!idToken,
     initializing,
     signIn,

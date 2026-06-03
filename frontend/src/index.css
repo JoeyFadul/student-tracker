@@ -1,2 +1,29 @@
 * { box-sizing: border-box; }
-body { margin: 0; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #FBF7F1;
+  color: #1C1917;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior-y: contain;
+}
+
+input, textarea, select, button {
+  font-family: inherit;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (display-mode: standalone) {
+  body { background: #FBF7F1; }
+}

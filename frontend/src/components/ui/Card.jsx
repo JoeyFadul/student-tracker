@@ -1,27 +1,39 @@
-// Card: the standard rounded-rectangle container used throughout the app.
-// Accepts an optional title and renders children with consistent padding.
+import { theme } from '../../theme';
 
-export function Card({ title, children, style, ...rest }) {
+export function Card({ title, subtitle, children, padding = 20, style, ...rest }) {
   return (
     <div
       style={{
-        background: '#fff',
-        borderRadius: 20,
-        padding: 20,
-        border: '1px solid #e7e2d8',
-        marginBottom: 16,
+        background: theme.colors.surface,
+        borderRadius: theme.radius.xl,
+        padding,
+        boxShadow: theme.shadow.md,
+        marginBottom: 14,
         ...style,
       }}
       {...rest}
     >
-      {title && (
-        <div style={{
-          fontSize: 16,
-          fontWeight: 600,
-          color: '#1c1917',
-          marginBottom: 12,
-        }}>
-          {title}
+      {(title || subtitle) && (
+        <div style={{ marginBottom: 14 }}>
+          {title && (
+            <div style={{
+              fontSize: theme.font.sizes.heading,
+              fontWeight: 600,
+              color: theme.colors.text,
+              letterSpacing: '-0.01em',
+            }}>
+              {title}
+            </div>
+          )}
+          {subtitle && (
+            <div style={{
+              fontSize: theme.font.sizes.footnote,
+              color: theme.colors.textMuted,
+              marginTop: 2,
+            }}>
+              {subtitle}
+            </div>
+          )}
         </div>
       )}
       {children}

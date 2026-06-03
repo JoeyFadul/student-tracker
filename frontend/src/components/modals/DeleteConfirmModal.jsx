@@ -48,7 +48,7 @@ export function DeleteConfirmModal({ studentName, onClose, onConfirm }) {
       <ErrorBanner message={error} onDismiss={() => setError('')} />
 
       <div style={{ display: 'flex', gap: 10 }}>
-        <Button variant="secondary" fullWidth onClick={onClose} disabled={busy}>
+        <Button variant="outline" fullWidth onClick={onClose} disabled={busy}>
           Cancel
         </Button>
         <Button variant="danger" fullWidth onClick={handleDelete} disabled={!canDelete}>
@@ -60,22 +60,21 @@ export function DeleteConfirmModal({ studentName, onClose, onConfirm }) {
 }
 
 const warningStyle = {
-  padding: 14,
-  background: '#fef2f2',
-  borderRadius: 12,
+  padding: 16,
+  background: '#FEE2E2',
+  borderRadius: 14,
   marginBottom: 16,
-  border: '1px solid #fecaca',
 };
 
 const warningTitleStyle = {
-  fontSize: 14,
+  fontSize: 15,
   color: '#991b1b',
-  fontWeight: 500,
+  fontWeight: 600,
   marginBottom: 4,
 };
 
 const warningBodyStyle = {
-  fontSize: 13,
+  fontSize: 14,
   color: '#7f1d1d',
   lineHeight: 1.5,
 };

@@ -1,4 +1,4 @@
-// Form input primitives. All form fields in the app use these.
+import { theme } from '../../theme';
 
 export function Input({ label, ...inputProps }) {
   return (
@@ -17,7 +17,7 @@ export function Textarea({ label, ...textareaProps }) {
         {...textareaProps}
         style={{
           ...inputStyle,
-          minHeight: 80, resize: 'vertical', lineHeight: 1.5,
+          minHeight: 88, resize: 'vertical', lineHeight: 1.5,
           ...textareaProps.style,
         }}
       />
@@ -34,7 +34,7 @@ export function Select({ label, options, ...selectProps }) {
         style={{
           ...inputStyle,
           appearance: 'none',
-          paddingRight: 36,
+          paddingRight: 40,
           backgroundImage: chevronSvg,
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'right 14px center',
@@ -53,9 +53,9 @@ export function Label({ children }) {
   return (
     <label style={{
       display: 'block',
-      fontSize: 13,
+      fontSize: theme.font.sizes.footnote,
       fontWeight: 500,
-      color: '#57534e',
+      color: theme.colors.textMuted,
       marginBottom: 6,
     }}>
       {children}
@@ -65,15 +65,17 @@ export function Label({ children }) {
 
 const inputStyle = {
   width: '100%',
-  padding: '12px 14px',
-  fontSize: 15,
-  border: '1px solid #e7e2d8',
-  borderRadius: 10,
-  marginBottom: 16,
+  padding: '14px 16px',
+  fontSize: theme.font.sizes.body,
+  border: 'none',
+  borderRadius: theme.radius.md,
+  marginBottom: 14,
   boxSizing: 'border-box',
-  fontFamily: 'inherit',
-  background: '#fff',
+  fontFamily: theme.font.family,
+  background: theme.colors.surfaceAlt,
+  color: theme.colors.text,
   outline: 'none',
+  WebkitAppearance: 'none',
 };
 
 const chevronSvg = 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%2378716c\' stroke-width=\'2\'><polyline points=\'6 9 12 15 18 9\'/></svg>")';

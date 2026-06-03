@@ -1,27 +1,38 @@
-import { UserPlus } from 'lucide-react';
+import { Plus } from 'lucide-react';
+import { theme } from '../../theme';
+import { usePressable } from '../../hooks/usePressable';
 
 export function AddStudentButton({ onClick }) {
+  const { handlers, pressedStyle } = usePressable();
   return (
-    <button onClick={onClick} title="Add student" aria-label="Add student" style={buttonStyle}>
-      <UserPlus size={26} />
+    <button
+      onClick={onClick}
+      title="Add student"
+      aria-label="Add student"
+      {...handlers}
+      style={{ ...buttonStyle, ...pressedStyle }}
+    >
+      <Plus size={26} strokeWidth={2.5} />
     </button>
   );
 }
 
 const buttonStyle = {
   position: 'fixed',
-  bottom: 24,
-  right: 24,
-  width: 60,
-  height: 60,
-  borderRadius: 30,
-  background: '#1c1917',
+  bottom: `calc(${theme.tabBarHeight}px + 20px + ${theme.safeBottom})`,
+  right: 20,
+  width: 56,
+  height: 56,
+  borderRadius: 28,
+  background: theme.colors.accent,
   color: '#fff',
   border: 'none',
-  boxShadow: '0 8px 24px rgba(28, 25, 23, 0.3)',
+  boxShadow: theme.shadow.fab,
   cursor: 'pointer',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  zIndex: 50,
+  zIndex: 40,
+  transition: 'transform 0.1s ease, box-shadow 0.15s ease',
+  WebkitTapHighlightColor: 'transparent',
 };

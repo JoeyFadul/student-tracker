@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import { Plus, Minus, X } from 'lucide-react';
+import { theme } from '../../theme';
+import { Button } from '../ui/Button';
+import { usePressable } from '../../hooks/usePressable';
 
 const PRESET_AMOUNTS = [1, 5, 10];
 const PRESET_REASONS = [
@@ -25,172 +28,235 @@ export function BulkActionBar({ selectedCount, onCancel, onGrant }) {
 
   return (
     <div style={wrapStyle}>
-      <div style={topRowStyle}>
-        <span style={countStyle}>{selectedCount} selected</span>
-        <button onClick={onCancel} style={closeBtnStyle} aria-label="Cancel"><X size={18} /></button>
-      </div>
+      <div style={innerStyle}>
+        <div style={topRowStyle}>
+          <div>
+            <div style={countStyle}>{selectedCount} selected</div>
+            <div style={hintStyle}>Choose an amount and reason</div>
+          </div>
+          <CloseButton onClick={onCancel} />
+        </div>
 
-      <div style={amountRowStyle}>
-        <span style={labelStyle}>Amount:</span>
-        {PRESET_AMOUNTS.map(n => (
-          <button key={n} onClick={() => setAmount(n)} style={getChipStyle(amount === n)} type="button">{n}</button>
-        ))}
+        <div style={amountRowStyle}>
+          {PRESET_AMOUNTS.map(n => (
+            <Chip key={n} active={amount === n} onClick={() => setAmount(n)}>{n}</Chip>
+          ))}
+          <input
+            type="number"
+            value={amount}
+            onChange={e => setAmount(Math.max(1, parseInt(e.target.value) || 1))}
+            style={numberInputStyle}
+          />
+        </div>
+
         <input
-          type="number"
-          value={amount}
-          onChange={e => setAmount(Math.max(1, parseInt(e.target.value) || 1))}
-          style={numberInputStyle}
+          type="text"
+          placeholder="Reason (optional)"
+          value={reason}
+          onChange={e => setReason(e.target.value)}
+          style={reasonInputStyle}
         />
-      </div>
 
-      <input
-        type="text"
-        placeholder="Reason (optional)"
-        value={reason}
-        onChange={e => setReason(e.target.value)}
-        style={reasonInputStyle}
-      />
+        <div style={reasonRowStyle}>
+          {PRESET_REASONS.map(r => (
+            <ReasonChip key={r} active={reason === r} onClick={() => setReason(r)}>{r}</ReasonChip>
+          ))}
+        </div>
 
-      <div style={reasonRowStyle}>
-        {PRESET_REASONS.map(r => (
-          <button key={r} onClick={() => setReason(r)} style={getReasonChipStyle(reason === r)} type="button">{r}</button>
-        ))}
-      </div>
-
-      <div style={buttonRowStyle}>
-        <button
-          onClick={() => submit(amount)}
-          disabled={busy || selectedCount === 0}
-          style={{ ...actionBtnStyle, background: '#16a34a' }}
-        >
-          <Plus size={18} /> Grant {amount} to {selectedCount}
-        </button>
-        <button
-          onClick={() => submit(-amount)}
-          disabled={busy || selectedCount === 0}
-          style={{ ...actionBtnStyle, background: '#fff', color: '#dc2626', border: '1.5px solid #dc2626' }}
-        >
-          <Minus size={18} /> Revoke
-        </button>
+        <div style={buttonRowStyle}>
+          <Button
+            variant="success"
+            size="lg"
+            fullWidth
+            disabled={busy || selectedCount === 0}
+            onClick={() => submit(amount)}
+            icon={<Plus size={18} strokeWidth={2.5} />}
+          >
+            Grant {amount} to {selectedCount}
+          </Button>
+          <Button
+            variant="dangerSoft"
+            size="lg"
+            disabled={busy || selectedCount === 0}
+            onClick={() => submit(-amount)}
+            icon={<Minus size={18} strokeWidth={2.5} />}
+          >
+            Revoke
+          </Button>
+        </div>
       </div>
     </div>
   );
 }
 
+function Chip({ active, onClick, children }) {
+  const { handlers, pressedStyle } = usePressable();
+  return (
+    <button
+      onClick={onClick}
+      {...handlers}
+      style={{
+        ...amountChipStyle,
+        ...pressedStyle,
+        background: active ? theme.colors.text : theme.colors.surfaceAlt,
+        color: active ? '#fff' : theme.colors.text,
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function ReasonChip({ active, onClick, children }) {
+  const { handlers, pressedStyle } = usePressable();
+  return (
+    <button
+      onClick={onClick}
+      {...handlers}
+      style={{
+        ...reasonChipStyle,
+        ...pressedStyle,
+        background: active ? theme.colors.accentSoft : theme.colors.surfaceAlt,
+        color: active ? theme.colors.accentDark : theme.colors.text,
+        fontWeight: active ? 600 : 500,
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function CloseButton({ onClick }) {
+  const { handlers, pressedStyle } = usePressable();
+  return (
+    <button onClick={onClick} {...handlers} style={{ ...closeBtnStyle, ...pressedStyle }} aria-label="Cancel">
+      <X size={18} />
+    </button>
+  );
+}
+
 const wrapStyle = {
   position: 'fixed',
-  bottom: 0,
   left: 0,
   right: 0,
-  background: '#fff',
-  borderTop: '1px solid #e7e2d8',
-  padding: 16,
-  boxShadow: '0 -4px 20px rgba(0,0,0,0.1)',
+  bottom: 0,
+  background: theme.colors.surface,
+  borderTopLeftRadius: 28,
+  borderTopRightRadius: 28,
+  boxShadow: theme.shadow.sheet,
   zIndex: 100,
+  paddingBottom: theme.safeBottom,
+};
+
+const innerStyle = {
   maxWidth: 720,
   margin: '0 auto',
+  padding: 20,
 };
 
 const topRowStyle = {
   display: 'flex',
   justifyContent: 'space-between',
-  alignItems: 'center',
-  marginBottom: 12,
+  alignItems: 'flex-start',
+  marginBottom: 16,
 };
 
 const countStyle = {
-  fontSize: 16,
-  fontWeight: 600,
-  color: '#1c1917',
+  fontSize: theme.font.sizes.title3,
+  fontWeight: 700,
+  color: theme.colors.text,
+  letterSpacing: '-0.02em',
 };
 
-const closeBtnStyle = {
-  background: 'none',
-  border: 'none',
-  cursor: 'pointer',
-  color: '#78716c',
-  padding: 4,
-};
-
-const labelStyle = {
-  fontSize: 13,
-  color: '#78716c',
+const hintStyle = {
+  fontSize: theme.font.sizes.footnote,
+  color: theme.colors.textMuted,
+  marginTop: 2,
 };
 
 const amountRowStyle = {
   display: 'flex',
-  alignItems: 'center',
   gap: 8,
-  marginBottom: 10,
+  marginBottom: 12,
+  alignItems: 'center',
 };
 
 const reasonInputStyle = {
   width: '100%',
-  padding: '10px 12px',
-  fontSize: 14,
-  border: '1px solid #e7e2d8',
-  borderRadius: 10,
-  marginBottom: 8,
+  padding: '14px 16px',
+  fontSize: theme.font.sizes.body,
+  border: 'none',
+  borderRadius: theme.radius.md,
+  marginBottom: 10,
   boxSizing: 'border-box',
-  fontFamily: 'inherit',
+  fontFamily: theme.font.family,
+  background: theme.colors.surfaceAlt,
+  color: theme.colors.text,
+  outline: 'none',
+  WebkitAppearance: 'none',
 };
 
 const reasonRowStyle = {
   display: 'flex',
   flexWrap: 'wrap',
   gap: 6,
-  marginBottom: 12,
+  marginBottom: 16,
 };
 
-const getChipStyle = (selected) => ({
-  padding: '6px 12px',
-  borderRadius: 8,
-  border: selected ? '1.5px solid #1c1917' : '1px solid #e7e2d8',
-  background: selected ? '#1c1917' : '#fff',
-  color: selected ? '#fff' : '#1c1917',
-  fontSize: 14,
+const amountChipStyle = {
+  padding: '8px 18px',
+  borderRadius: theme.radius.pill,
+  border: 'none',
+  fontSize: theme.font.sizes.body,
+  fontWeight: 600,
   cursor: 'pointer',
-  fontWeight: 500,
-  fontFamily: 'inherit',
-});
+  fontFamily: theme.font.family,
+  minHeight: 40,
+  WebkitTapHighlightColor: 'transparent',
+  transition: 'transform 0.1s ease, background 0.15s ease',
+};
 
-const getReasonChipStyle = (selected) => ({
-  padding: '4px 10px',
-  borderRadius: 14,
-  border: selected ? '1.5px solid #1c1917' : '1px solid #e7e2d8',
-  background: selected ? '#1c1917' : '#fff',
-  color: selected ? '#fff' : '#57534e',
-  fontSize: 12,
+const reasonChipStyle = {
+  padding: '6px 12px',
+  borderRadius: theme.radius.pill,
+  border: 'none',
+  fontSize: theme.font.sizes.footnote,
   cursor: 'pointer',
-  fontFamily: 'inherit',
-});
+  fontFamily: theme.font.family,
+  WebkitTapHighlightColor: 'transparent',
+  transition: 'transform 0.1s ease, background 0.15s ease',
+};
 
 const numberInputStyle = {
-  width: 70,
-  padding: '6px 10px',
-  fontSize: 14,
-  border: '1px solid #e7e2d8',
-  borderRadius: 8,
-  fontFamily: 'inherit',
+  width: 64,
+  padding: '8px 12px',
+  fontSize: theme.font.sizes.body,
+  border: 'none',
+  borderRadius: theme.radius.md,
+  fontFamily: theme.font.family,
+  background: theme.colors.surfaceAlt,
+  outline: 'none',
+  minHeight: 40,
+  WebkitAppearance: 'none',
+};
+
+const closeBtnStyle = {
+  background: theme.colors.surfaceAlt,
+  border: 'none',
+  cursor: 'pointer',
+  color: theme.colors.textMuted,
+  width: 36,
+  height: 36,
+  borderRadius: theme.radius.pill,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  WebkitTapHighlightColor: 'transparent',
+  transition: 'transform 0.1s ease',
+  flexShrink: 0,
 };
 
 const buttonRowStyle = {
   display: 'flex',
   gap: 8,
-};
-
-const actionBtnStyle = {
-  flex: 1,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  gap: 8,
-  padding: '12px 16px',
-  borderRadius: 12,
-  border: 'none',
-  color: '#fff',
-  fontSize: 15,
-  fontWeight: 600,
-  cursor: 'pointer',
-  fontFamily: 'inherit',
 };

@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { theme } from '../../theme';
 
 export function Toast({ message, actionLabel, onAction, onDismiss, durationMs = 6000 }) {
   useEffect(() => {
@@ -19,32 +20,33 @@ export function Toast({ message, actionLabel, onAction, onDismiss, durationMs = 
 
 const wrapStyle = {
   position: 'fixed',
-  bottom: 24,
+  bottom: `calc(${theme.tabBarHeight}px + 16px + ${theme.safeBottom})`,
   left: '50%',
   transform: 'translateX(-50%)',
   display: 'flex',
   alignItems: 'center',
   gap: 12,
   padding: '12px 16px',
-  background: '#1c1917',
+  background: theme.colors.text,
   color: '#fff',
-  borderRadius: 12,
+  borderRadius: theme.radius.pill,
   boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
-  fontSize: 14,
-  zIndex: 1000,
+  fontSize: theme.font.sizes.footnote,
+  fontWeight: 500,
+  zIndex: 300,
   maxWidth: 'calc(100% - 32px)',
 };
 
 const actionStyle = {
   background: 'transparent',
-  border: '1px solid #57534e',
-  color: '#fbbf24',
-  padding: '4px 12px',
-  borderRadius: 8,
-  fontSize: 13,
-  fontWeight: 600,
+  border: 'none',
+  color: theme.colors.accent,
+  padding: '0 8px',
+  fontSize: theme.font.sizes.footnote,
+  fontWeight: 700,
   cursor: 'pointer',
-  fontFamily: 'inherit',
+  fontFamily: theme.font.family,
+  WebkitTapHighlightColor: 'transparent',
 };
 
 const closeStyle = {
@@ -55,4 +57,5 @@ const closeStyle = {
   cursor: 'pointer',
   padding: 0,
   lineHeight: 1,
+  fontFamily: theme.font.family,
 };

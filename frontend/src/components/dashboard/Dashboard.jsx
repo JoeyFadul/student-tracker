@@ -1,27 +1,23 @@
-// Dashboard: composes the dashboard view. Owns local UI state (search, modal open,
-// select mode), but delegates data operations to props from the parent App.
-
 import { useState, useMemo } from 'react';
-import { CheckSquare } from 'lucide-react';
-import { DashboardHeader } from './DashboardHeader';
+import { CheckCircle2 } from 'lucide-react';
+import { theme } from '../../theme';
+import { ScreenHeader } from '../ui/ScreenHeader';
 import { SearchBar } from './SearchBar';
 import { SortControl, sortStudents } from './SortControl';
 import { StudentList } from './StudentList';
 import { AddStudentButton } from './AddStudentButton';
 import { BulkActionBar } from './BulkActionBar';
-import { TopReasonsCard } from './TopReasonsCard';
 import { ErrorBanner } from '../ui/ErrorBanner';
 import { AddStudentModal } from '../modals/AddStudentModal';
+import { usePressable } from '../../hooks/usePressable';
 
 export function Dashboard({
   students,
   loading,
   error,
-  api,
   onDismissError,
   onSelectStudent,
   onCreateStudent,
-  onSignOut,
   onBulkGrant,
 }) {
   const [search, setSearch] = useState('');
@@ -29,7 +25,6 @@ export function Dashboard({
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState(new Set());
-  const [topReasonsRefresh, setTopReasonsRefresh] = useState(0);
 
   const filteredAndSorted = useMemo(() => {
     const filtered = search
@@ -57,26 +52,30 @@ export function Dashboard({
 
   const handleBulkGrant = async (delta, reason) => {
     await onBulkGrant([...selectedIds], delta, reason);
-    setTopReasonsRefresh(n => n + 1);
     exitSelectMode();
   };
 
   return (
     <div style={pageStyle}>
-      <div style={{ ...containerStyle, paddingBottom: selectMode ? 360 : 100 }}>
-        <DashboardHeader onSignOut={onSignOut} />
+      <div style={{ ...containerStyle, paddingBottom: selectMode ? 380 : `calc(${theme.tabBarHeight}px + 24px + ${theme.safeBottom})` }}>
+        <ScreenHeader
+          title="Students"
+          subtitle={`${students.length} ${students.length === 1 ? 'student' : 'students'}`}
+          action={
+            <SelectToggle
+              active={selectMode}
+              onClick={() => selectMode ? exitSelectMode() : setSelectMode(true)}
+            />
+          }
+        />
+
         <ErrorBanner message={error} onDismiss={onDismissError} />
-        <TopReasonsCard api={api} refreshKey={topReasonsRefresh} />
-        <SearchBar value={search} onChange={setSearch} />
-        <SortControl value={sortKey} onChange={setSortKey} />
-        <div style={selectRowStyle}>
-          <button
-            onClick={() => selectMode ? exitSelectMode() : setSelectMode(true)}
-            style={selectToggleStyle(selectMode)}
-          >
-            <CheckSquare size={14} /> {selectMode ? 'Cancel' : 'Select students'}
-          </button>
+
+        <div style={controlsRowStyle}>
+          <SearchBar value={search} onChange={setSearch} />
+          <SortControl value={sortKey} onChange={setSortKey} />
         </div>
+
         <StudentList
           students={filteredAndSorted}
           loading={loading}
@@ -107,10 +106,29 @@ export function Dashboard({
   );
 }
 
+function SelectToggle({ active, onClick }) {
+  const { handlers, pressedStyle } = usePressable();
+  return (
+    <button
+      onClick={onClick}
+      {...handlers}
+      style={{
+        ...selectToggleStyle,
+        ...pressedStyle,
+        background: active ? theme.colors.accentSoft : 'transparent',
+        color: active ? theme.colors.accentDark : theme.colors.textMuted,
+      }}
+    >
+      <CheckCircle2 size={16} />
+      <span>{active ? 'Done' : 'Select'}</span>
+    </button>
+  );
+}
+
 const pageStyle = {
   minHeight: '100vh',
-  background: '#faf7f2',
-  fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+  background: theme.colors.bg,
+  fontFamily: theme.font.family,
 };
 
 const containerStyle = {
@@ -119,23 +137,25 @@ const containerStyle = {
   padding: '20px 16px 100px',
 };
 
-const selectRowStyle = {
+const controlsRowStyle = {
   display: 'flex',
-  justifyContent: 'flex-end',
-  marginBottom: 10,
+  gap: 8,
+  marginBottom: 14,
+  alignItems: 'center',
 };
 
-const selectToggleStyle = (active) => ({
+const selectToggleStyle = {
   display: 'flex',
   alignItems: 'center',
   gap: 6,
-  padding: '6px 12px',
-  fontSize: 13,
-  border: active ? '1.5px solid #1c1917' : '1px solid #e7e2d8',
-  background: active ? '#1c1917' : '#fff',
-  color: active ? '#fff' : '#57534e',
-  borderRadius: 8,
+  padding: '8px 14px',
+  borderRadius: theme.radius.pill,
+  border: 'none',
+  fontSize: theme.font.sizes.footnote,
+  fontWeight: 600,
   cursor: 'pointer',
-  fontWeight: 500,
-  fontFamily: 'inherit',
-});
+  fontFamily: theme.font.family,
+  transition: 'transform 0.1s ease, background 0.15s ease',
+  WebkitTapHighlightColor: 'transparent',
+  minHeight: 36,
+};
