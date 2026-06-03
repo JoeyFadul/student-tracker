@@ -1,6 +1,6 @@
 import { LogOut, School, Calendar } from 'lucide-react';
 import { theme } from '../../theme';
-import { ScreenHeader } from '../ui/ScreenHeader';
+import { AppHeader } from '../ui/AppHeader';
 import { SettingsRow } from './SettingsRow';
 import { usePressable } from '../../hooks/usePressable';
 
@@ -13,9 +13,8 @@ export function SettingsScreen({
 }) {
   return (
     <div style={pageStyle}>
+      <AppHeader title="Settings" />
       <div style={containerStyle}>
-        <ScreenHeader title="Settings" />
-
         <div style={groupStyle}>
           <SettingsRow
             icon={<School size={18} color={theme.colors.accentDark} />}

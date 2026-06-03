@@ -3,7 +3,7 @@
 html, body {
   margin: 0;
   padding: 0;
-  background: #FBF7F1;
+  background: #0E1729;
   color: #1C1917;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -13,11 +13,7 @@ html, body {
 }
 
 body {
-  background:
-    radial-gradient(ellipse 70% 50% at 100% 0%, rgba(252, 178, 144, 0.45) 0%, rgba(252, 178, 144, 0) 60%),
-    radial-gradient(ellipse 60% 40% at 0% 100%, rgba(253, 220, 200, 0.35) 0%, rgba(253, 220, 200, 0) 60%),
-    #FBF7F1;
-  background-attachment: fixed;
+  background: #F4F5F7;
 }
 
 input, textarea, select, button {
@@ -30,8 +26,4 @@ input:focus, textarea:focus, select:focus {
 
 button {
   -webkit-tap-highlight-color: transparent;
-}
-
-@media (display-mode: standalone) {
-  body { background-color: #FBF7F1; }
 }

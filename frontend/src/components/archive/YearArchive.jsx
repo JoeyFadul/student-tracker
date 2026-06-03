@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { ChevronLeft, Archive, ChevronRight, Flame } from 'lucide-react';
+import { ChevronLeft, Archive, ChevronRight } from 'lucide-react';
 import { theme } from '../../theme';
 import { DEFAULT_AVATAR } from '../../lib/avatars';
 import { getTier } from '../../lib/tiers';
 import { usePressable } from '../../hooks/usePressable';
+import { AppHeader } from '../ui/AppHeader';
 import { YearStudentDetail } from './YearStudentDetail';
 
 export function YearArchive({ classroomId, year, api, onBack }) {
@@ -38,11 +39,15 @@ export function YearArchive({ classroomId, year, api, onBack }) {
 
   return (
     <div style={pageStyle}>
-      <NavBar year={year} onBack={onBack} />
+      <AppHeader
+        title={year.label}
+        subtitle={`Archive · ${formatRange(year)}`}
+        left={<HeaderBackButton onClick={onBack} />}
+      />
       <div style={containerStyle}>
         <div style={bannerStyle}>
           <Archive size={16} color={theme.colors.textMuted} />
-          <span>Read-only archive · {formatRange(year)}</span>
+          <span>Read-only</span>
         </div>
 
         {error && <div style={errorStyle}>{error}</div>}
@@ -63,16 +68,12 @@ export function YearArchive({ classroomId, year, api, onBack }) {
   );
 }
 
-function NavBar({ year, onBack }) {
-  const back = usePressable();
+function HeaderBackButton({ onClick }) {
+  const { handlers, pressedStyle } = usePressable();
   return (
-    <div style={navBarStyle}>
-      <button onClick={onBack} {...back.handlers} style={{ ...iconBtnStyle, ...back.pressedStyle }} aria-label="Back">
-        <ChevronLeft size={22} color={theme.colors.text} />
-      </button>
-      <div style={navTitleStyle}>{year.label}</div>
-      <div style={{ width: 40 }} />
-    </div>
+    <button onClick={onClick} {...handlers} style={{ ...headerIconBtnStyle, ...pressedStyle }} aria-label="Back">
+      <ChevronLeft size={22} color={theme.colors.headerDarkText} />
+    </button>
   );
 }
 
@@ -119,36 +120,19 @@ const pageStyle = {
 const containerStyle = {
   maxWidth: 720,
   margin: '0 auto',
-  padding: `8px 16px calc(40px + ${theme.safeBottom})`,
+  padding: `20px 16px calc(40px + ${theme.safeBottom})`,
 };
 
-const navBarStyle = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  maxWidth: 720,
-  margin: '0 auto',
-  padding: '12px 12px 0',
-};
-
-const navTitleStyle = {
-  fontSize: theme.font.sizes.heading,
-  fontWeight: 600,
-  color: theme.colors.text,
-  letterSpacing: '-0.01em',
-};
-
-const iconBtnStyle = {
-  background: theme.colors.surface,
+const headerIconBtnStyle = {
+  background: 'rgba(255,255,255,0.08)',
   border: 'none',
-  width: 40,
-  height: 40,
-  borderRadius: 20,
+  width: 36,
+  height: 36,
+  borderRadius: 18,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   cursor: 'pointer',
-  boxShadow: theme.shadow.sm,
   WebkitTapHighlightColor: 'transparent',
   transition: 'transform 0.1s ease',
 };

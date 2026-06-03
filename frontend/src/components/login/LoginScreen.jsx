@@ -91,7 +91,7 @@ export function LoginScreen({ onSignIn, onSubmitNewPassword }) {
 
 const containerStyle = {
   minHeight: '100vh',
-  background: '#FBF7F1',
+  background: '#F4F5F7',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',

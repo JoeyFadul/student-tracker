@@ -1,27 +1,33 @@
 import { ChevronLeft } from 'lucide-react';
 import { theme } from '../../theme';
+import { AppHeader } from '../ui/AppHeader';
 import { usePressable } from '../../hooks/usePressable';
 
 export function DetailScreen({ title, onBack, children }) {
-  const { handlers, pressedStyle } = usePressable();
   return (
     <div style={pageStyle}>
-      <div style={navBarStyle}>
-        <button
-          onClick={onBack}
-          {...handlers}
-          style={{ ...iconBtnStyle, ...pressedStyle }}
-          aria-label="Back"
-        >
-          <ChevronLeft size={22} color={theme.colors.text} />
-        </button>
-        <div style={navTitleStyle}>{title}</div>
-        <div style={{ width: 40 }} />
-      </div>
+      <AppHeader
+        title={title}
+        left={<BackButton onClick={onBack} />}
+      />
       <div style={containerStyle}>
         {children}
       </div>
     </div>
+  );
+}
+
+function BackButton({ onClick }) {
+  const { handlers, pressedStyle } = usePressable();
+  return (
+    <button
+      onClick={onClick}
+      {...handlers}
+      style={{ ...iconBtnStyle, ...pressedStyle }}
+      aria-label="Back"
+    >
+      <ChevronLeft size={22} color={theme.colors.headerDarkText} />
+    </button>
   );
 }
 
@@ -31,33 +37,16 @@ const pageStyle = {
   fontFamily: theme.font.family,
 };
 
-const navBarStyle = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  maxWidth: 720,
-  margin: '0 auto',
-  padding: '12px 12px 0',
-};
-
-const navTitleStyle = {
-  fontSize: theme.font.sizes.heading,
-  fontWeight: 600,
-  color: theme.colors.text,
-  letterSpacing: '-0.01em',
-};
-
 const iconBtnStyle = {
-  background: theme.colors.surface,
+  background: 'rgba(255,255,255,0.08)',
   border: 'none',
-  width: 40,
-  height: 40,
-  borderRadius: 20,
+  width: 36,
+  height: 36,
+  borderRadius: 18,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   cursor: 'pointer',
-  boxShadow: theme.shadow.sm,
   WebkitTapHighlightColor: 'transparent',
   transition: 'transform 0.1s ease',
 };
@@ -65,5 +54,5 @@ const iconBtnStyle = {
 const containerStyle = {
   maxWidth: 720,
   margin: '0 auto',
-  padding: `8px 16px calc(${theme.tabBarHeight}px + 24px + ${theme.safeBottom})`,
+  padding: `20px 16px calc(${theme.tabBarHeight}px + 24px + ${theme.safeBottom})`,
 };

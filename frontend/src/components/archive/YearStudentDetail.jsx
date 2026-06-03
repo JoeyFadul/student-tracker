@@ -5,6 +5,7 @@ import { getTier } from '../../lib/tiers';
 import { DEFAULT_AVATAR } from '../../lib/avatars';
 import { ActivityHistory } from '../profile/ActivityHistory';
 import { usePressable } from '../../hooks/usePressable';
+import { AppHeader } from '../ui/AppHeader';
 
 export function YearStudentDetail({ classroomId, year, student, api, onBack }) {
   const [data, setData] = useState(null);
@@ -26,13 +27,15 @@ export function YearStudentDetail({ classroomId, year, student, api, onBack }) {
 
   return (
     <div style={pageStyle}>
-      <div style={navBarStyle}>
-        <button onClick={onBack} {...back.handlers} style={{ ...iconBtnStyle, ...back.pressedStyle }} aria-label="Back">
-          <ChevronLeft size={22} color={theme.colors.text} />
-        </button>
-        <div style={navTitleStyle}>{year.label}</div>
-        <div style={{ width: 40 }} />
-      </div>
+      <AppHeader
+        title={student.name}
+        subtitle={year.label}
+        left={
+          <button onClick={onBack} {...back.handlers} style={{ ...headerIconBtnStyle, ...back.pressedStyle }} aria-label="Back">
+            <ChevronLeft size={22} color={theme.colors.headerDarkText} />
+          </button>
+        }
+      />
 
       <div style={containerStyle}>
         <div style={bannerStyle}>
@@ -80,35 +83,19 @@ const pageStyle = {
 const containerStyle = {
   maxWidth: 720,
   margin: '0 auto',
-  padding: `8px 16px calc(40px + ${theme.safeBottom})`,
+  padding: `20px 16px calc(40px + ${theme.safeBottom})`,
 };
 
-const navBarStyle = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  maxWidth: 720,
-  margin: '0 auto',
-  padding: '12px 12px 0',
-};
-
-const navTitleStyle = {
-  fontSize: theme.font.sizes.heading,
-  fontWeight: 600,
-  color: theme.colors.text,
-};
-
-const iconBtnStyle = {
-  background: theme.colors.surface,
+const headerIconBtnStyle = {
+  background: 'rgba(255,255,255,0.08)',
   border: 'none',
-  width: 40,
-  height: 40,
-  borderRadius: 20,
+  width: 36,
+  height: 36,
+  borderRadius: 18,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   cursor: 'pointer',
-  boxShadow: theme.shadow.sm,
   WebkitTapHighlightColor: 'transparent',
   transition: 'transform 0.1s ease',
 };

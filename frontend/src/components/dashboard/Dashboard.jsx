@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { X } from 'lucide-react';
 import { theme } from '../../theme';
-import { ScreenHeader } from '../ui/ScreenHeader';
+import { AppHeader } from '../ui/AppHeader';
 import { SearchBar } from './SearchBar';
 import { SortControl, sortStudents } from './SortControl';
 import { StudentList } from './StudentList';
@@ -77,8 +77,8 @@ export function Dashboard({
   if (yearLoading) {
     return (
       <div style={pageStyle}>
+        <AppHeader title={classroomName || 'Students'} />
         <div style={containerStyle}>
-          <ScreenHeader title={classroomName || 'Students'} subtitle="" />
           <DashboardSkeleton />
         </div>
       </div>
@@ -88,8 +88,8 @@ export function Dashboard({
   if (!activeYear) {
     return (
       <div style={pageStyle}>
+        <AppHeader title={classroomName || 'Students'} subtitle="No active school year" />
         <div style={containerStyle}>
-          <ScreenHeader title={classroomName || 'Students'} subtitle="No active school year" />
           <ErrorBanner message={error} onDismiss={onDismissError} />
           <NoYearEmptyState onGoToSettings={onGoToSettings} />
         </div>
@@ -99,16 +99,15 @@ export function Dashboard({
 
   return (
     <div style={pageStyle}>
+      <AppHeader
+        title={selectMode ? 'Select students' : (classroomName || 'Students')}
+        subtitle={selectMode
+          ? `${selectedIds.size} ${selectedIds.size === 1 ? 'selected' : 'selected'}`
+          : `${activeYear.label} · ${students.length} ${students.length === 1 ? 'student' : 'students'}`
+        }
+        action={selectMode ? <CancelButton onClick={exitSelectMode} /> : null}
+      />
       <div style={{ ...containerStyle, paddingBottom: bottomPadding }}>
-        <ScreenHeader
-          title={selectMode ? 'Select students' : (classroomName || 'Students')}
-          subtitle={selectMode
-            ? `${selectedIds.size} ${selectedIds.size === 1 ? 'selected' : 'selected'}`
-            : `${activeYear.label} · ${students.length} ${students.length === 1 ? 'student' : 'students'}`
-          }
-          action={selectMode ? <CancelButton onClick={exitSelectMode} /> : null}
-        />
-
         <ErrorBanner message={error} onDismiss={onDismissError} />
 
         <div style={controlsRowStyle}>
@@ -180,7 +179,7 @@ const pageStyle = {
 const containerStyle = {
   maxWidth: 720,
   margin: '0 auto',
-  padding: '20px 16px 100px',
+  padding: '16px 16px 100px',
 };
 
 const controlsRowStyle = {

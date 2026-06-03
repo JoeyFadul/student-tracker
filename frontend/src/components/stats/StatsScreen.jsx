@@ -1,6 +1,7 @@
 import { TrendingUp, Flame } from 'lucide-react';
 import { theme } from '../../theme';
 import { useEffect, useState } from 'react';
+import { AppHeader } from '../ui/AppHeader';
 
 export function StatsScreen({ students, api, classroomId, activeYear }) {
   const totalStudents = students.length;
@@ -10,14 +11,8 @@ export function StatsScreen({ students, api, classroomId, activeYear }) {
 
   return (
     <div style={pageStyle}>
+      <AppHeader title="Statistics" subtitle={activeYear?.label || 'No active school year'} />
       <div style={containerStyle}>
-        <header style={headerStyle}>
-          <div>
-            <div style={kickerStyle}>{activeYear?.label || 'No active year'}</div>
-            <h1 style={titleStyle}>Statistics</h1>
-          </div>
-        </header>
-
         <div style={heroCardStyle}>
           <div style={heroLabelStyle}>Total dollars</div>
           <div style={heroNumberStyle}>{totalDollars.toLocaleString()}</div>
@@ -107,30 +102,7 @@ const pageStyle = {
 const containerStyle = {
   maxWidth: 720,
   margin: '0 auto',
-  padding: `24px 16px calc(${theme.tabBarHeight}px + 24px + ${theme.safeBottom})`,
-};
-
-const headerStyle = {
-  marginBottom: 22,
-};
-
-const kickerStyle = {
-  fontSize: theme.font.sizes.caption,
-  color: theme.dark.textMuted,
-  textTransform: 'uppercase',
-  letterSpacing: 1.2,
-  fontWeight: 600,
-  marginBottom: 4,
-};
-
-const titleStyle = {
-  fontSize: theme.font.sizes.largeTitle,
-  fontWeight: 700,
-  color: theme.dark.text,
-  margin: 0,
-  letterSpacing: '-0.025em',
-  lineHeight: 1.1,
-  fontFamily: theme.font.display,
+  padding: `8px 16px calc(${theme.tabBarHeight}px + 24px + ${theme.safeBottom})`,
 };
 
 const heroCardStyle = {

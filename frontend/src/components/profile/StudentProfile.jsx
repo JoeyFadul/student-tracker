@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ChevronLeft, Trash2 } from 'lucide-react';
 import { theme } from '../../theme';
 import { usePressable } from '../../hooks/usePressable';
+import { AppHeader } from '../ui/AppHeader';
 import { ProfileHero } from './ProfileHero';
 import { QuickGrantRow } from './QuickGrantRow';
 import { PointsAdjuster } from './PointsAdjuster';
@@ -29,7 +30,11 @@ export function StudentProfile({
 
   return (
     <div style={pageStyle}>
-      <NavBar onBack={onBack} onDelete={() => setShowDeleteModal(true)} />
+      <AppHeader
+        title={student.name}
+        left={<HeaderIconButton icon={<ChevronLeft size={22} color={theme.colors.headerDarkText} />} onClick={onBack} ariaLabel="Back" />}
+        action={<HeaderIconButton icon={<Trash2 size={18} color="#FCA5A5" />} onClick={() => setShowDeleteModal(true)} ariaLabel="Delete student" />}
+      />
 
       <div style={containerStyle}>
         <ProfileHero
@@ -71,28 +76,17 @@ export function StudentProfile({
   );
 }
 
-function NavBar({ onBack, onDelete }) {
-  const backPress = usePressable();
-  const deletePress = usePressable();
+function HeaderIconButton({ icon, onClick, ariaLabel }) {
+  const { handlers, pressedStyle } = usePressable();
   return (
-    <div style={navBarStyle}>
-      <button
-        onClick={onBack}
-        {...backPress.handlers}
-        style={{ ...iconBtnStyle, ...backPress.pressedStyle }}
-        aria-label="Back"
-      >
-        <ChevronLeft size={22} color={theme.colors.text} />
-      </button>
-      <button
-        onClick={onDelete}
-        {...deletePress.handlers}
-        style={{ ...iconBtnStyle, ...deletePress.pressedStyle, color: theme.colors.danger }}
-        aria-label="Delete student"
-      >
-        <Trash2 size={20} color={theme.colors.danger} />
-      </button>
-    </div>
+    <button
+      onClick={onClick}
+      {...handlers}
+      style={{ ...headerIconBtnStyle, ...pressedStyle }}
+      aria-label={ariaLabel}
+    >
+      {icon}
+    </button>
   );
 }
 
@@ -108,26 +102,16 @@ const containerStyle = {
   padding: `8px 16px calc(40px + ${theme.safeBottom})`,
 };
 
-const navBarStyle = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  maxWidth: 720,
-  margin: '0 auto',
-  padding: '12px 12px 0',
-};
-
-const iconBtnStyle = {
-  background: theme.colors.surface,
+const headerIconBtnStyle = {
+  background: 'rgba(255,255,255,0.08)',
   border: 'none',
-  width: 40,
-  height: 40,
-  borderRadius: 20,
+  width: 36,
+  height: 36,
+  borderRadius: 18,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   cursor: 'pointer',
-  boxShadow: theme.shadow.sm,
   WebkitTapHighlightColor: 'transparent',
   transition: 'transform 0.1s ease',
 };
