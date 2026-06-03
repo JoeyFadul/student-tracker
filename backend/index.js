@@ -9,6 +9,7 @@
 //   DELETE /students/{id}                 -> delete a student
 //   POST   /students/{id}/points          -> grant/revoke points { delta, reason }
 //   GET    /students/{id}/photo-upload    -> presigned S3 URL for photo upload
+//   DELETE /students/{id}/events/{ts}     -> remove event, reverse its delta
 
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
 const {
@@ -140,7 +141,26 @@ exports.handler = async (event) => {
             Item: { pk, sk: `EVENT#${timestamp}`, delta, reason, timestamp },
           })),
         ]);
-        return respond(200, updated.Attributes);
+        return respond(200, { ...updated.Attributes, eventTimestamp: timestamp });
+      }
+
+      // DELETE /students/{id}/events/{timestamp} - undo a grant
+      if (method === 'DELETE' && sub.startsWith('/events/')) {
+        const timestamp = decodeURIComponent(sub.slice('/events/'.length));
+        const sk = `EVENT#${timestamp}`;
+        const existing = await ddb.send(new GetCommand({
+          TableName: TABLE, Key: { pk, sk },
+        }));
+        if (!existing.Item) return respond(404, { error: 'Event not found' });
+        await Promise.all([
+          ddb.send(new DeleteCommand({ TableName: TABLE, Key: { pk, sk } })),
+          ddb.send(new UpdateCommand({
+            TableName: TABLE, Key: { pk, sk: 'PROFILE' },
+            UpdateExpression: 'ADD points :d',
+            ExpressionAttributeValues: { ':d': -existing.Item.delta },
+          })),
+        ]);
+        return respond(204, {});
       }
 
       // GET /students/{id}/photo-upload -> presigned URL

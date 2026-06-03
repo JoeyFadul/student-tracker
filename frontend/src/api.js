@@ -54,5 +54,11 @@ export function createApiClient(idToken) {
 
     getPhotoUploadUrl: (id) =>
       fetch(`${API_URL}/students/${id}/photo-upload`, { headers }).then(handleResponse),
+
+    deleteEvent: (id, timestamp) =>
+      fetch(`${API_URL}/students/${id}/events/${encodeURIComponent(timestamp)}`, {
+        method: 'DELETE',
+        headers,
+      }).then(handleResponse),
   };
 }

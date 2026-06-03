@@ -43,8 +43,15 @@ export function useStudents(idToken) {
   }, [api]);
 
   const grantPoints = useCallback(async (id, delta, reason) => {
-    await api.grantPoints(id, delta, reason);
+    const result = await api.grantPoints(id, delta, reason);
     // Re-fetch the full record to get updated points + new history entry
+    const fresh = await api.getStudent(id);
+    setStudents(prev => prev.map(s => s.id === id ? { ...s, points: fresh.points } : s));
+    return { ...fresh, eventTimestamp: result.eventTimestamp };
+  }, [api]);
+
+  const deleteEvent = useCallback(async (id, timestamp) => {
+    await api.deleteEvent(id, timestamp);
     const fresh = await api.getStudent(id);
     setStudents(prev => prev.map(s => s.id === id ? { ...s, points: fresh.points } : s));
     return fresh;
@@ -60,5 +67,6 @@ export function useStudents(idToken) {
     updateStudent,
     deleteStudent,
     grantPoints,
+    deleteEvent,
   };
 }

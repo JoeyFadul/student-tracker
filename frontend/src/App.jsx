@@ -36,13 +36,14 @@ export function App() {
       const fresh = await studentsApi.grantPoints(id, delta, reason);
       setSelectedStudent(fresh);
       const verb = delta > 0 ? 'Granted' : 'Revoked';
+      const eventTimestamp = fresh.eventTimestamp;
       setToast({
         message: `${verb} ${Math.abs(delta)} ${Math.abs(delta) === 1 ? 'dollar' : 'dollars'} for ${fresh.name}`,
         actionLabel: 'Undo',
         onAction: async () => {
           setToast(null);
           try {
-            const undone = await studentsApi.grantPoints(id, -delta, `Undo: ${reason || (delta > 0 ? 'Points awarded' : 'Points removed')}`);
+            const undone = await studentsApi.deleteEvent(id, eventTimestamp);
             setSelectedStudent(undone);
           } catch (err) {
             studentsApi.setError(err.message);
