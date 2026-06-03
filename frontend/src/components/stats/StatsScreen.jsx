@@ -2,7 +2,7 @@ import { TopReasonsCard } from '../dashboard/TopReasonsCard';
 import { ScreenHeader } from '../ui/ScreenHeader';
 import { theme } from '../../theme';
 
-export function StatsScreen({ students, api }) {
+export function StatsScreen({ students, api, activeYear }) {
   const totalStudents = students.length;
   const totalDollars = students.reduce((sum, s) => sum + (s.points || 0), 0);
   const onFire = students.filter(s => (s.streak || 0) > 1).length;
@@ -10,7 +10,10 @@ export function StatsScreen({ students, api }) {
   return (
     <div style={pageStyle}>
       <div style={containerStyle}>
-        <ScreenHeader title="Stats" subtitle="The last 30 days" />
+        <ScreenHeader
+          title="Stats"
+          subtitle={activeYear ? `${activeYear.label} · last 30 days` : 'No active school year'}
+        />
 
         <div style={statsRowStyle}>
           <StatTile value={totalStudents} label="Students" />
@@ -18,7 +21,7 @@ export function StatsScreen({ students, api }) {
           <StatTile value={onFire} label="On streak" />
         </div>
 
-        <TopReasonsCard api={api} refreshKey={0} />
+        <TopReasonsCard api={api} refreshKey={0} yearId={activeYear?.yearId} />
       </div>
     </div>
   );

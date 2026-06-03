@@ -1,14 +1,31 @@
 import { LogOut, Mail } from 'lucide-react';
 import { theme } from '../../theme';
 import { ScreenHeader } from '../ui/ScreenHeader';
+import { SchoolYearSection } from './SchoolYearSection';
 import { usePressable } from '../../hooks/usePressable';
 
-export function SettingsScreen({ email, onSignOut }) {
+export function SettingsScreen({
+  email,
+  onSignOut,
+  schoolYear,
+  onStartYear,
+  onEndYear,
+  onOpenArchive,
+}) {
   return (
     <div style={pageStyle}>
       <div style={containerStyle}>
         <ScreenHeader title="Settings" />
 
+        <SchoolYearSection
+          active={schoolYear.active}
+          years={schoolYear.years}
+          onStart={onStartYear}
+          onEnd={onEndYear}
+          onOpenArchive={onOpenArchive}
+        />
+
+        <div style={sectionLabelStyle}>Account</div>
         <div style={groupStyle}>
           {email && (
             <Row icon={<Mail size={18} color={theme.colors.textMuted} />} label="Signed in as" value={email} />
@@ -41,10 +58,7 @@ function SignOutRow({ onClick }) {
     <button
       onClick={onClick}
       {...handlers}
-      style={{
-        ...signOutStyle,
-        ...pressedStyle,
-      }}
+      style={{ ...signOutStyle, ...pressedStyle }}
     >
       <LogOut size={18} />
       <span>Sign out</span>
@@ -64,11 +78,22 @@ const containerStyle = {
   padding: `20px 16px calc(${theme.tabBarHeight}px + 24px + ${theme.safeBottom})`,
 };
 
+const sectionLabelStyle = {
+  fontSize: theme.font.sizes.footnote,
+  fontWeight: 600,
+  color: theme.colors.textMuted,
+  textTransform: 'uppercase',
+  letterSpacing: 0.5,
+  marginBottom: 10,
+  paddingLeft: 4,
+  marginTop: 18,
+};
+
 const groupStyle = {
   background: theme.colors.surface,
   borderRadius: theme.radius.xl,
   boxShadow: theme.shadow.md,
-  marginBottom: 14,
+  marginBottom: 12,
   overflow: 'hidden',
 };
 

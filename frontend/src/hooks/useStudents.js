@@ -1,6 +1,3 @@
-// useStudents: encapsulates all student CRUD and the loading/error state around it.
-// Components call these methods and only see the resulting list/error - no fetch logic in components.
-
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { createApiClient } from '../api';
 
@@ -11,15 +8,20 @@ export function useStudents(idToken) {
 
   const api = useMemo(() => idToken ? createApiClient(idToken) : null, [idToken]);
 
-  // Load on mount / when token changes
-  useEffect(() => {
+  const refresh = useCallback(async () => {
     if (!api) return;
     setLoading(true);
-    api.listStudents()
-      .then(data => setStudents(data.students || []))
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false));
+    try {
+      const data = await api.listStudents();
+      setStudents(data.students || []);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   }, [api]);
+
+  useEffect(() => { refresh(); }, [refresh]);
 
   const getStudent = useCallback(async (id) => {
     return api.getStudent(id);
@@ -44,7 +46,6 @@ export function useStudents(idToken) {
 
   const grantPoints = useCallback(async (id, delta, reason) => {
     const result = await api.grantPoints(id, delta, reason);
-    // Re-fetch the full record to get updated points + new history entry
     const fresh = await api.getStudent(id);
     setStudents(prev => prev.map(s => s.id === id ? { ...s, points: fresh.points } : s));
     return { ...fresh, eventTimestamp: result.eventTimestamp };
@@ -67,6 +68,7 @@ export function useStudents(idToken) {
     loading,
     error,
     setError,
+    refresh,
     getStudent,
     createStudent,
     updateStudent,

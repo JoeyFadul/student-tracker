@@ -1,6 +1,3 @@
-// API client. Returns an object with one method per endpoint.
-// All methods throw on non-2xx responses with a descriptive Error.
-
 import { API_URL } from './config';
 
 const handleResponse = async (res) => {
@@ -18,12 +15,14 @@ export function createApiClient(idToken) {
     'Authorization': `Bearer ${idToken}`,
   };
 
-  return {
-    listStudents: () =>
-      fetch(`${API_URL}/students`, { headers }).then(handleResponse),
+  const yearQuery = (year) => year ? `?year=${encodeURIComponent(year)}` : '';
 
-    getStudent: (id) =>
-      fetch(`${API_URL}/students/${id}`, { headers }).then(handleResponse),
+  return {
+    listStudents: (year) =>
+      fetch(`${API_URL}/students${yearQuery(year)}`, { headers }).then(handleResponse),
+
+    getStudent: (id, year) =>
+      fetch(`${API_URL}/students/${id}${yearQuery(year)}`, { headers }).then(handleResponse),
 
     createStudent: (data) =>
       fetch(`${API_URL}/students`, {
@@ -68,7 +67,26 @@ export function createApiClient(idToken) {
         body: JSON.stringify({ ids, delta, reason }),
       }).then(handleResponse),
 
-    getTopReasons: (days = 30) =>
-      fetch(`${API_URL}/analytics/top-reasons?days=${days}`, { headers }).then(handleResponse),
+    getTopReasons: (days = 30, year) => {
+      const params = new URLSearchParams({ days });
+      if (year) params.set('year', year);
+      return fetch(`${API_URL}/analytics/top-reasons?${params}`, { headers }).then(handleResponse);
+    },
+
+    listSchoolYears: () =>
+      fetch(`${API_URL}/school-years`, { headers }).then(handleResponse),
+
+    startSchoolYear: (label) =>
+      fetch(`${API_URL}/school-years/start`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ label }),
+      }).then(handleResponse),
+
+    endSchoolYear: () =>
+      fetch(`${API_URL}/school-years/end`, {
+        method: 'POST',
+        headers,
+      }).then(handleResponse),
   };
 }

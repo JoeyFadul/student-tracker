@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { Users, BarChart3, Settings } from 'lucide-react';
 import { useAuth } from './hooks/useAuth';
 import { useStudents } from './hooks/useStudents';
+import { useSchoolYear } from './hooks/useSchoolYear';
 import { createApiClient } from './api';
 import { theme } from './theme';
 import { LoginScreen } from './components/login/LoginScreen';
@@ -9,6 +10,7 @@ import { Dashboard } from './components/dashboard/Dashboard';
 import { StudentProfile } from './components/profile/StudentProfile';
 import { StatsScreen } from './components/stats/StatsScreen';
 import { SettingsScreen } from './components/settings/SettingsScreen';
+import { YearArchive } from './components/archive/YearArchive';
 import { TabBar } from './components/ui/TabBar';
 import { Toast } from './components/ui/Toast';
 
@@ -20,12 +22,14 @@ const TABS = [
 
 export function App() {
   const auth = useAuth();
-  const studentsApi = useStudents(auth.idToken);
   const api = useMemo(() => auth.idToken ? createApiClient(auth.idToken) : null, [auth.idToken]);
+  const studentsApi = useStudents(auth.idToken);
+  const schoolYear = useSchoolYear(api);
   const [activeTab, setActiveTab] = useState('students');
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [toast, setToast] = useState(null);
+  const [archiveYear, setArchiveYear] = useState(null);
 
   const openStudent = useCallback(async (id) => {
     try {
@@ -103,6 +107,18 @@ export function App() {
     }
   }, [studentsApi]);
 
+  const handleStartYear = useCallback(async (label) => {
+    await schoolYear.startYear(label);
+    await studentsApi.refresh?.();
+    setToast({ message: `Started school year: ${label}` });
+  }, [schoolYear, studentsApi]);
+
+  const handleEndYear = useCallback(async () => {
+    await schoolYear.endYear();
+    await studentsApi.refresh?.();
+    setToast({ message: 'School year ended' });
+  }, [schoolYear, studentsApi]);
+
   if (auth.initializing) {
     return <FullPageMessage>Loading…</FullPageMessage>;
   }
@@ -124,6 +140,19 @@ export function App() {
       onDismiss={() => setToast(null)}
     />
   );
+
+  if (archiveYear) {
+    return (
+      <>
+        <YearArchive
+          year={archiveYear}
+          api={api}
+          onBack={() => setArchiveYear(null)}
+        />
+        {toastEl}
+      </>
+    );
+  }
 
   if (selectedStudent) {
     return (
@@ -149,17 +178,26 @@ export function App() {
           students={studentsApi.students}
           loading={studentsApi.loading}
           error={studentsApi.error}
+          activeYear={schoolYear.active}
           onDismissError={() => studentsApi.setError('')}
           onSelectStudent={openStudent}
           onCreateStudent={studentsApi.createStudent}
           onBulkGrant={handleBulkGrant}
+          onGoToSettings={() => setActiveTab('settings')}
         />
       )}
       {activeTab === 'stats' && (
-        <StatsScreen students={studentsApi.students} api={api} />
+        <StatsScreen students={studentsApi.students} api={api} activeYear={schoolYear.active} />
       )}
       {activeTab === 'settings' && (
-        <SettingsScreen email={auth.email} onSignOut={auth.signOut} />
+        <SettingsScreen
+          email={auth.email}
+          onSignOut={auth.signOut}
+          schoolYear={schoolYear}
+          onStartYear={handleStartYear}
+          onEndYear={handleEndYear}
+          onOpenArchive={setArchiveYear}
+        />
       )}
       <TabBar tabs={TABS} active={activeTab} onChange={setActiveTab} />
       {toastEl}

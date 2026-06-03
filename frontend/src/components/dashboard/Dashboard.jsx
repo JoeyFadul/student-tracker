@@ -9,6 +9,7 @@ import { AddStudentButton } from './AddStudentButton';
 import { BulkGrantEntry } from './BulkGrantEntry';
 import { BulkSelectFooter } from './BulkSelectFooter';
 import { BulkGrantSheet } from './BulkGrantSheet';
+import { NoYearEmptyState } from './NoYearEmptyState';
 import { ErrorBanner } from '../ui/ErrorBanner';
 import { AddStudentModal } from '../modals/AddStudentModal';
 import { usePressable } from '../../hooks/usePressable';
@@ -17,10 +18,12 @@ export function Dashboard({
   students,
   loading,
   error,
+  activeYear,
   onDismissError,
   onSelectStudent,
   onCreateStudent,
   onBulkGrant,
+  onGoToSettings,
 }) {
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState('recent');
@@ -68,6 +71,18 @@ export function Dashboard({
     ? 140
     : `calc(${theme.tabBarHeight}px + 24px + ${theme.safeBottom})`;
 
+  if (!activeYear) {
+    return (
+      <div style={pageStyle}>
+        <div style={containerStyle}>
+          <ScreenHeader title="Students" subtitle="No active school year" />
+          <ErrorBanner message={error} onDismiss={onDismissError} />
+          <NoYearEmptyState onGoToSettings={onGoToSettings} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={pageStyle}>
       <div style={{ ...containerStyle, paddingBottom: bottomPadding }}>
@@ -75,7 +90,7 @@ export function Dashboard({
           title={selectMode ? 'Select students' : 'Students'}
           subtitle={selectMode
             ? `${selectedIds.size} ${selectedIds.size === 1 ? 'selected' : 'selected'}`
-            : `${students.length} ${students.length === 1 ? 'student' : 'students'}`
+            : `${activeYear.label} · ${students.length} ${students.length === 1 ? 'student' : 'students'}`
           }
           action={selectMode ? <CancelButton onClick={exitSelectMode} /> : null}
         />
