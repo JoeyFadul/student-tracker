@@ -1,17 +1,35 @@
+import { useState } from 'react';
 import { MoreHorizontal, Plus } from 'lucide-react';
 import { theme } from '../../theme';
 import { usePressable } from '../../hooks/usePressable';
+import { ReasonPrompt } from './ReasonPrompt';
 
 const QUICK_AMOUNTS = [1, 5, 10];
 
 export function QuickGrantRow({ onQuickGrant, onMore }) {
+  const [pendingAmount, setPendingAmount] = useState(null);
+
+  const confirm = (reason) => {
+    onQuickGrant(pendingAmount, reason);
+    setPendingAmount(null);
+  };
+
   return (
-    <div style={wrapStyle}>
-      {QUICK_AMOUNTS.map(n => (
-        <QuickButton key={n} amount={n} onClick={() => onQuickGrant(n)} />
-      ))}
-      <MoreButton onClick={onMore} />
-    </div>
+    <>
+      <div style={wrapStyle}>
+        {QUICK_AMOUNTS.map(n => (
+          <QuickButton key={n} amount={n} onClick={() => setPendingAmount(n)} />
+        ))}
+        <MoreButton onClick={onMore} />
+      </div>
+
+      <ReasonPrompt
+        amount={pendingAmount}
+        open={pendingAmount !== null}
+        onClose={() => setPendingAmount(null)}
+        onConfirm={confirm}
+      />
+    </>
   );
 }
 

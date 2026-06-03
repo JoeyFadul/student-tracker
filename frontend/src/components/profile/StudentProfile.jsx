@@ -39,7 +39,7 @@ export function StudentProfile({
         />
 
         <QuickGrantRow
-          onQuickGrant={(delta) => onGrantPoints(student.id, delta, '')}
+          onQuickGrant={(delta, reason) => onGrantPoints(student.id, delta, reason)}
           onMore={() => setShowAdjuster(true)}
         />
 
