@@ -6,17 +6,18 @@ import { DEFAULT_AVATAR } from '../../lib/avatars';
 import { ActivityHistory } from '../profile/ActivityHistory';
 import { usePressable } from '../../hooks/usePressable';
 
-export function YearStudentDetail({ year, student, api, onBack }) {
+export function YearStudentDetail({ classroomId, year, student, api, onBack }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
+    if (!classroomId) return;
     let cancelled = false;
-    api.getStudent(student.id, year.yearId)
+    api.getStudent(classroomId, student.id, year.yearId)
       .then(d => { if (!cancelled) setData(d); })
       .catch(err => { if (!cancelled) setError(err.message); });
     return () => { cancelled = true; };
-  }, [api, student.id, year.yearId]);
+  }, [api, classroomId, student.id, year.yearId]);
 
   const tier = getTier((data?.points) ?? student.points);
   const TierIcon = tier.icon;

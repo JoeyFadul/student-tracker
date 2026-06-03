@@ -1,24 +1,51 @@
 // Lambda handler for the student tracker API
 //
-// Routes:
-//   GET    /students                      -> list students (current year by default; ?year=X for archive)
-//   POST   /students                      -> create a student
-//   GET    /students/{id}                 -> get one student with history (?year=X for archive)
-//   PATCH  /students/{id}                 -> update name, grade, photo, notes
-//   DELETE /students/{id}                 -> delete a student
-//   POST   /students/{id}/points          -> grant/revoke points { delta, reason } (active year required)
-//   GET    /students/{id}/photo-upload    -> presigned S3 URL for photo upload
-//   DELETE /students/{id}/events/{ts}     -> remove event, reverse its delta
-//   POST   /students/bulk-points          -> grant points to many students at once
-//   GET    /analytics/top-reasons         -> aggregate top reasons (?year=X to scope)
-//   GET    /school-years                  -> list all years + active pointer
-//   POST   /school-years/start            -> { label } end current, reset points, create+activate new
-//   POST   /school-years/end              -> end the active year (no new tracking until start)
+// Every request is authenticated by Cognito at API Gateway. The Lambda extracts
+// the caller's email from the JWT claims and enforces that they belong to the
+// classroom they're trying to act on.
+//
+// Top-level routes:
+//   GET    /classrooms                                 -> list classrooms I'm a member of
+//   POST   /classrooms                                 -> create a classroom (I become owner)
+//
+// Per-classroom routes (caller must be a member):
+//   GET    /classrooms/{cid}                           -> details + my role
+//   PATCH  /classrooms/{cid}                           -> rename (owner only)
+//   DELETE /classrooms/{cid}                           -> delete (owner only)
+//
+//   GET    /classrooms/{cid}/members                   -> list members
+//   POST   /classrooms/{cid}/members                   -> invite by email (owner only)
+//   DELETE /classrooms/{cid}/members/{email}           -> remove (owner only)
+//
+//   GET    /classrooms/{cid}/students                  -> list students (?year= for archive)
+//   POST   /classrooms/{cid}/students                  -> create student
+//   GET    /classrooms/{cid}/students/{sid}            -> student with history (?year=)
+//   PATCH  /classrooms/{cid}/students/{sid}            -> update
+//   DELETE /classrooms/{cid}/students/{sid}            -> delete
+//   POST   /classrooms/{cid}/students/{sid}/points     -> grant points (active year required)
+//   GET    /classrooms/{cid}/students/{sid}/photo-upload -> presigned URL
+//   DELETE /classrooms/{cid}/students/{sid}/events/{ts}  -> undo event
+//   POST   /classrooms/{cid}/students/bulk-points      -> bulk grant
+//
+//   GET    /classrooms/{cid}/school-years              -> list years + active
+//   POST   /classrooms/{cid}/school-years/start        -> { label }
+//   POST   /classrooms/{cid}/school-years/end          -> archive current
+//
+//   GET    /classrooms/{cid}/analytics/top-reasons     -> top reasons (?days=N&year=X)
+//
+// Data model (single-table):
+//   pk = USER#<email>,      sk = MEMBERSHIP#<cid>           -> { classroomId, classroomName, role, joinedAt }
+//   pk = CLASSROOM#<cid>,   sk = META                       -> { id, name, ownerEmail, createdAt }
+//   pk = CLASSROOM#<cid>,   sk = MEMBER#<email>             -> { email, role, joinedAt }
+//   pk = CLASSROOM#<cid>,   sk = ACTIVE_YEAR                -> { yearId, label }
+//   pk = CLASSROOM#<cid>,   sk = YEAR#<yearId>              -> { yearId, label, startedAt, endedAt }
+//   pk = CLASSROOM#<cid>,   sk = STUDENT_PROFILE#<sid>      -> { id, name, grade, points, photo, notes, createdAt }
+//   pk = CLASSROOM#<cid>,   sk = STUDENT_EVENT#<sid>#<ts>   -> { studentId, delta, reason, timestamp, yearId }
 
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
 const {
   DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand,
-  DeleteCommand, QueryCommand, ScanCommand
+  DeleteCommand, QueryCommand
 } = require('@aws-sdk/lib-dynamodb');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
@@ -40,12 +67,44 @@ const respond = (status, body) => ({
   body: JSON.stringify(body),
 });
 
-// Data model in DynamoDB (single-table):
-//   pk = META,         sk = ACTIVE_YEAR     -> { yearId, label }  (absent when no active year)
-//   pk = YEAR#<id>,    sk = META            -> { yearId, label, startedAt, endedAt | null }
-//   pk = STUDENT#<id>, sk = PROFILE         -> { id, name, grade, points, photo, notes, createdAt }
-//                                              points is *current year* only; resets to 0 when a new year starts
-//   pk = STUDENT#<id>, sk = EVENT#<ts>      -> { delta, reason, timestamp, yearId }
+// ===== Helpers =====
+
+const norm = (email) => (email || '').trim().toLowerCase();
+
+function getCallerEmail(event) {
+  const claims = event.requestContext?.authorizer?.jwt?.claims || {};
+  return norm(claims.email || claims['cognito:username']);
+}
+
+async function getMembership(email, classroomId) {
+  const r = await ddb.send(new GetCommand({
+    TableName: TABLE, Key: { pk: `USER#${email}`, sk: `MEMBERSHIP#${classroomId}` },
+  }));
+  return r.Item || null;
+}
+
+async function getClassroomMeta(classroomId) {
+  const r = await ddb.send(new GetCommand({
+    TableName: TABLE, Key: { pk: `CLASSROOM#${classroomId}`, sk: 'META' },
+  }));
+  return r.Item || null;
+}
+
+async function getActiveYear(classroomId) {
+  const r = await ddb.send(new GetCommand({
+    TableName: TABLE, Key: { pk: `CLASSROOM#${classroomId}`, sk: 'ACTIVE_YEAR' },
+  }));
+  return r.Item || null;
+}
+
+async function listClassroomItems(classroomId, skPrefix) {
+  const r = await ddb.send(new QueryCommand({
+    TableName: TABLE,
+    KeyConditionExpression: 'pk = :pk AND begins_with(sk, :prefix)',
+    ExpressionAttributeValues: { ':pk': `CLASSROOM#${classroomId}`, ':prefix': skPrefix },
+  }));
+  return r.Items || [];
+}
 
 function computeStreak(positiveTimestamps) {
   if (positiveTimestamps.length === 0) return 0;
@@ -65,21 +124,7 @@ function computeStreak(positiveTimestamps) {
   return streak;
 }
 
-async function getActiveYear() {
-  const result = await ddb.send(new GetCommand({
-    TableName: TABLE, Key: { pk: 'META', sk: 'ACTIVE_YEAR' },
-  }));
-  return result.Item || null;
-}
-
-async function listAllYears() {
-  const result = await ddb.send(new ScanCommand({
-    TableName: TABLE,
-    FilterExpression: 'sk = :sk AND begins_with(pk, :prefix)',
-    ExpressionAttributeValues: { ':sk': 'META', ':prefix': 'YEAR#' },
-  }));
-  return (result.Items || []).sort((a, b) => (b.startedAt || '').localeCompare(a.startedAt || ''));
-}
+// ===== Handler =====
 
 exports.handler = async (event) => {
   const method = event.requestContext?.http?.method;
@@ -88,180 +133,290 @@ exports.handler = async (event) => {
 
   if (method === 'OPTIONS') return respond(200, {});
 
-  try {
-    // ===== School year management =====
+  const callerEmail = getCallerEmail(event);
+  if (!callerEmail) return respond(401, { error: 'Unauthenticated' });
 
-    // GET /school-years
-    if (method === 'GET' && path === '/school-years') {
-      const [active, years] = await Promise.all([getActiveYear(), listAllYears()]);
-      return respond(200, { active, years });
+  try {
+    // ===== /classrooms (list + create) =====
+    if (path === '/classrooms') {
+      if (method === 'GET') {
+        const r = await ddb.send(new QueryCommand({
+          TableName: TABLE,
+          KeyConditionExpression: 'pk = :pk AND begins_with(sk, :prefix)',
+          ExpressionAttributeValues: { ':pk': `USER#${callerEmail}`, ':prefix': 'MEMBERSHIP#' },
+        }));
+        return respond(200, { classrooms: r.Items || [] });
+      }
+
+      if (method === 'POST') {
+        const body = JSON.parse(event.body || '{}');
+        const name = (body.name || '').trim();
+        if (!name) return respond(400, { error: 'name required' });
+        const id = randomUUID();
+        const now = new Date().toISOString();
+        await Promise.all([
+          ddb.send(new PutCommand({
+            TableName: TABLE,
+            Item: { pk: `CLASSROOM#${id}`, sk: 'META', id, name, ownerEmail: callerEmail, createdAt: now },
+          })),
+          ddb.send(new PutCommand({
+            TableName: TABLE,
+            Item: { pk: `CLASSROOM#${id}`, sk: `MEMBER#${callerEmail}`, email: callerEmail, role: 'owner', joinedAt: now },
+          })),
+          ddb.send(new PutCommand({
+            TableName: TABLE,
+            Item: { pk: `USER#${callerEmail}`, sk: `MEMBERSHIP#${id}`, classroomId: id, classroomName: name, role: 'owner', joinedAt: now },
+          })),
+        ]);
+        return respond(201, { classroomId: id, name, role: 'owner' });
+      }
     }
 
-    // POST /school-years/start  -> { label }
-    if (method === 'POST' && path === '/school-years/start') {
+    // All routes below require a classroom and membership
+    const cidMatch = path.match(/^\/classrooms\/([^/]+)(\/.*)?$/);
+    if (!cidMatch) return respond(404, { error: 'Route not found' });
+
+    const cid = cidMatch[1];
+    const rest = cidMatch[2] || '';
+    const membership = await getMembership(callerEmail, cid);
+    if (!membership) return respond(403, { error: 'Not a member of this classroom' });
+    const isOwner = membership.role === 'owner';
+
+    // ===== Classroom details / rename / delete =====
+    if (rest === '') {
+      if (method === 'GET') {
+        const meta = await getClassroomMeta(cid);
+        if (!meta) return respond(404, { error: 'Classroom not found' });
+        return respond(200, { ...meta, role: membership.role });
+      }
+      if (method === 'PATCH') {
+        if (!isOwner) return respond(403, { error: 'Only the owner can rename' });
+        const body = JSON.parse(event.body || '{}');
+        const name = (body.name || '').trim();
+        if (!name) return respond(400, { error: 'name required' });
+
+        // Update META and every membership's classroomName cache
+        const members = await listClassroomItems(cid, 'MEMBER#');
+        await Promise.all([
+          ddb.send(new UpdateCommand({
+            TableName: TABLE, Key: { pk: `CLASSROOM#${cid}`, sk: 'META' },
+            UpdateExpression: 'SET #n = :n',
+            ExpressionAttributeNames: { '#n': 'name' },
+            ExpressionAttributeValues: { ':n': name },
+          })),
+          ...members.map(m => ddb.send(new UpdateCommand({
+            TableName: TABLE, Key: { pk: `USER#${m.email}`, sk: `MEMBERSHIP#${cid}` },
+            UpdateExpression: 'SET classroomName = :n',
+            ExpressionAttributeValues: { ':n': name },
+          }))),
+        ]);
+        return respond(200, { id: cid, name });
+      }
+      if (method === 'DELETE') {
+        if (!isOwner) return respond(403, { error: 'Only the owner can delete' });
+        // Wipe everything in this classroom's partition + each member's MEMBERSHIP record
+        const items = await ddb.send(new QueryCommand({
+          TableName: TABLE,
+          KeyConditionExpression: 'pk = :pk',
+          ExpressionAttributeValues: { ':pk': `CLASSROOM#${cid}` },
+        }));
+        const members = (items.Items || []).filter(i => i.sk?.startsWith('MEMBER#'));
+        await Promise.all([
+          ...(items.Items || []).map(i => ddb.send(new DeleteCommand({
+            TableName: TABLE, Key: { pk: i.pk, sk: i.sk },
+          }))),
+          ...members.map(m => ddb.send(new DeleteCommand({
+            TableName: TABLE, Key: { pk: `USER#${m.email}`, sk: `MEMBERSHIP#${cid}` },
+          }))),
+        ]);
+        return respond(204, {});
+      }
+    }
+
+    // ===== Members =====
+    if (rest === '/members') {
+      if (method === 'GET') {
+        const members = await listClassroomItems(cid, 'MEMBER#');
+        return respond(200, { members });
+      }
+      if (method === 'POST') {
+        if (!isOwner) return respond(403, { error: 'Only the owner can invite' });
+        const body = JSON.parse(event.body || '{}');
+        const email = norm(body.email);
+        if (!email) return respond(400, { error: 'email required' });
+        const meta = await getClassroomMeta(cid);
+        const now = new Date().toISOString();
+        await Promise.all([
+          ddb.send(new PutCommand({
+            TableName: TABLE,
+            Item: { pk: `CLASSROOM#${cid}`, sk: `MEMBER#${email}`, email, role: 'member', joinedAt: now },
+          })),
+          ddb.send(new PutCommand({
+            TableName: TABLE,
+            Item: { pk: `USER#${email}`, sk: `MEMBERSHIP#${cid}`, classroomId: cid, classroomName: meta?.name || '', role: 'member', joinedAt: now },
+          })),
+        ]);
+        return respond(201, { email, role: 'member', joinedAt: now });
+      }
+    }
+
+    const memberMatch = rest.match(/^\/members\/(.+)$/);
+    if (memberMatch && method === 'DELETE') {
+      if (!isOwner) return respond(403, { error: 'Only the owner can remove members' });
+      const email = norm(decodeURIComponent(memberMatch[1]));
+      const meta = await getClassroomMeta(cid);
+      if (email === meta?.ownerEmail) return respond(400, { error: 'Cannot remove the owner' });
+      await Promise.all([
+        ddb.send(new DeleteCommand({ TableName: TABLE, Key: { pk: `CLASSROOM#${cid}`, sk: `MEMBER#${email}` } })),
+        ddb.send(new DeleteCommand({ TableName: TABLE, Key: { pk: `USER#${email}`, sk: `MEMBERSHIP#${cid}` } })),
+      ]);
+      return respond(204, {});
+    }
+
+    // ===== School years =====
+    if (rest === '/school-years') {
+      if (method === 'GET') {
+        const [active, years] = await Promise.all([
+          getActiveYear(cid),
+          listClassroomItems(cid, 'YEAR#'),
+        ]);
+        years.sort((a, b) => (b.startedAt || '').localeCompare(a.startedAt || ''));
+        return respond(200, { active, years });
+      }
+    }
+    if (rest === '/school-years/start' && method === 'POST') {
       const body = JSON.parse(event.body || '{}');
       const label = (body.label || '').trim();
       if (!label) return respond(400, { error: 'label required' });
 
       const yearId = randomUUID();
       const now = new Date().toISOString();
-      const prev = await getActiveYear();
+      const prev = await getActiveYear(cid);
 
-      // End the previous active year, if any
       if (prev?.yearId) {
         await ddb.send(new UpdateCommand({
-          TableName: TABLE, Key: { pk: `YEAR#${prev.yearId}`, sk: 'META' },
+          TableName: TABLE, Key: { pk: `CLASSROOM#${cid}`, sk: `YEAR#${prev.yearId}` },
           UpdateExpression: 'SET endedAt = :now',
           ExpressionAttributeValues: { ':now': now },
         }));
       }
 
-      // Reset every student's current-year points to 0
-      const studentsScan = await ddb.send(new ScanCommand({
-        TableName: TABLE,
-        FilterExpression: 'sk = :sk',
-        ExpressionAttributeValues: { ':sk': 'PROFILE' },
-      }));
-      await Promise.all((studentsScan.Items || []).map(s =>
+      const profiles = await listClassroomItems(cid, 'STUDENT_PROFILE#');
+      await Promise.all(profiles.map(p =>
         ddb.send(new UpdateCommand({
-          TableName: TABLE, Key: { pk: s.pk, sk: 'PROFILE' },
+          TableName: TABLE, Key: { pk: p.pk, sk: p.sk },
           UpdateExpression: 'SET points = :z',
           ExpressionAttributeValues: { ':z': 0 },
         }))
       ));
 
-      // Create the new year and point ACTIVE_YEAR at it
       await Promise.all([
         ddb.send(new PutCommand({
           TableName: TABLE,
-          Item: { pk: `YEAR#${yearId}`, sk: 'META', yearId, label, startedAt: now, endedAt: null },
+          Item: { pk: `CLASSROOM#${cid}`, sk: `YEAR#${yearId}`, yearId, label, startedAt: now, endedAt: null },
         })),
         ddb.send(new PutCommand({
           TableName: TABLE,
-          Item: { pk: 'META', sk: 'ACTIVE_YEAR', yearId, label },
+          Item: { pk: `CLASSROOM#${cid}`, sk: 'ACTIVE_YEAR', yearId, label },
         })),
       ]);
 
       return respond(201, { yearId, label, startedAt: now });
     }
-
-    // POST /school-years/end
-    if (method === 'POST' && path === '/school-years/end') {
-      const active = await getActiveYear();
+    if (rest === '/school-years/end' && method === 'POST') {
+      const active = await getActiveYear(cid);
       if (!active) return respond(400, { error: 'No active year' });
       const now = new Date().toISOString();
       await Promise.all([
         ddb.send(new UpdateCommand({
-          TableName: TABLE, Key: { pk: `YEAR#${active.yearId}`, sk: 'META' },
+          TableName: TABLE, Key: { pk: `CLASSROOM#${cid}`, sk: `YEAR#${active.yearId}` },
           UpdateExpression: 'SET endedAt = :now',
           ExpressionAttributeValues: { ':now': now },
         })),
         ddb.send(new DeleteCommand({
-          TableName: TABLE, Key: { pk: 'META', sk: 'ACTIVE_YEAR' },
+          TableName: TABLE, Key: { pk: `CLASSROOM#${cid}`, sk: 'ACTIVE_YEAR' },
         })),
       ]);
       return respond(200, { endedAt: now });
     }
 
-    // ===== Students =====
-
-    // GET /students  - returns profiles with computed streak; ?year=X for archive
-    if (method === 'GET' && path === '/students') {
-      const archiveYear = query.year;
-      const result = await ddb.send(new ScanCommand({ TableName: TABLE }));
-      const profiles = [];
-      const allEventsByStudent = {};
-      const archiveEventsByStudent = {};
-      for (const item of result.Items || []) {
-        if (item.sk === 'PROFILE') profiles.push(item);
-        else if (item.sk?.startsWith('EVENT#')) {
-          (allEventsByStudent[item.pk] ||= []).push(item);
-          if (archiveYear && item.yearId === archiveYear) {
-            (archiveEventsByStudent[item.pk] ||= []).push(item);
+    // ===== Students (collection) =====
+    if (rest === '/students') {
+      if (method === 'GET') {
+        const archiveYear = query.year;
+        const profiles = await listClassroomItems(cid, 'STUDENT_PROFILE#');
+        const events = await listClassroomItems(cid, 'STUDENT_EVENT#');
+        const positiveByStudent = {};
+        const archiveByStudent = {};
+        for (const e of events) {
+          if (e.delta > 0) (positiveByStudent[e.studentId] ||= []).push(e.timestamp);
+          if (archiveYear && e.yearId === archiveYear) {
+            (archiveByStudent[e.studentId] ||= []).push(e);
           }
         }
+        const students = profiles.map(p => {
+          const streak = computeStreak(positiveByStudent[p.id] || []);
+          if (archiveYear) {
+            const yearEvents = archiveByStudent[p.id] || [];
+            const points = yearEvents.reduce((sum, e) => sum + (e.delta || 0), 0);
+            return { ...p, points, streak: 0, archiveYear };
+          }
+          return { ...p, streak };
+        });
+        return respond(200, { students, archiveYear: archiveYear || null });
       }
-      const students = profiles.map(p => {
-        const positiveTs = (allEventsByStudent[p.pk] || [])
-          .filter(e => e.delta > 0)
-          .map(e => e.timestamp);
-        const streak = computeStreak(positiveTs);
-        if (archiveYear) {
-          const yearEvents = archiveEventsByStudent[p.pk] || [];
-          const points = yearEvents.reduce((sum, e) => sum + (e.delta || 0), 0);
-          return { ...p, points, streak: 0, archiveYear };
-        }
-        return { ...p, streak };
-      });
-      return respond(200, { students, archiveYear: archiveYear || null });
-    }
-
-    // POST /students
-    if (method === 'POST' && path === '/students') {
-      const body = JSON.parse(event.body || '{}');
-      const id = randomUUID();
-      const student = {
-        pk: `STUDENT#${id}`, sk: 'PROFILE',
-        id, name: body.name || 'New student', grade: body.grade || '',
-        points: 0, photo: body.photo || '', notes: body.notes || '',
-        createdAt: new Date().toISOString(),
-      };
-      await ddb.send(new PutCommand({ TableName: TABLE, Item: student }));
-      return respond(201, student);
+      if (method === 'POST') {
+        const body = JSON.parse(event.body || '{}');
+        const id = randomUUID();
+        const student = {
+          pk: `CLASSROOM#${cid}`, sk: `STUDENT_PROFILE#${id}`,
+          id, name: body.name || 'New student', grade: body.grade || '',
+          points: 0, photo: body.photo || '', notes: body.notes || '',
+          createdAt: new Date().toISOString(),
+        };
+        await ddb.send(new PutCommand({ TableName: TABLE, Item: student }));
+        return respond(201, student);
+      }
     }
 
     // POST /students/bulk-points
-    if (method === 'POST' && path === '/students/bulk-points') {
-      const active = await getActiveYear();
+    if (rest === '/students/bulk-points' && method === 'POST') {
+      const active = await getActiveYear(cid);
       if (!active) return respond(400, { error: 'No active school year' });
       const body = JSON.parse(event.body || '{}');
       const delta = parseInt(body.delta, 10);
       const ids = Array.isArray(body.ids) ? body.ids : [];
-      if (isNaN(delta) || ids.length === 0) {
-        return respond(400, { error: 'delta and ids[] required' });
-      }
+      if (isNaN(delta) || ids.length === 0) return respond(400, { error: 'delta and ids[] required' });
       const reason = body.reason || (delta > 0 ? 'Points awarded' : 'Points removed');
       const timestamp = new Date().toISOString();
-      await Promise.all(ids.flatMap(sid => {
-        const spk = `STUDENT#${sid}`;
-        return [
-          ddb.send(new UpdateCommand({
-            TableName: TABLE, Key: { pk: spk, sk: 'PROFILE' },
-            UpdateExpression: 'ADD points :d',
-            ConditionExpression: 'attribute_exists(pk)',
-            ExpressionAttributeValues: { ':d': delta },
-          })),
-          ddb.send(new PutCommand({
-            TableName: TABLE,
-            Item: { pk: spk, sk: `EVENT#${timestamp}`, delta, reason, timestamp, yearId: active.yearId },
-          })),
-        ];
-      }));
+      await Promise.all(ids.flatMap(sid => [
+        ddb.send(new UpdateCommand({
+          TableName: TABLE, Key: { pk: `CLASSROOM#${cid}`, sk: `STUDENT_PROFILE#${sid}` },
+          UpdateExpression: 'ADD points :d',
+          ConditionExpression: 'attribute_exists(pk)',
+          ExpressionAttributeValues: { ':d': delta },
+        })),
+        ddb.send(new PutCommand({
+          TableName: TABLE,
+          Item: { pk: `CLASSROOM#${cid}`, sk: `STUDENT_EVENT#${sid}#${timestamp}`, studentId: sid, delta, reason, timestamp, yearId: active.yearId },
+        })),
+      ]));
       return respond(200, { count: ids.length, delta, reason, timestamp });
     }
 
-    // GET /analytics/top-reasons?days=30&year=X
-    if (method === 'GET' && path === '/analytics/top-reasons') {
+    // Top reasons
+    if (rest === '/analytics/top-reasons' && method === 'GET') {
       const days = parseInt(query.days || '30', 10);
       const yearId = query.year;
       const cutoff = new Date(Date.now() - days * 86400000).toISOString();
-      const filters = ['begins_with(sk, :prefix)', '#ts >= :cutoff', 'delta > :zero'];
-      const values = { ':prefix': 'EVENT#', ':cutoff': cutoff, ':zero': 0 };
-      const names = { '#ts': 'timestamp' };
-      if (yearId) {
-        filters.push('yearId = :yearId');
-        values[':yearId'] = yearId;
-      }
-      const result = await ddb.send(new ScanCommand({
-        TableName: TABLE,
-        FilterExpression: filters.join(' AND '),
-        ExpressionAttributeNames: names,
-        ExpressionAttributeValues: values,
-      }));
+      const events = await listClassroomItems(cid, 'STUDENT_EVENT#');
       const counts = {};
-      for (const item of result.Items || []) {
-        const reason = item.reason || 'No reason';
-        counts[reason] = (counts[reason] || 0) + 1;
+      for (const e of events) {
+        if ((e.delta || 0) <= 0) continue;
+        if (e.timestamp < cutoff) continue;
+        if (yearId && e.yearId !== yearId) continue;
+        const r = e.reason || 'No reason';
+        counts[r] = (counts[r] || 0) + 1;
       }
       const reasons = Object.entries(counts)
         .map(([reason, count]) => ({ reason, count }))
@@ -270,24 +425,21 @@ exports.handler = async (event) => {
       return respond(200, { reasons, days, yearId: yearId || null });
     }
 
-    // Routes with {id}
-    const idMatch = path.match(/^\/students\/([^/]+)(\/.*)?$/);
-    if (idMatch) {
-      const id = idMatch[1];
-      const sub = idMatch[2] || '';
-      const pk = `STUDENT#${id}`;
+    // Per-student routes
+    const studentMatch = rest.match(/^\/students\/([^/]+)(\/.*)?$/);
+    if (studentMatch) {
+      const sid = studentMatch[1];
+      const sub = studentMatch[2] || '';
+      const profileKey = { pk: `CLASSROOM#${cid}`, sk: `STUDENT_PROFILE#${sid}` };
 
-      // GET /students/{id}  ?year=X for archive
       if (method === 'GET' && !sub) {
         const archiveYear = query.year;
-        const profile = await ddb.send(new GetCommand({
-          TableName: TABLE, Key: { pk, sk: 'PROFILE' },
-        }));
+        const profile = await ddb.send(new GetCommand({ TableName: TABLE, Key: profileKey }));
         if (!profile.Item) return respond(404, { error: 'Not found' });
         const events = await ddb.send(new QueryCommand({
           TableName: TABLE,
           KeyConditionExpression: 'pk = :pk AND begins_with(sk, :prefix)',
-          ExpressionAttributeValues: { ':pk': pk, ':prefix': 'EVENT#' },
+          ExpressionAttributeValues: { ':pk': `CLASSROOM#${cid}`, ':prefix': `STUDENT_EVENT#${sid}#` },
           ScanIndexForward: false, Limit: 200,
         }));
         let history = events.Items || [];
@@ -300,7 +452,6 @@ exports.handler = async (event) => {
         return respond(200, { ...payload, history });
       }
 
-      // PATCH /students/{id}
       if (method === 'PATCH' && !sub) {
         const body = JSON.parse(event.body || '{}');
         const allowed = ['name', 'grade', 'photo', 'notes'];
@@ -312,7 +463,7 @@ exports.handler = async (event) => {
         }
         if (!sets.length) return respond(400, { error: 'No valid fields' });
         const result = await ddb.send(new UpdateCommand({
-          TableName: TABLE, Key: { pk, sk: 'PROFILE' },
+          TableName: TABLE, Key: profileKey,
           UpdateExpression: `SET ${sets.join(', ')}`,
           ExpressionAttributeNames: names, ExpressionAttributeValues: values,
           ReturnValues: 'ALL_NEW',
@@ -320,25 +471,22 @@ exports.handler = async (event) => {
         return respond(200, result.Attributes);
       }
 
-      // DELETE /students/{id}
       if (method === 'DELETE' && !sub) {
-        await ddb.send(new DeleteCommand({ TableName: TABLE, Key: { pk, sk: 'PROFILE' } }));
+        await ddb.send(new DeleteCommand({ TableName: TABLE, Key: profileKey }));
         return respond(204, {});
       }
 
-      // POST /students/{id}/points
       if (method === 'POST' && sub === '/points') {
-        const active = await getActiveYear();
+        const active = await getActiveYear(cid);
         if (!active) return respond(400, { error: 'No active school year' });
         const body = JSON.parse(event.body || '{}');
         const delta = parseInt(body.delta, 10);
         if (isNaN(delta)) return respond(400, { error: 'delta required' });
         const reason = body.reason || (delta > 0 ? 'Points awarded' : 'Points removed');
         const timestamp = new Date().toISOString();
-
         const [updated] = await Promise.all([
           ddb.send(new UpdateCommand({
-            TableName: TABLE, Key: { pk, sk: 'PROFILE' },
+            TableName: TABLE, Key: profileKey,
             UpdateExpression: 'ADD points :d',
             ConditionExpression: 'attribute_exists(pk)',
             ExpressionAttributeValues: { ':d': delta },
@@ -346,27 +494,22 @@ exports.handler = async (event) => {
           })),
           ddb.send(new PutCommand({
             TableName: TABLE,
-            Item: { pk, sk: `EVENT#${timestamp}`, delta, reason, timestamp, yearId: active.yearId },
+            Item: { pk: `CLASSROOM#${cid}`, sk: `STUDENT_EVENT#${sid}#${timestamp}`, studentId: sid, delta, reason, timestamp, yearId: active.yearId },
           })),
         ]);
         return respond(200, { ...updated.Attributes, eventTimestamp: timestamp });
       }
 
-      // DELETE /students/{id}/events/{timestamp}
       if (method === 'DELETE' && sub.startsWith('/events/')) {
         const timestamp = decodeURIComponent(sub.slice('/events/'.length));
-        const sk = `EVENT#${timestamp}`;
-        const existing = await ddb.send(new GetCommand({
-          TableName: TABLE, Key: { pk, sk },
-        }));
+        const eventKey = { pk: `CLASSROOM#${cid}`, sk: `STUDENT_EVENT#${sid}#${timestamp}` };
+        const existing = await ddb.send(new GetCommand({ TableName: TABLE, Key: eventKey }));
         if (!existing.Item) return respond(404, { error: 'Event not found' });
-        const active = await getActiveYear();
-        // Reverse points only on the profile (current year). If the event is from a
-        // past year, profile.points isn't affected by it anymore, but we still remove the event.
-        const ops = [ddb.send(new DeleteCommand({ TableName: TABLE, Key: { pk, sk } }))];
+        const active = await getActiveYear(cid);
+        const ops = [ddb.send(new DeleteCommand({ TableName: TABLE, Key: eventKey }))];
         if (existing.Item.yearId === active?.yearId) {
           ops.push(ddb.send(new UpdateCommand({
-            TableName: TABLE, Key: { pk, sk: 'PROFILE' },
+            TableName: TABLE, Key: profileKey,
             UpdateExpression: 'ADD points :d',
             ExpressionAttributeValues: { ':d': -existing.Item.delta },
           })));
@@ -375,9 +518,8 @@ exports.handler = async (event) => {
         return respond(204, {});
       }
 
-      // GET /students/{id}/photo-upload
       if (method === 'GET' && sub === '/photo-upload') {
-        const key = `students/${id}/${Date.now()}.jpg`;
+        const key = `classrooms/${cid}/students/${sid}/${Date.now()}.jpg`;
         const url = await getSignedUrl(s3, new PutObjectCommand({
           Bucket: PHOTO_BUCKET, Key: key, ContentType: 'image/jpeg',
         }), { expiresIn: 300 });

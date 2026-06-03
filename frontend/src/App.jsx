@@ -3,9 +3,11 @@ import { Users, BarChart3, Settings } from 'lucide-react';
 import { useAuth } from './hooks/useAuth';
 import { useStudents } from './hooks/useStudents';
 import { useSchoolYear } from './hooks/useSchoolYear';
+import { useClassrooms } from './hooks/useClassrooms';
 import { createApiClient } from './api';
 import { theme } from './theme';
 import { LoginScreen } from './components/login/LoginScreen';
+import { CreateClassroomScreen } from './components/onboarding/CreateClassroomScreen';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { StudentProfile } from './components/profile/StudentProfile';
 import { StatsScreen } from './components/stats/StatsScreen';
@@ -23,8 +25,10 @@ const TABS = [
 export function App() {
   const auth = useAuth();
   const api = useMemo(() => auth.idToken ? createApiClient(auth.idToken) : null, [auth.idToken]);
-  const studentsApi = useStudents(auth.idToken);
-  const schoolYear = useSchoolYear(api);
+  const classrooms = useClassrooms(api);
+  const cid = classrooms.activeId;
+  const studentsApi = useStudents(api, cid);
+  const schoolYear = useSchoolYear(api, cid);
   const [activeTab, setActiveTab] = useState('students');
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -80,10 +84,10 @@ export function App() {
   }, [studentsApi]);
 
   const handlePhotoUpload = useCallback(async (file) => {
-    if (!selectedStudent || !api) return;
+    if (!selectedStudent || !api || !cid) return;
     setUploadingPhoto(true);
     try {
-      const { url, publicUrl } = await api.getPhotoUploadUrl(selectedStudent.id);
+      const { url, publicUrl } = await api.getPhotoUploadUrl(cid, selectedStudent.id);
       await fetch(url, { method: 'PUT', body: file, headers: { 'Content-Type': 'image/jpeg' } });
       const updated = await studentsApi.updateStudent(selectedStudent.id, { photo: publicUrl });
       setSelectedStudent(prev => prev ? { ...prev, photo: updated.photo } : prev);
@@ -92,7 +96,7 @@ export function App() {
     } finally {
       setUploadingPhoto(false);
     }
-  }, [selectedStudent, api, studentsApi]);
+  }, [selectedStudent, api, cid, studentsApi]);
 
   const handleBulkGrant = useCallback(async (ids, delta, reason) => {
     try {
@@ -109,13 +113,13 @@ export function App() {
 
   const handleStartYear = useCallback(async (label) => {
     await schoolYear.startYear(label);
-    await studentsApi.refresh?.();
+    await studentsApi.refresh();
     setToast({ message: `Started school year: ${label}` });
   }, [schoolYear, studentsApi]);
 
   const handleEndYear = useCallback(async () => {
     await schoolYear.endYear();
-    await studentsApi.refresh?.();
+    await studentsApi.refresh();
     setToast({ message: 'School year ended' });
   }, [schoolYear, studentsApi]);
 
@@ -128,6 +132,19 @@ export function App() {
       <LoginScreen
         onSignIn={auth.signIn}
         onSubmitNewPassword={auth.submitNewPassword}
+      />
+    );
+  }
+
+  if (classrooms.loading) {
+    return <FullPageMessage>Loading…</FullPageMessage>;
+  }
+
+  if (classrooms.classrooms.length === 0) {
+    return (
+      <CreateClassroomScreen
+        onCreate={classrooms.createClassroom}
+        onSignOut={auth.signOut}
       />
     );
   }
@@ -145,6 +162,7 @@ export function App() {
     return (
       <>
         <YearArchive
+          classroomId={cid}
           year={archiveYear}
           api={api}
           onBack={() => setArchiveYear(null)}
@@ -180,6 +198,7 @@ export function App() {
           yearLoading={schoolYear.loading}
           error={studentsApi.error}
           activeYear={schoolYear.active}
+          classroomName={classrooms.active?.classroomName}
           onDismissError={() => studentsApi.setError('')}
           onSelectStudent={openStudent}
           onCreateStudent={studentsApi.createStudent}
@@ -188,12 +207,13 @@ export function App() {
         />
       )}
       {activeTab === 'stats' && (
-        <StatsScreen students={studentsApi.students} api={api} activeYear={schoolYear.active} />
+        <StatsScreen students={studentsApi.students} api={api} classroomId={cid} activeYear={schoolYear.active} />
       )}
       {activeTab === 'settings' && (
         <SettingsScreen
-          email={auth.email}
+          api={api}
           onSignOut={auth.signOut}
+          classroomsState={classrooms}
           schoolYear={schoolYear}
           onStartYear={handleStartYear}
           onEndYear={handleEndYear}

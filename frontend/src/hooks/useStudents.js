@@ -1,80 +1,68 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { createApiClient } from '../api';
+import { useState, useEffect, useCallback } from 'react';
 
-export function useStudents(idToken) {
+export function useStudents(api, classroomId) {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const api = useMemo(() => idToken ? createApiClient(idToken) : null, [idToken]);
-
   const refresh = useCallback(async () => {
-    if (!api) return;
+    if (!api || !classroomId) { setStudents([]); return; }
     setLoading(true);
     try {
-      const data = await api.listStudents();
+      const data = await api.listStudents(classroomId);
       setStudents(data.students || []);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [api]);
+  }, [api, classroomId]);
 
   useEffect(() => { refresh(); }, [refresh]);
 
   const getStudent = useCallback(async (id) => {
-    return api.getStudent(id);
-  }, [api]);
+    return api.getStudent(classroomId, id);
+  }, [api, classroomId]);
 
   const createStudent = useCallback(async (data) => {
-    const created = await api.createStudent(data);
+    const created = await api.createStudent(classroomId, data);
     setStudents(prev => [...prev, created]);
     return created;
-  }, [api]);
+  }, [api, classroomId]);
 
   const updateStudent = useCallback(async (id, patch) => {
-    const updated = await api.updateStudent(id, patch);
+    const updated = await api.updateStudent(classroomId, id, patch);
     setStudents(prev => prev.map(s => s.id === id ? { ...s, ...updated } : s));
     return updated;
-  }, [api]);
+  }, [api, classroomId]);
 
   const deleteStudent = useCallback(async (id) => {
-    await api.deleteStudent(id);
+    await api.deleteStudent(classroomId, id);
     setStudents(prev => prev.filter(s => s.id !== id));
-  }, [api]);
+  }, [api, classroomId]);
 
   const grantPoints = useCallback(async (id, delta, reason) => {
-    const result = await api.grantPoints(id, delta, reason);
-    const fresh = await api.getStudent(id);
+    const result = await api.grantPoints(classroomId, id, delta, reason);
+    const fresh = await api.getStudent(classroomId, id);
     setStudents(prev => prev.map(s => s.id === id ? { ...s, points: fresh.points } : s));
     return { ...fresh, eventTimestamp: result.eventTimestamp };
-  }, [api]);
+  }, [api, classroomId]);
 
   const deleteEvent = useCallback(async (id, timestamp) => {
-    await api.deleteEvent(id, timestamp);
-    const fresh = await api.getStudent(id);
+    await api.deleteEvent(classroomId, id, timestamp);
+    const fresh = await api.getStudent(classroomId, id);
     setStudents(prev => prev.map(s => s.id === id ? { ...s, points: fresh.points } : s));
     return fresh;
-  }, [api]);
+  }, [api, classroomId]);
 
   const bulkGrantPoints = useCallback(async (ids, delta, reason) => {
-    await api.bulkGrantPoints(ids, delta, reason);
+    await api.bulkGrantPoints(classroomId, ids, delta, reason);
     setStudents(prev => prev.map(s => ids.includes(s.id) ? { ...s, points: s.points + delta } : s));
-  }, [api]);
+  }, [api, classroomId]);
 
   return {
-    students,
-    loading,
-    error,
-    setError,
-    refresh,
-    getStudent,
-    createStudent,
-    updateStudent,
-    deleteStudent,
-    grantPoints,
-    deleteEvent,
-    bulkGrantPoints,
+    students, loading, error, setError, refresh,
+    getStudent, createStudent, updateStudent, deleteStudent,
+    grantPoints, deleteEvent, bulkGrantPoints,
   };
 }

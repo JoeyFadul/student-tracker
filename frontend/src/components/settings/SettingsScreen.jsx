@@ -2,27 +2,47 @@ import { LogOut } from 'lucide-react';
 import { theme } from '../../theme';
 import { ScreenHeader } from '../ui/ScreenHeader';
 import { SchoolYearSection } from './SchoolYearSection';
+import { ClassroomSection } from './ClassroomSection';
 import { usePressable } from '../../hooks/usePressable';
 
 export function SettingsScreen({
+  api,
   onSignOut,
+  classroomsState,
   schoolYear,
   onStartYear,
   onEndYear,
   onOpenArchive,
 }) {
+  const isOwner = classroomsState.active?.role === 'owner';
+
   return (
     <div style={pageStyle}>
       <div style={containerStyle}>
         <ScreenHeader title="Settings" />
 
-        <SchoolYearSection
-          active={schoolYear.active}
-          years={schoolYear.years}
-          onStart={onStartYear}
-          onEnd={onEndYear}
-          onOpenArchive={onOpenArchive}
+        <ClassroomSection
+          api={api}
+          classrooms={classroomsState.classrooms}
+          active={classroomsState.active}
+          onSwitch={classroomsState.setActiveId}
+          onCreate={classroomsState.createClassroom}
+          onRename={classroomsState.renameClassroom}
+          onDelete={classroomsState.deleteClassroom}
+          isOwner={isOwner}
         />
+
+        {classroomsState.active && (
+          <div style={{ marginTop: 18 }}>
+            <SchoolYearSection
+              active={schoolYear.active}
+              years={schoolYear.years}
+              onStart={onStartYear}
+              onEnd={onEndYear}
+              onOpenArchive={onOpenArchive}
+            />
+          </div>
+        )}
 
         <SignOutRow onClick={onSignOut} />
       </div>
@@ -33,11 +53,7 @@ export function SettingsScreen({
 function SignOutRow({ onClick }) {
   const { handlers, pressedStyle } = usePressable();
   return (
-    <button
-      onClick={onClick}
-      {...handlers}
-      style={{ ...signOutStyle, ...pressedStyle }}
-    >
+    <button onClick={onClick} {...handlers} style={{ ...signOutStyle, ...pressedStyle }}>
       <LogOut size={18} />
       <span>Sign out</span>
     </button>
@@ -74,4 +90,5 @@ const signOutStyle = {
   cursor: 'pointer',
   transition: 'transform 0.1s ease',
   WebkitTapHighlightColor: 'transparent',
+  marginTop: 18,
 };

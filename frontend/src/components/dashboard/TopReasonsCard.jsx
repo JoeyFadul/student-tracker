@@ -2,18 +2,18 @@ import { useEffect, useState } from 'react';
 import { theme } from '../../theme';
 import { Card } from '../ui/Card';
 
-export function TopReasonsCard({ api, refreshKey, yearId }) {
+export function TopReasonsCard({ api, classroomId, refreshKey, yearId }) {
   const [reasons, setReasons] = useState(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!api) return;
+    if (!api || !classroomId) return;
     let cancelled = false;
-    api.getTopReasons(30, yearId)
+    api.getTopReasons(classroomId, 30, yearId)
       .then(data => { if (!cancelled) setReasons(data.reasons || []); })
       .catch(err => { if (!cancelled) setError(err.message); });
     return () => { cancelled = true; };
-  }, [api, refreshKey, yearId]);
+  }, [api, classroomId, refreshKey, yearId]);
 
   if (error || !reasons || reasons.length === 0) return null;
   const max = reasons[0].count;

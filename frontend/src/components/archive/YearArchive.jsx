@@ -6,14 +6,15 @@ import { getTier } from '../../lib/tiers';
 import { usePressable } from '../../hooks/usePressable';
 import { YearStudentDetail } from './YearStudentDetail';
 
-export function YearArchive({ year, api, onBack }) {
+export function YearArchive({ classroomId, year, api, onBack }) {
   const [students, setStudents] = useState(null);
   const [error, setError] = useState('');
   const [selected, setSelected] = useState(null);
 
   useEffect(() => {
+    if (!classroomId) return;
     let cancelled = false;
-    api.listStudents(year.yearId)
+    api.listStudents(classroomId, year.yearId)
       .then(data => {
         if (cancelled) return;
         const sorted = [...(data.students || [])].sort((a, b) => b.points - a.points);
@@ -21,11 +22,12 @@ export function YearArchive({ year, api, onBack }) {
       })
       .catch(err => { if (!cancelled) setError(err.message); });
     return () => { cancelled = true; };
-  }, [api, year.yearId]);
+  }, [api, classroomId, year.yearId]);
 
   if (selected) {
     return (
       <YearStudentDetail
+        classroomId={classroomId}
         year={year}
         student={selected}
         api={api}

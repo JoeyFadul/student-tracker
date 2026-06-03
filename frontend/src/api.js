@@ -15,78 +15,48 @@ export function createApiClient(idToken) {
     'Authorization': `Bearer ${idToken}`,
   };
 
+  const get = (url) => fetch(url, { headers }).then(handleResponse);
+  const post = (url, body) => fetch(url, { method: 'POST', headers, body: JSON.stringify(body ?? {}) }).then(handleResponse);
+  const patch = (url, body) => fetch(url, { method: 'PATCH', headers, body: JSON.stringify(body) }).then(handleResponse);
+  const del = (url) => fetch(url, { method: 'DELETE', headers }).then(handleResponse);
+
   const yearQuery = (year) => year ? `?year=${encodeURIComponent(year)}` : '';
+  const cBase = (cid) => `${API_URL}/classrooms/${cid}`;
 
   return {
-    listStudents: (year) =>
-      fetch(`${API_URL}/students${yearQuery(year)}`, { headers }).then(handleResponse),
+    // Classrooms
+    listClassrooms: () => get(`${API_URL}/classrooms`),
+    createClassroom: (name) => post(`${API_URL}/classrooms`, { name }),
+    getClassroom: (cid) => get(cBase(cid)),
+    renameClassroom: (cid, name) => patch(cBase(cid), { name }),
+    deleteClassroom: (cid) => del(cBase(cid)),
 
-    getStudent: (id, year) =>
-      fetch(`${API_URL}/students/${id}${yearQuery(year)}`, { headers }).then(handleResponse),
+    // Members
+    listMembers: (cid) => get(`${cBase(cid)}/members`),
+    addMember: (cid, email) => post(`${cBase(cid)}/members`, { email }),
+    removeMember: (cid, email) => del(`${cBase(cid)}/members/${encodeURIComponent(email)}`),
 
-    createStudent: (data) =>
-      fetch(`${API_URL}/students`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(data),
-      }).then(handleResponse),
+    // Students
+    listStudents: (cid, year) => get(`${cBase(cid)}/students${yearQuery(year)}`),
+    getStudent: (cid, id, year) => get(`${cBase(cid)}/students/${id}${yearQuery(year)}`),
+    createStudent: (cid, data) => post(`${cBase(cid)}/students`, data),
+    updateStudent: (cid, id, patchBody) => patch(`${cBase(cid)}/students/${id}`, patchBody),
+    deleteStudent: (cid, id) => del(`${cBase(cid)}/students/${id}`),
+    grantPoints: (cid, id, delta, reason) => post(`${cBase(cid)}/students/${id}/points`, { delta, reason }),
+    getPhotoUploadUrl: (cid, id) => get(`${cBase(cid)}/students/${id}/photo-upload`),
+    deleteEvent: (cid, id, timestamp) => del(`${cBase(cid)}/students/${id}/events/${encodeURIComponent(timestamp)}`),
+    bulkGrantPoints: (cid, ids, delta, reason) => post(`${cBase(cid)}/students/bulk-points`, { ids, delta, reason }),
 
-    updateStudent: (id, patch) =>
-      fetch(`${API_URL}/students/${id}`, {
-        method: 'PATCH',
-        headers,
-        body: JSON.stringify(patch),
-      }).then(handleResponse),
+    // School years
+    listSchoolYears: (cid) => get(`${cBase(cid)}/school-years`),
+    startSchoolYear: (cid, label) => post(`${cBase(cid)}/school-years/start`, { label }),
+    endSchoolYear: (cid) => post(`${cBase(cid)}/school-years/end`),
 
-    deleteStudent: (id) =>
-      fetch(`${API_URL}/students/${id}`, {
-        method: 'DELETE',
-        headers,
-      }).then(handleResponse),
-
-    grantPoints: (id, delta, reason) =>
-      fetch(`${API_URL}/students/${id}/points`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ delta, reason }),
-      }).then(handleResponse),
-
-    getPhotoUploadUrl: (id) =>
-      fetch(`${API_URL}/students/${id}/photo-upload`, { headers }).then(handleResponse),
-
-    deleteEvent: (id, timestamp) =>
-      fetch(`${API_URL}/students/${id}/events/${encodeURIComponent(timestamp)}`, {
-        method: 'DELETE',
-        headers,
-      }).then(handleResponse),
-
-    bulkGrantPoints: (ids, delta, reason) =>
-      fetch(`${API_URL}/students/bulk-points`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ ids, delta, reason }),
-      }).then(handleResponse),
-
-    getTopReasons: (days = 30, year) => {
+    // Analytics
+    getTopReasons: (cid, days = 30, year) => {
       const params = new URLSearchParams({ days });
       if (year) params.set('year', year);
-      return fetch(`${API_URL}/analytics/top-reasons?${params}`, { headers }).then(handleResponse);
+      return get(`${cBase(cid)}/analytics/top-reasons?${params}`);
     },
-
-    listSchoolYears: () =>
-      fetch(`${API_URL}/school-years`, { headers }).then(handleResponse),
-
-    startSchoolYear: (label) =>
-      fetch(`${API_URL}/school-years/start`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ label }),
-      }).then(handleResponse),
-
-    endSchoolYear: () =>
-      fetch(`${API_URL}/school-years/end`, {
-        method: 'POST',
-        headers,
-      }).then(handleResponse),
   };
 }

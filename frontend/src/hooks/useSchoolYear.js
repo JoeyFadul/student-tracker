@@ -1,16 +1,18 @@
 import { useState, useEffect, useCallback } from 'react';
 
-export function useSchoolYear(api) {
+export function useSchoolYear(api, classroomId) {
   const [active, setActive] = useState(null);
   const [years, setYears] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   const refresh = useCallback(async () => {
-    if (!api) return;
+    if (!api || !classroomId) {
+      setActive(null); setYears([]); setLoading(false); return;
+    }
     setLoading(true);
     try {
-      const data = await api.listSchoolYears();
+      const data = await api.listSchoolYears(classroomId);
       setActive(data.active || null);
       setYears(data.years || []);
       setError('');
@@ -19,19 +21,19 @@ export function useSchoolYear(api) {
     } finally {
       setLoading(false);
     }
-  }, [api]);
+  }, [api, classroomId]);
 
   useEffect(() => { refresh(); }, [refresh]);
 
   const startYear = useCallback(async (label) => {
-    await api.startSchoolYear(label);
+    await api.startSchoolYear(classroomId, label);
     await refresh();
-  }, [api, refresh]);
+  }, [api, classroomId, refresh]);
 
   const endYear = useCallback(async () => {
-    await api.endSchoolYear();
+    await api.endSchoolYear(classroomId);
     await refresh();
-  }, [api, refresh]);
+  }, [api, classroomId, refresh]);
 
   return { active, years, loading, error, refresh, startYear, endYear };
 }
@@ -45,7 +47,6 @@ export function suggestYearLabel(now = new Date()) {
 export function deriveYearOptions(now = new Date()) {
   const month = now.getMonth();
   const year = now.getFullYear();
-  // Academic year start: if we're in July or later, this year; else last year.
   const academicStart = month >= 6 ? year : year - 1;
   const options = [];
   for (let i = -1; i <= 2; i++) {

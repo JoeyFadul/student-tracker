@@ -21,6 +21,7 @@ export function Dashboard({
   yearLoading,
   error,
   activeYear,
+  classroomName,
   onDismissError,
   onSelectStudent,
   onCreateStudent,
@@ -77,7 +78,7 @@ export function Dashboard({
     return (
       <div style={pageStyle}>
         <div style={containerStyle}>
-          <ScreenHeader title="Students" subtitle="" />
+          <ScreenHeader title={classroomName || 'Students'} subtitle="" />
           <DashboardSkeleton />
         </div>
       </div>
@@ -88,7 +89,7 @@ export function Dashboard({
     return (
       <div style={pageStyle}>
         <div style={containerStyle}>
-          <ScreenHeader title="Students" subtitle="No active school year" />
+          <ScreenHeader title={classroomName || 'Students'} subtitle="No active school year" />
           <ErrorBanner message={error} onDismiss={onDismissError} />
           <NoYearEmptyState onGoToSettings={onGoToSettings} />
         </div>
@@ -100,7 +101,7 @@ export function Dashboard({
     <div style={pageStyle}>
       <div style={{ ...containerStyle, paddingBottom: bottomPadding }}>
         <ScreenHeader
-          title={selectMode ? 'Select students' : 'Students'}
+          title={selectMode ? 'Select students' : (classroomName || 'Students')}
           subtitle={selectMode
             ? `${selectedIds.size} ${selectedIds.size === 1 ? 'selected' : 'selected'}`
             : `${activeYear.label} · ${students.length} ${students.length === 1 ? 'student' : 'students'}`
