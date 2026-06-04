@@ -8,6 +8,11 @@
 //   GET    /classrooms                                 -> list classrooms I'm a member of
 //   POST   /classrooms                                 -> create a classroom (I become owner)
 //
+// Roles: 'owner' and 'member'. The user who creates a classroom is its owner.
+// Owner-only:    rename/delete classroom, invite/remove members, delete school year.
+// Member+owner:  manage students, grant/revoke points (single + bulk), start/end
+//                school year, view archives, upload photos.
+//
 // Per-classroom routes (caller must be a member):
 //   GET    /classrooms/{cid}                           -> details + my role
 //   PATCH  /classrooms/{cid}                           -> rename (owner only)
@@ -45,7 +50,7 @@
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
 const {
   DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand,
-  DeleteCommand, QueryCommand
+  DeleteCommand, QueryCommand, TransactWriteCommand
 } = require('@aws-sdk/lib-dynamodb');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
@@ -56,14 +61,11 @@ const s3 = new S3Client({});
 const TABLE = process.env.TABLE_NAME;
 const PHOTO_BUCKET = process.env.PHOTO_BUCKET;
 
+// CORS is handled by API Gateway HTTP API's CorsConfiguration; the Lambda
+// shouldn't echo Access-Control-* headers itself (they'd shadow the gateway's).
 const respond = (status, body) => ({
   statusCode: status,
-  headers: {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type,Authorization',
-    'Access-Control-Allow-Methods': 'GET,POST,PATCH,DELETE,OPTIONS',
-  },
+  headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify(body),
 });
 
@@ -352,14 +354,14 @@ exports.handler = async (event) => {
 
       const active = await getActiveYear(cid);
       const isActiveYear = active?.yearId === yearId;
-
-      // Find all events tagged with this year
       const allEvents = await listClassroomItems(cid, 'STUDENT_EVENT#');
       const yearEvents = allEvents.filter(e => e.yearId === yearId);
 
-      const ops = [];
-
-      // If we're deleting the active year, reverse current-year points on profiles
+      // Build the full list of transactional writes:
+      // - one Delete per event in the year
+      // - if active: one Update per student reversing their delta sum, plus delete ACTIVE_YEAR
+      // - one Delete for the YEAR meta itself
+      const writes = [];
       if (isActiveYear) {
         const sumsByStudent = {};
         for (const e of yearEvents) {
@@ -367,30 +369,37 @@ exports.handler = async (event) => {
         }
         for (const [sid, sum] of Object.entries(sumsByStudent)) {
           if (sum === 0) continue;
-          ops.push(ddb.send(new UpdateCommand({
-            TableName: TABLE, Key: { pk: `CLASSROOM#${cid}`, sk: `STUDENT_PROFILE#${sid}` },
-            UpdateExpression: 'ADD points :d',
-            ExpressionAttributeValues: { ':d': -sum },
-          })));
+          writes.push({
+            Update: {
+              TableName: TABLE, Key: { pk: `CLASSROOM#${cid}`, sk: `STUDENT_PROFILE#${sid}` },
+              UpdateExpression: 'ADD points :d',
+              ConditionExpression: 'attribute_exists(pk)',
+              ExpressionAttributeValues: { ':d': -sum },
+            },
+          });
         }
-        ops.push(ddb.send(new DeleteCommand({
-          TableName: TABLE, Key: { pk: `CLASSROOM#${cid}`, sk: 'ACTIVE_YEAR' },
-        })));
+        writes.push({
+          Delete: { TableName: TABLE, Key: { pk: `CLASSROOM#${cid}`, sk: 'ACTIVE_YEAR' } },
+        });
       }
-
-      // Delete all events for the year
       for (const e of yearEvents) {
-        ops.push(ddb.send(new DeleteCommand({
-          TableName: TABLE, Key: { pk: e.pk, sk: e.sk },
-        })));
+        writes.push({
+          Delete: { TableName: TABLE, Key: { pk: e.pk, sk: e.sk } },
+        });
       }
+      writes.push({
+        Delete: { TableName: TABLE, Key: { pk: `CLASSROOM#${cid}`, sk: `YEAR#${yearId}` } },
+      });
 
-      // Delete the year meta record itself
-      ops.push(ddb.send(new DeleteCommand({
-        TableName: TABLE, Key: { pk: `CLASSROOM#${cid}`, sk: `YEAR#${yearId}` },
-      })));
-
-      await Promise.all(ops);
+      // DynamoDB TransactWriteItems caps at 100 ops per transaction. Chunk while
+      // keeping the YEAR meta delete in the LAST chunk so it commits last — if a
+      // mid-batch fails, the year still has its meta and the operation can be
+      // safely retried.
+      const CHUNK = 100;
+      for (let i = 0; i < writes.length; i += CHUNK) {
+        const slice = writes.slice(i, i + CHUNK);
+        await ddb.send(new TransactWriteCommand({ TransactItems: slice }));
+      }
       return respond(204, {});
     }
 
@@ -433,7 +442,7 @@ exports.handler = async (event) => {
       }
     }
 
-    // POST /students/bulk-points
+    // POST /students/bulk-points - atomic per chunk of <=50 students (100 ops)
     if (rest === '/students/bulk-points' && method === 'POST') {
       const active = await getActiveYear(cid);
       if (!active) return respond(400, { error: 'No active school year' });
@@ -443,18 +452,29 @@ exports.handler = async (event) => {
       if (isNaN(delta) || ids.length === 0) return respond(400, { error: 'delta and ids[] required' });
       const reason = body.reason || (delta > 0 ? 'Points awarded' : 'Points removed');
       const timestamp = new Date().toISOString();
-      await Promise.all(ids.flatMap(sid => [
-        ddb.send(new UpdateCommand({
-          TableName: TABLE, Key: { pk: `CLASSROOM#${cid}`, sk: `STUDENT_PROFILE#${sid}` },
-          UpdateExpression: 'ADD points :d',
-          ConditionExpression: 'attribute_exists(pk)',
-          ExpressionAttributeValues: { ':d': delta },
-        })),
-        ddb.send(new PutCommand({
-          TableName: TABLE,
-          Item: { pk: `CLASSROOM#${cid}`, sk: `STUDENT_EVENT#${sid}#${timestamp}`, studentId: sid, delta, reason, timestamp, yearId: active.yearId },
-        })),
-      ]));
+      const CHUNK = 50;
+      for (let i = 0; i < ids.length; i += CHUNK) {
+        const chunk = ids.slice(i, i + CHUNK);
+        await ddb.send(new TransactWriteCommand({
+          TransactItems: chunk.flatMap(sid => ([
+            {
+              Update: {
+                TableName: TABLE, Key: { pk: `CLASSROOM#${cid}`, sk: `STUDENT_PROFILE#${sid}` },
+                UpdateExpression: 'ADD points :d',
+                ConditionExpression: 'attribute_exists(pk)',
+                ExpressionAttributeValues: { ':d': delta },
+              },
+            },
+            {
+              Put: {
+                TableName: TABLE,
+                Item: { pk: `CLASSROOM#${cid}`, sk: `STUDENT_EVENT#${sid}#${timestamp}`, studentId: sid, delta, reason, timestamp, yearId: active.yearId },
+                ConditionExpression: 'attribute_not_exists(sk)',
+              },
+            },
+          ])),
+        }));
+      }
       return respond(200, { count: ids.length, delta, reason, timestamp });
     }
 
@@ -538,20 +558,27 @@ exports.handler = async (event) => {
         if (isNaN(delta)) return respond(400, { error: 'delta required' });
         const reason = body.reason || (delta > 0 ? 'Points awarded' : 'Points removed');
         const timestamp = new Date().toISOString();
-        const [updated] = await Promise.all([
-          ddb.send(new UpdateCommand({
-            TableName: TABLE, Key: profileKey,
-            UpdateExpression: 'ADD points :d',
-            ConditionExpression: 'attribute_exists(pk)',
-            ExpressionAttributeValues: { ':d': delta },
-            ReturnValues: 'ALL_NEW',
-          })),
-          ddb.send(new PutCommand({
-            TableName: TABLE,
-            Item: { pk: `CLASSROOM#${cid}`, sk: `STUDENT_EVENT#${sid}#${timestamp}`, studentId: sid, delta, reason, timestamp, yearId: active.yearId },
-          })),
-        ]);
-        return respond(200, { ...updated.Attributes, eventTimestamp: timestamp });
+        // Atomic: profile.points increment + event record together.
+        await ddb.send(new TransactWriteCommand({
+          TransactItems: [
+            {
+              Update: {
+                TableName: TABLE, Key: profileKey,
+                UpdateExpression: 'ADD points :d',
+                ConditionExpression: 'attribute_exists(pk)',
+                ExpressionAttributeValues: { ':d': delta },
+              },
+            },
+            {
+              Put: {
+                TableName: TABLE,
+                Item: { pk: `CLASSROOM#${cid}`, sk: `STUDENT_EVENT#${sid}#${timestamp}`, studentId: sid, delta, reason, timestamp, yearId: active.yearId },
+                ConditionExpression: 'attribute_not_exists(sk)',
+              },
+            },
+          ],
+        }));
+        return respond(200, { eventTimestamp: timestamp });
       }
 
       if (method === 'DELETE' && sub.startsWith('/events/')) {
@@ -560,15 +587,28 @@ exports.handler = async (event) => {
         const existing = await ddb.send(new GetCommand({ TableName: TABLE, Key: eventKey }));
         if (!existing.Item) return respond(404, { error: 'Event not found' });
         const active = await getActiveYear(cid);
-        const ops = [ddb.send(new DeleteCommand({ TableName: TABLE, Key: eventKey }))];
-        if (existing.Item.yearId === active?.yearId) {
-          ops.push(ddb.send(new UpdateCommand({
-            TableName: TABLE, Key: profileKey,
-            UpdateExpression: 'ADD points :d',
-            ExpressionAttributeValues: { ':d': -existing.Item.delta },
-          })));
+        const yearMatchesActive = existing.Item.yearId === active?.yearId;
+        const transactItems = [
+          {
+            Delete: {
+              TableName: TABLE, Key: eventKey,
+              ConditionExpression: 'attribute_exists(sk) AND #d = :d',
+              ExpressionAttributeNames: { '#d': 'delta' },
+              ExpressionAttributeValues: { ':d': existing.Item.delta },
+            },
+          },
+        ];
+        if (yearMatchesActive) {
+          transactItems.push({
+            Update: {
+              TableName: TABLE, Key: profileKey,
+              UpdateExpression: 'ADD points :d',
+              ConditionExpression: 'attribute_exists(pk)',
+              ExpressionAttributeValues: { ':d': -existing.Item.delta },
+            },
+          });
         }
-        await Promise.all(ops);
+        await ddb.send(new TransactWriteCommand({ TransactItems: transactItems }));
         return respond(204, {});
       }
 

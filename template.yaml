@@ -6,14 +6,35 @@ Parameters:
   AppName:
     Type: String
     Default: student-tracker
-    Description: Prefix for resource names
+    Description: Prefix for resource names.
+  Env:
+    Type: String
+    Default: prod
+    AllowedValues: [prod, dev]
+    Description: >-
+      Environment suffix for resource names. "prod" keeps the original names
+      so existing data is preserved; "dev" adds a -dev suffix so a parallel
+      stack can be deployed without colliding.
+  AllowedOrigins:
+    Type: CommaDelimitedList
+    Default: "https://welldonestudent.com,https://www.welldonestudent.com,https://d3ck42g5jjmjbj.cloudfront.net"
+    Description: Origins permitted by API + photo bucket CORS. Add localhost entries for dev.
+  AlertEmail:
+    Type: String
+    Default: joefadul@gmail.com
+    Description: Email address subscribed to the CloudWatch alarms SNS topic.
+
+Conditions:
+  IsProd: !Equals [!Ref Env, prod]
 
 Resources:
   # ===== DATA: DynamoDB single-table =====
   StudentsTable:
     Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
-      TableName: !Sub ${AppName}-data
+      TableName: !If [IsProd, !Sub "${AppName}-data", !Sub "${AppName}-${Env}-data"]
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: pk
@@ -31,13 +52,17 @@ Resources:
   # ===== PHOTOS: S3 bucket =====
   PhotoBucket:
     Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
-      BucketName: !Sub ${AppName}-photos-${AWS::AccountId}
+      BucketName: !If [IsProd, !Sub "${AppName}-photos-${AWS::AccountId}", !Sub "${AppName}-${Env}-photos-${AWS::AccountId}"]
       CorsConfiguration:
         CorsRules:
-          - AllowedOrigins: ['*']
+          - AllowedOrigins: !Ref AllowedOrigins
             AllowedMethods: [GET, PUT]
             AllowedHeaders: ['*']
+            ExposedHeaders: [ETag]
+            MaxAge: 3000
       PublicAccessBlockConfiguration:
         BlockPublicPolicy: false
         RestrictPublicBuckets: false
@@ -58,29 +83,47 @@ Resources:
   # ===== AUTH: Cognito user pool =====
   UserPool:
     Type: AWS::Cognito::UserPool
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
-      UserPoolName: !Sub ${AppName}-teachers
+      UserPoolName: !If [IsProd, !Sub "${AppName}-teachers", !Sub "${AppName}-${Env}-teachers"]
       AdminCreateUserConfig:
         AllowAdminCreateUserOnly: true
       Policies:
         PasswordPolicy:
-          MinimumLength: 10
+          MinimumLength: 12
           RequireUppercase: true
           RequireLowercase: true
           RequireNumbers: true
+          RequireSymbols: true
       UsernameAttributes:
         - email
+      # AdvancedSecurityMode requires Cognito PLUS pricing tier ($0.015/MAU).
+      # Re-enable by setting UserPoolTier: PLUS and adding:
+      #   UserPoolAddOns:
+      #     AdvancedSecurityMode: AUDIT
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
 
   UserPoolClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:
       UserPoolId: !Ref UserPool
-      ClientName: !Sub ${AppName}-web
+      ClientName: !If [IsProd, !Sub "${AppName}-web", !Sub "${AppName}-${Env}-web"]
       GenerateSecret: false
+      PreventUserExistenceErrors: ENABLED
       ExplicitAuthFlows:
         - ALLOW_USER_SRP_AUTH
-        - ALLOW_USER_PASSWORD_AUTH
         - ALLOW_REFRESH_TOKEN_AUTH
+      AccessTokenValidity: 60
+      IdTokenValidity: 60
+      RefreshTokenValidity: 7
+      TokenValidityUnits:
+        AccessToken: minutes
+        IdToken: minutes
+        RefreshToken: days
 
   # ===== API: Lambda + HTTP API =====
   # NOTE: CORS preflight (OPTIONS) is handled automatically by the HTTP API's
@@ -90,10 +133,10 @@ Resources:
   ApiFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub ${AppName}-api
+      FunctionName: !If [IsProd, !Sub "${AppName}-api", !Sub "${AppName}-${Env}-api"]
       CodeUri: backend/
       Handler: index.handler
-      Runtime: nodejs20.x
+      Runtime: nodejs22.x
       Timeout: 10
       MemorySize: 256
       Environment:
@@ -126,9 +169,14 @@ Resources:
   HttpApi:
     Type: AWS::Serverless::HttpApi
     Properties:
-      Name: !Sub ${AppName}-api
+      Name: !If [IsProd, !Sub "${AppName}-api", !Sub "${AppName}-${Env}-api"]
+      # Account-level default is 10k req/s burst — way too high for this app.
+      # Per-route throttling caps any single client's blast radius.
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 100
+        ThrottlingRateLimit: 50
       CorsConfiguration:
-        AllowOrigins: ['*']
+        AllowOrigins: !Ref AllowedOrigins
         AllowHeaders:
           - Content-Type
           - Authorization
@@ -153,7 +201,58 @@ Resources:
   WebBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub ${AppName}-web-${AWS::AccountId}
+      BucketName: !If [IsProd, !Sub "${AppName}-web-${AWS::AccountId}", !Sub "${AppName}-${Env}-web-${AWS::AccountId}"]
+
+  # ===== WAF =====
+  # CLOUDFRONT-scope WAF ACLs must live in us-east-1 (we already are).
+  WebAcl:
+    Type: AWS::WAFv2::WebACL
+    Properties:
+      Name: !If [IsProd, !Sub "${AppName}-web-acl", !Sub "${AppName}-${Env}-web-acl"]
+      Scope: CLOUDFRONT
+      DefaultAction:
+        Allow: {}
+      VisibilityConfig:
+        SampledRequestsEnabled: true
+        CloudWatchMetricsEnabled: true
+        MetricName: !If [IsProd, !Sub "${AppName}-web-acl", !Sub "${AppName}-${Env}-web-acl"]
+      Rules:
+        - Name: AWSManagedRulesCommonRuleSet
+          Priority: 0
+          OverrideAction:
+            None: {}
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesCommonRuleSet
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: AWSManagedRulesCommonRuleSet
+        - Name: AWSManagedRulesKnownBadInputsRuleSet
+          Priority: 1
+          OverrideAction:
+            None: {}
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesKnownBadInputsRuleSet
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: AWSManagedRulesKnownBadInputsRuleSet
+        - Name: RateLimit
+          Priority: 2
+          Action:
+            Block: {}
+          Statement:
+            RateBasedStatement:
+              Limit: 2000
+              AggregateKeyType: IP
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: RateLimit
 
   WebOriginAccessControl:
     Type: AWS::CloudFront::OriginAccessControl
@@ -164,6 +263,49 @@ Resources:
         SigningBehavior: always
         SigningProtocol: sigv4
 
+  WebSecurityHeadersPolicy:
+    Type: AWS::CloudFront::ResponseHeadersPolicy
+    Properties:
+      ResponseHeadersPolicyConfig:
+        Name: !Sub ${AppName}-security-headers
+        Comment: HSTS, CSP, COOP, no-referrer, X-Content-Type-Options for the SPA.
+        SecurityHeadersConfig:
+          StrictTransportSecurity:
+            AccessControlMaxAgeSec: 63072000
+            IncludeSubdomains: true
+            Preload: true
+            Override: true
+          ContentTypeOptions:
+            Override: true
+          FrameOptions:
+            FrameOption: DENY
+            Override: true
+          ReferrerPolicy:
+            ReferrerPolicy: no-referrer
+            Override: true
+          ContentSecurityPolicy:
+            ContentSecurityPolicy: >-
+              default-src 'self';
+              img-src 'self' data: https://*.s3.amazonaws.com https://*.s3.us-east-1.amazonaws.com;
+              script-src 'self';
+              style-src 'self' 'unsafe-inline';
+              connect-src 'self' https://*.execute-api.us-east-1.amazonaws.com https://cognito-idp.us-east-1.amazonaws.com https://cognito-identity.us-east-1.amazonaws.com;
+              font-src 'self' data:;
+              object-src 'none';
+              base-uri 'self';
+              frame-ancestors 'none';
+              form-action 'self';
+              upgrade-insecure-requests
+            Override: true
+        CustomHeadersConfig:
+          Items:
+            - Header: Cross-Origin-Opener-Policy
+              Value: same-origin
+              Override: true
+            - Header: Permissions-Policy
+              Value: "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+              Override: true
+
   WebDistribution:
     Type: AWS::CloudFront::Distribution
     Properties:
@@ -171,6 +313,7 @@ Resources:
         Enabled: true
         DefaultRootObject: index.html
         PriceClass: PriceClass_100
+        WebACLId: !GetAtt WebAcl.Arn
         Origins:
           - Id: S3Origin
             DomainName: !GetAtt WebBucket.RegionalDomainName
@@ -182,6 +325,7 @@ Resources:
           ViewerProtocolPolicy: redirect-to-https
           AllowedMethods: [GET, HEAD]
           CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+          ResponseHeadersPolicyId: !Ref WebSecurityHeadersPolicy
           Compress: true
         CustomErrorResponses:
           - ErrorCode: 403
@@ -205,6 +349,108 @@ Resources:
             Condition:
               StringEquals:
                 AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${WebDistribution}
+
+  # ===== ALARMS =====
+  AlertTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !If [IsProd, !Sub "${AppName}-alerts", !Sub "${AppName}-${Env}-alerts"]
+      DisplayName: !If [IsProd, !Sub "${AppName} alerts", !Sub "${AppName} ${Env} alerts"]
+
+  AlertEmailSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref AlertTopic
+      Protocol: email
+      Endpoint: !Ref AlertEmail
+
+  LambdaErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !If [IsProd, !Sub "${AppName}-lambda-errors", !Sub "${AppName}-${Env}-lambda-errors"]
+      AlarmDescription: API Lambda is throwing errors
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref ApiFunction
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 5
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlertTopic]
+      OKActions: [!Ref AlertTopic]
+
+  LambdaThrottlesAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !If [IsProd, !Sub "${AppName}-lambda-throttles", !Sub "${AppName}-${Env}-lambda-throttles"]
+      AlarmDescription: API Lambda is being throttled
+      Namespace: AWS/Lambda
+      MetricName: Throttles
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref ApiFunction
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 0
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlertTopic]
+
+  ApiServerErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !If [IsProd, !Sub "${AppName}-api-5xx", !Sub "${AppName}-${Env}-api-5xx"]
+      AlarmDescription: HTTP API is returning 5XX responses
+      Namespace: AWS/ApiGateway
+      MetricName: 5xx
+      Dimensions:
+        - Name: ApiId
+          Value: !Ref HttpApi
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 5
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlertTopic]
+
+  DynamoUserErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !If [IsProd, !Sub "${AppName}-dynamo-user-errors", !Sub "${AppName}-${Env}-dynamo-user-errors"]
+      AlarmDescription: DynamoDB client/validation errors
+      Namespace: AWS/DynamoDB
+      MetricName: UserErrors
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 5
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlertTopic]
+
+  DynamoSystemErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !If [IsProd, !Sub "${AppName}-dynamo-system-errors", !Sub "${AppName}-${Env}-dynamo-system-errors"]
+      AlarmDescription: DynamoDB server-side errors against the data table
+      Namespace: AWS/DynamoDB
+      MetricName: SystemErrors
+      Dimensions:
+        - Name: TableName
+          Value: !Ref StudentsTable
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 0
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlertTopic]
 
 Outputs:
   AppURL:

@@ -1,14 +1,32 @@
 version = 0.1
 
+# Default config = production. `sam deploy` with no flags deploys here.
 [default.deploy.parameters]
 stack_name = "well-done"
 resolve_s3 = true
 s3_prefix = "well-done"
-confirm_changeset = true
+confirm_changeset = false
 capabilities = "CAPABILITY_IAM"
-disable_rollback = true
-parameter_overrides = "AppName=\"well-done\""
+disable_rollback = false
+parameter_overrides = "AppName=\"well-done\" Env=\"prod\""
 image_repositories = []
 
 [default.global.parameters]
+region = "us-east-1"
+
+# Dev stack: `sam deploy --config-env dev` to deploy isolated dev resources
+# (separate DynamoDB table, buckets, user pool, alarms) under the same AWS
+# account in us-east-1. Use a different AlertEmail or unsubscribe the prod one
+# from the dev SNS topic if you don't want dev alerts.
+[dev.deploy.parameters]
+stack_name = "well-done-dev"
+resolve_s3 = true
+s3_prefix = "well-done-dev"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+disable_rollback = false
+parameter_overrides = "AppName=\"well-done\" Env=\"dev\""
+image_repositories = []
+
+[dev.global.parameters]
 region = "us-east-1"
