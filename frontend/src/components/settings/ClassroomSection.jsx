@@ -3,6 +3,7 @@ import { School, Users, ChevronDown, Plus, X, UserPlus } from 'lucide-react';
 import { theme } from '../../theme';
 import { Sheet } from '../ui/Sheet';
 import { Button } from '../ui/Button';
+import { DeleteClassroomModal } from './DeleteClassroomModal';
 import { usePressable } from '../../hooks/usePressable';
 
 export function ClassroomSection({
@@ -19,6 +20,7 @@ export function ClassroomSection({
   const [refreshKey, setRefreshKey] = useState(0);
   const [showSwitcher, setShowSwitcher] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     if (!api || !active) { setMembers(null); return; }
@@ -35,8 +37,7 @@ export function ClassroomSection({
     setRefreshKey(k => k + 1);
   };
 
-  const handleDelete = async () => {
-    if (!confirm(`Delete "${active.classroomName}"? This wipes every student, event, and school year for this classroom and cannot be undone.`)) return;
+  const handleDeleteConfirmed = async () => {
     await onDelete(active.classroomId);
   };
 
@@ -86,7 +87,7 @@ export function ClassroomSection({
           <Button
             variant="dangerSoft"
             size="sm"
-            onClick={handleDelete}
+            onClick={() => setShowDeleteModal(true)}
           >
             Delete classroom
           </Button>
@@ -111,6 +112,14 @@ export function ClassroomSection({
           setShowInvite(false);
         }}
       />
+
+      {showDeleteModal && (
+        <DeleteClassroomModal
+          classroom={active}
+          onClose={() => setShowDeleteModal(false)}
+          onConfirm={handleDeleteConfirmed}
+        />
+      )}
     </>
   );
 }
