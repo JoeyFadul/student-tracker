@@ -51,6 +51,7 @@ export function createApiClient(idToken) {
     listSchoolYears: (cid) => get(`${cBase(cid)}/school-years`),
     startSchoolYear: (cid, label) => post(`${cBase(cid)}/school-years/start`, { label }),
     endSchoolYear: (cid) => post(`${cBase(cid)}/school-years/end`),
+    deleteSchoolYear: (cid, yearId) => del(`${cBase(cid)}/school-years/${encodeURIComponent(yearId)}`),
 
     // Analytics
     getTopReasons: (cid, days = 30, year) => {

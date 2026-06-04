@@ -3,8 +3,10 @@ import { SchoolYearSection } from './SchoolYearSection';
 
 export function SchoolYearDetailScreen({
   schoolYear,
+  isOwner,
   onStartYear,
   onEndYear,
+  onDeleteYear,
   onOpenArchive,
   onBack,
 }) {
@@ -15,6 +17,7 @@ export function SchoolYearDetailScreen({
         years={schoolYear.years}
         onStart={onStartYear}
         onEnd={onEndYear}
+        onDelete={isOwner ? onDeleteYear : null}
         onOpenArchive={onOpenArchive}
       />
     </DetailScreen>

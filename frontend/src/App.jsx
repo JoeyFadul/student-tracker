@@ -126,6 +126,12 @@ export function App() {
     setToast({ message: 'School year ended' });
   }, [schoolYear, studentsApi]);
 
+  const handleDeleteYear = useCallback(async (yearId) => {
+    await schoolYear.deleteYear(yearId);
+    await studentsApi.refresh();
+    setToast({ message: 'School year deleted' });
+  }, [schoolYear, studentsApi]);
+
   if (auth.initializing) {
     return <FullPageMessage>Loading…</FullPageMessage>;
   }
@@ -231,8 +237,10 @@ export function App() {
       {activeTab === 'settings' && settingsScreen === 'schoolyear' && (
         <SchoolYearDetailScreen
           schoolYear={schoolYear}
+          isOwner={classrooms.active?.role === 'owner'}
           onStartYear={handleStartYear}
           onEndYear={handleEndYear}
+          onDeleteYear={handleDeleteYear}
           onOpenArchive={(y) => { setSettingsScreen(null); setArchiveYear(y); }}
           onBack={() => setSettingsScreen(null)}
         />

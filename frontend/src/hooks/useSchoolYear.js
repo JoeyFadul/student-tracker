@@ -35,7 +35,12 @@ export function useSchoolYear(api, classroomId) {
     await refresh();
   }, [api, classroomId, refresh]);
 
-  return { active, years, loading, error, refresh, startYear, endYear };
+  const deleteYear = useCallback(async (yearId) => {
+    await api.deleteSchoolYear(classroomId, yearId);
+    await refresh();
+  }, [api, classroomId, refresh]);
+
+  return { active, years, loading, error, refresh, startYear, endYear, deleteYear };
 }
 
 export function suggestYearLabel(now = new Date()) {
@@ -44,6 +49,8 @@ export function suggestYearLabel(now = new Date()) {
   return month >= 6 ? `${year}–${year + 1}` : `${year - 1}–${year}`;
 }
 
+// Returns dropdown options in chronological order, with "Summer YYYY" inserted
+// right after the academic year that ends in YYYY (the current calendar year).
 export function deriveYearOptions(now = new Date()) {
   const month = now.getMonth();
   const year = now.getFullYear();
@@ -52,6 +59,7 @@ export function deriveYearOptions(now = new Date()) {
   for (let i = -1; i <= 2; i++) {
     const start = academicStart + i;
     options.push(`${start}–${start + 1}`);
+    if (start + 1 === year) options.push(`Summer ${year}`);
   }
   return options;
 }

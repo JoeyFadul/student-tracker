@@ -340,6 +340,60 @@ exports.handler = async (event) => {
       return respond(200, { endedAt: now });
     }
 
+    // DELETE /school-years/{yearId} - permanently delete a year and all its events
+    const yearDeleteMatch = rest.match(/^\/school-years\/([^/]+)$/);
+    if (yearDeleteMatch && method === 'DELETE') {
+      if (!isOwner) return respond(403, { error: 'Only the owner can delete a school year' });
+      const yearId = yearDeleteMatch[1];
+      const yearMeta = await ddb.send(new GetCommand({
+        TableName: TABLE, Key: { pk: `CLASSROOM#${cid}`, sk: `YEAR#${yearId}` },
+      }));
+      if (!yearMeta.Item) return respond(404, { error: 'Year not found' });
+
+      const active = await getActiveYear(cid);
+      const isActiveYear = active?.yearId === yearId;
+
+      // Find all events tagged with this year
+      const allEvents = await listClassroomItems(cid, 'STUDENT_EVENT#');
+      const yearEvents = allEvents.filter(e => e.yearId === yearId);
+
+      const ops = [];
+
+      // If we're deleting the active year, reverse current-year points on profiles
+      if (isActiveYear) {
+        const sumsByStudent = {};
+        for (const e of yearEvents) {
+          sumsByStudent[e.studentId] = (sumsByStudent[e.studentId] || 0) + (e.delta || 0);
+        }
+        for (const [sid, sum] of Object.entries(sumsByStudent)) {
+          if (sum === 0) continue;
+          ops.push(ddb.send(new UpdateCommand({
+            TableName: TABLE, Key: { pk: `CLASSROOM#${cid}`, sk: `STUDENT_PROFILE#${sid}` },
+            UpdateExpression: 'ADD points :d',
+            ExpressionAttributeValues: { ':d': -sum },
+          })));
+        }
+        ops.push(ddb.send(new DeleteCommand({
+          TableName: TABLE, Key: { pk: `CLASSROOM#${cid}`, sk: 'ACTIVE_YEAR' },
+        })));
+      }
+
+      // Delete all events for the year
+      for (const e of yearEvents) {
+        ops.push(ddb.send(new DeleteCommand({
+          TableName: TABLE, Key: { pk: e.pk, sk: e.sk },
+        })));
+      }
+
+      // Delete the year meta record itself
+      ops.push(ddb.send(new DeleteCommand({
+        TableName: TABLE, Key: { pk: `CLASSROOM#${cid}`, sk: `YEAR#${yearId}` },
+      })));
+
+      await Promise.all(ops);
+      return respond(204, {});
+    }
+
     // ===== Students (collection) =====
     if (rest === '/students') {
       if (method === 'GET') {

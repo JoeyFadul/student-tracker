@@ -1,13 +1,15 @@
 import { useState } from 'react';
-import { Calendar, CalendarPlus, CalendarOff, ChevronRight, Archive } from 'lucide-react';
+import { Calendar, CalendarPlus, CalendarOff, ChevronRight, Archive, Trash2 } from 'lucide-react';
 import { theme } from '../../theme';
 import { Button } from '../ui/Button';
 import { StartYearSheet } from './StartYearSheet';
+import { DeleteYearModal } from './DeleteYearModal';
 import { usePressable } from '../../hooks/usePressable';
 
-export function SchoolYearSection({ active, years, onStart, onEnd, onOpenArchive }) {
+export function SchoolYearSection({ active, years, onStart, onEnd, onDelete, onOpenArchive }) {
   const [showStart, setShowStart] = useState(false);
   const [endBusy, setEndBusy] = useState(false);
+  const [yearToDelete, setYearToDelete] = useState(null);
 
   const handleEnd = async () => {
     if (!confirm(`End ${active.label}? You can start a new year later.`)) return;
@@ -31,9 +33,21 @@ export function SchoolYearSection({ active, years, onStart, onEnd, onOpenArchive
               <div style={metaStyle}>Started {formatDate(active.startedAt)}</div>
             </div>
           </div>
-          <Button variant="dangerSoft" size="sm" onClick={handleEnd} disabled={endBusy} icon={<CalendarOff size={14} />}>
-            End year
-          </Button>
+          <div style={cardActionsStyle}>
+            <Button variant="dangerSoft" size="sm" onClick={handleEnd} disabled={endBusy} icon={<CalendarOff size={14} />}>
+              End year
+            </Button>
+            {onDelete && (
+              <Button
+                variant="dangerSoft"
+                size="sm"
+                onClick={() => setYearToDelete({ ...active, _isActive: true })}
+                icon={<Trash2 size={14} />}
+              >
+                Delete
+              </Button>
+            )}
+          </div>
         </div>
       ) : (
         <div style={emptyCardStyle}>
@@ -57,7 +71,12 @@ export function SchoolYearSection({ active, years, onStart, onEnd, onOpenArchive
           <SectionLabel style={{ marginTop: 24 }}>Past years</SectionLabel>
           <div style={listStyle}>
             {pastYears.map(y => (
-              <PastYearRow key={y.yearId} year={y} onClick={() => onOpenArchive(y)} />
+              <PastYearRow
+                key={y.yearId}
+                year={y}
+                onClick={() => onOpenArchive(y)}
+                onDelete={onDelete ? () => setYearToDelete(y) : null}
+              />
             ))}
           </div>
         </>
@@ -69,25 +88,45 @@ export function SchoolYearSection({ active, years, onStart, onEnd, onOpenArchive
         onStart={onStart}
         replacingYear={active}
       />
+
+      <DeleteYearModal
+        year={yearToDelete}
+        isActive={yearToDelete?._isActive}
+        onClose={() => setYearToDelete(null)}
+        onConfirm={() => onDelete(yearToDelete.yearId)}
+      />
     </div>
   );
 }
 
-function PastYearRow({ year, onClick }) {
+function PastYearRow({ year, onClick, onDelete }) {
   const { handlers, pressedStyle } = usePressable();
+  const deletePress = usePressable();
   return (
-    <button onClick={onClick} {...handlers} style={{ ...rowStyle, ...pressedStyle }}>
-      <div style={{ ...iconWrapStyle, background: theme.colors.surfaceAlt }}>
-        <Archive size={18} color={theme.colors.textMuted} />
-      </div>
-      <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
-        <div style={pastLabelStyle}>{year.label}</div>
-        <div style={metaStyle}>
-          {formatDate(year.startedAt)}{year.endedAt ? ` – ${formatDate(year.endedAt)}` : ''}
+    <div style={{ ...rowStyle, ...pressedStyle }}>
+      <button onClick={onClick} {...handlers} style={rowMainStyle} aria-label={`Open ${year.label}`}>
+        <div style={{ ...iconWrapStyle, background: theme.colors.surfaceAlt }}>
+          <Archive size={18} color={theme.colors.textMuted} />
         </div>
-      </div>
-      <ChevronRight size={18} color={theme.colors.textFaint} />
-    </button>
+        <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+          <div style={pastLabelStyle}>{year.label}</div>
+          <div style={metaStyle}>
+            {formatDate(year.startedAt)}{year.endedAt ? ` – ${formatDate(year.endedAt)}` : ''}
+          </div>
+        </div>
+        <ChevronRight size={18} color={theme.colors.textFaint} />
+      </button>
+      {onDelete && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onDelete(); }}
+          {...deletePress.handlers}
+          style={{ ...deleteBtnStyle, ...deletePress.pressedStyle }}
+          aria-label={`Delete ${year.label}`}
+        >
+          <Trash2 size={16} color={theme.colors.danger} />
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -123,6 +162,12 @@ const cardStyle = {
   flexDirection: 'column',
   gap: 12,
   alignItems: 'flex-start',
+};
+
+const cardActionsStyle = {
+  display: 'flex',
+  gap: 8,
+  flexWrap: 'wrap',
 };
 
 const emptyCardStyle = {
@@ -195,17 +240,38 @@ const listStyle = {
 const rowStyle = {
   display: 'flex',
   alignItems: 'center',
-  gap: 12,
   background: theme.colors.surface,
-  border: 'none',
   borderRadius: theme.radius.lg,
-  padding: '12px 14px',
-  cursor: 'pointer',
-  width: '100%',
   fontFamily: theme.font.family,
   boxShadow: theme.shadow.sm,
+  overflow: 'hidden',
+};
+
+const rowMainStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 12,
+  background: 'transparent',
+  border: 'none',
+  padding: '12px 14px',
+  cursor: 'pointer',
+  flex: 1,
+  fontFamily: theme.font.family,
+  WebkitTapHighlightColor: 'transparent',
+  minWidth: 0,
+};
+
+const deleteBtnStyle = {
+  background: 'transparent',
+  border: 'none',
+  padding: '12px 14px',
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
   WebkitTapHighlightColor: 'transparent',
   transition: 'transform 0.1s ease',
+  flexShrink: 0,
 };
 
 const pastLabelStyle = {
