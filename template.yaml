@@ -23,9 +23,20 @@ Parameters:
     Type: String
     Default: joefadul@gmail.com
     Description: Email address subscribed to the CloudWatch alarms SNS topic.
+  CustomDomainCertArn:
+    Type: String
+    Default: "arn:aws:acm:us-east-1:573849277857:certificate/601c7b30-1bdc-45ab-b49b-8ad66103cc75"
+    Description: >-
+      ACM certificate ARN (must be in us-east-1) for the CloudFront custom
+      domain. Leave blank to use the default *.cloudfront.net certificate.
+  CustomDomainAliases:
+    Type: CommaDelimitedList
+    Default: "welldonestudent.com,www.welldonestudent.com"
+    Description: Aliases on the CloudFront distribution. Leave empty list if no custom domain.
 
 Conditions:
   IsProd: !Equals [!Ref Env, prod]
+  HasCustomDomain: !Not [!Equals [!Ref CustomDomainCertArn, ""]]
 
 Resources:
   # ===== DATA: DynamoDB single-table =====
@@ -315,6 +326,13 @@ Resources:
         DefaultRootObject: index.html
         PriceClass: PriceClass_100
         WebACLId: !GetAtt WebAcl.Arn
+        Aliases: !If [HasCustomDomain, !Ref CustomDomainAliases, !Ref AWS::NoValue]
+        ViewerCertificate: !If
+          - HasCustomDomain
+          - AcmCertificateArn: !Ref CustomDomainCertArn
+            SslSupportMethod: sni-only
+            MinimumProtocolVersion: TLSv1.2_2021
+          - CloudFrontDefaultCertificate: true
         Origins:
           - Id: S3Origin
             DomainName: !GetAtt WebBucket.RegionalDomainName
