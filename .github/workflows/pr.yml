@@ -1,0 +1,49 @@
+name: pr
+
+# Runs on every PR. Lints the frontend, builds it, validates the SAM
+# template. No AWS deploys.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  frontend:
+    name: frontend lint + build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+
+  backend:
+    name: backend validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+      - uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+      - name: SAM validate (with linter)
+        run: sam validate --lint --region us-east-1
+      - name: npm install (backend)
+        working-directory: backend
+        run: npm install --omit=dev
+      - name: SAM build
+        run: sam build

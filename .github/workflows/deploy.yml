@@ -1,0 +1,80 @@
+name: deploy
+
+# Manual-only deploy. From the Actions tab, click "Run workflow" and pick
+# the environment (prod by default). Each environment is a GitHub
+# Environment with its own protection rules.
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        type: choice
+        options: [prod, dev]
+        default: prod
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: deploy ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    env:
+      AWS_REGION: us-east-1
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: |
+            frontend/package-lock.json
+            backend/package-lock.json
+
+      # ----- Backend -----
+      - name: SAM build
+        run: sam build
+
+      - name: SAM deploy
+        run: sam deploy --config-env ${{ inputs.environment == 'prod' && 'default' || 'dev' }} --no-confirm-changeset --no-fail-on-empty-changeset
+
+      # ----- Frontend -----
+      - name: Read stack outputs
+        id: outputs
+        run: |
+          STACK=$([ "${{ inputs.environment }}" = "prod" ] && echo well-done || echo well-done-dev)
+          echo "stack=$STACK" >> $GITHUB_OUTPUT
+          echo "bucket=$(aws cloudformation describe-stacks --stack-name $STACK --query "Stacks[0].Outputs[?OutputKey=='WebBucketName'].OutputValue" --output text)" >> $GITHUB_OUTPUT
+          echo "distribution=$(aws cloudformation describe-stacks --stack-name $STACK --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistributionId'].OutputValue" --output text)" >> $GITHUB_OUTPUT
+          echo "apiUrl=$(aws cloudformation describe-stacks --stack-name $STACK --query "Stacks[0].Outputs[?OutputKey=='ApiURL'].OutputValue" --output text)" >> $GITHUB_OUTPUT
+          echo "userPoolId=$(aws cloudformation describe-stacks --stack-name $STACK --query "Stacks[0].Outputs[?OutputKey=='UserPoolId'].OutputValue" --output text)" >> $GITHUB_OUTPUT
+          echo "userPoolClientId=$(aws cloudformation describe-stacks --stack-name $STACK --query "Stacks[0].Outputs[?OutputKey=='UserPoolClientId'].OutputValue" --output text)" >> $GITHUB_OUTPUT
+
+      - name: Frontend install + build
+        working-directory: frontend
+        env:
+          VITE_API_URL: ${{ steps.outputs.outputs.apiUrl }}
+          VITE_USER_POOL_ID: ${{ steps.outputs.outputs.userPoolId }}
+          VITE_USER_POOL_CLIENT_ID: ${{ steps.outputs.outputs.userPoolClientId }}
+        run: |
+          npm ci
+          npm run build
+
+      - name: Upload to S3
+        run: aws s3 sync frontend/dist/ s3://${{ steps.outputs.outputs.bucket }}/ --delete
+
+      - name: Invalidate CloudFront
+        run: aws cloudfront create-invalidation --distribution-id ${{ steps.outputs.outputs.distribution }} --paths "/*"

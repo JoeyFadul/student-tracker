@@ -1,0 +1,85 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  GitHub Actions OIDC trust + deploy role for the student-tracker repo.
+  Deploy this stack ONCE manually in us-east-1 before enabling the workflows:
+    aws cloudformation deploy \
+      --template-file infra/github-oidc.yaml \
+      --stack-name well-done-cicd \
+      --capabilities CAPABILITY_NAMED_IAM \
+      --parameter-overrides GitHubRepo=JoeyFadul/student-tracker
+
+Parameters:
+  GitHubRepo:
+    Type: String
+    Default: JoeyFadul/student-tracker
+    Description: GitHub repository in <owner>/<repo> format.
+  CreateOidcProvider:
+    Type: String
+    Default: "true"
+    AllowedValues: ["true", "false"]
+    Description: >-
+      Set to "false" if an OIDC provider for token.actions.githubusercontent.com
+      already exists in this account (only one is allowed per account).
+
+Conditions:
+  ShouldCreateOidcProvider: !Equals [!Ref CreateOidcProvider, "true"]
+
+Resources:
+  GitHubOidcProvider:
+    Type: AWS::IAM::OIDCProvider
+    Condition: ShouldCreateOidcProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList: [sts.amazonaws.com]
+      # GitHub rotated to its own short-lived thumbprint validation in 2023;
+      # any value here is fine, AWS no longer enforces it.
+      ThumbprintList: [6938fd4d98bab03faadb97b34396831e3780aea1]
+
+  GitHubDeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: well-done-github-deploy
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Sub arn:aws:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubRepo}:*
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/PowerUserAccess
+      Policies:
+        - PolicyName: PassRoleForSam
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              # SAM/CloudFormation needs to create IAM roles for Lambda; this
+              # allows iam:* but only for roles whose names start with our app
+              # prefixes. Adjust if you rename the stack.
+              - Effect: Allow
+                Action:
+                  - iam:CreateRole
+                  - iam:DeleteRole
+                  - iam:AttachRolePolicy
+                  - iam:DetachRolePolicy
+                  - iam:PutRolePolicy
+                  - iam:DeleteRolePolicy
+                  - iam:GetRole
+                  - iam:GetRolePolicy
+                  - iam:PassRole
+                  - iam:TagRole
+                  - iam:UntagRole
+                  - iam:UpdateAssumeRolePolicy
+                Resource:
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/well-done-*
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/student-tracker-*
+
+Outputs:
+  RoleArn:
+    Description: Set as the value of the AWS_DEPLOY_ROLE_ARN GitHub secret.
+    Value: !GetAtt GitHubDeployRole.Arn
