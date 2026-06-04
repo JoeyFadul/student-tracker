@@ -11,7 +11,7 @@ export function DeleteYearModal({ year, isActive, onClose, onConfirm }) {
 
   useEffect(() => { setText(''); setError(''); }, [year]);
 
-  const canDelete = text.trim().toLowerCase() === (year?.label || '').toLowerCase() && !busy;
+  const canDelete = text.trim().toLowerCase() === 'delete' && !busy;
 
   const submit = async () => {
     if (!canDelete) return;
@@ -43,13 +43,13 @@ export function DeleteYearModal({ year, isActive, onClose, onConfirm }) {
       </div>
 
       <label style={labelStyle}>
-        Type <strong>{year.label}</strong> to confirm
+        Type <strong>delete</strong> to confirm
       </label>
       <input
         type="text"
         value={text}
         onChange={e => setText(e.target.value)}
-        placeholder={year.label}
+        placeholder="delete"
         autoFocus
         autoCapitalize="off"
         autoCorrect="off"
