@@ -52,7 +52,7 @@ const {
   DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand,
   DeleteCommand, QueryCommand, TransactWriteCommand
 } = require('@aws-sdk/lib-dynamodb');
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const { randomUUID } = require('crypto');
 
@@ -106,6 +106,45 @@ async function listClassroomItems(classroomId, skPrefix) {
     ExpressionAttributeValues: { ':pk': `CLASSROOM#${classroomId}`, ':prefix': skPrefix },
   }));
   return r.Items || [];
+}
+
+// Convert a stored profile.photo value into something the frontend can render.
+// Modern data stores just the S3 key. Legacy data may still have a full s3://
+// or https:// URL — normalize to a key and presign for read. Returns the
+// original value unchanged if it isn't a bucket key (e.g., for emoji avatars
+// stored as a single character).
+function photoKeyFromStored(value) {
+  if (!value || typeof value !== 'string') return null;
+  if (value.startsWith('classrooms/')) return value;
+  if (value.startsWith('http')) {
+    // legacy: https://<bucket>.s3.amazonaws.com/classrooms/... or .s3.us-east-1...
+    const i = value.indexOf('/classrooms/');
+    if (i >= 0) return value.slice(i + 1);
+  }
+  return null;
+}
+
+const PHOTO_PRESIGN_TTL = 60 * 60 * 8; // 8 hours covers a teaching day.
+
+async function presignPhotoGet(key) {
+  return getSignedUrl(s3, new GetObjectCommand({
+    Bucket: PHOTO_BUCKET, Key: key,
+  }), { expiresIn: PHOTO_PRESIGN_TTL });
+}
+
+// Resolve a profile's `photo` field to whatever the client should render.
+// Emojis pass through. Keys/legacy URLs become short-lived presigned URLs.
+async function resolvePhoto(value) {
+  const key = photoKeyFromStored(value);
+  if (!key) return value || '';
+  return presignPhotoGet(key);
+}
+
+async function resolveProfilesPhotos(profiles) {
+  return Promise.all(profiles.map(async p => ({
+    ...p,
+    photo: await resolvePhoto(p.photo),
+  })));
 }
 
 function computeStreak(positiveTimestamps) {
@@ -417,7 +456,7 @@ exports.handler = async (event) => {
             (archiveByStudent[e.studentId] ||= []).push(e);
           }
         }
-        const students = profiles.map(p => {
+        const enriched = profiles.map(p => {
           const streak = computeStreak(positiveByStudent[p.id] || []);
           if (archiveYear) {
             const yearEvents = archiveByStudent[p.id] || [];
@@ -426,6 +465,7 @@ exports.handler = async (event) => {
           }
           return { ...p, streak };
         });
+        const students = await resolveProfilesPhotos(enriched);
         return respond(200, { students, archiveYear: archiveYear || null });
       }
       if (method === 'POST') {
@@ -438,7 +478,7 @@ exports.handler = async (event) => {
           createdAt: new Date().toISOString(),
         };
         await ddb.send(new PutCommand({ TableName: TABLE, Item: student }));
-        return respond(201, student);
+        return respond(201, { ...student, photo: await resolvePhoto(student.photo) });
       }
     }
 
@@ -523,11 +563,17 @@ exports.handler = async (event) => {
           const points = history.reduce((sum, e) => sum + (e.delta || 0), 0);
           payload = { ...payload, points, archiveYear };
         }
-        return respond(200, { ...payload, history });
+        return respond(200, { ...payload, photo: await resolvePhoto(payload.photo), history });
       }
 
       if (method === 'PATCH' && !sub) {
         const body = JSON.parse(event.body || '{}');
+        // Normalize a presigned URL or legacy public URL down to its bucket key
+        // before persisting so we never store a stale/expired URL.
+        if (typeof body.photo === 'string' && body.photo.startsWith('http')) {
+          const key = photoKeyFromStored(body.photo);
+          body.photo = key || '';
+        }
         const allowed = ['name', 'grade', 'photo', 'notes'];
         const sets = [], names = {}, values = {};
         for (const k of allowed) {
@@ -542,7 +588,8 @@ exports.handler = async (event) => {
           ExpressionAttributeNames: names, ExpressionAttributeValues: values,
           ReturnValues: 'ALL_NEW',
         }));
-        return respond(200, result.Attributes);
+        const attrs = result.Attributes || {};
+        return respond(200, { ...attrs, photo: await resolvePhoto(attrs.photo) });
       }
 
       if (method === 'DELETE' && !sub) {
@@ -613,11 +660,17 @@ exports.handler = async (event) => {
       }
 
       if (method === 'GET' && sub === '/photo-upload') {
-        const key = `classrooms/${cid}/students/${sid}/${Date.now()}.jpg`;
+        // Verify the student exists in this classroom before signing — without
+        // this, an authenticated user could land presigned upload URLs at any
+        // S3 key they could guess in this classroom's namespace.
+        const profile = await ddb.send(new GetCommand({ TableName: TABLE, Key: profileKey }));
+        if (!profile.Item) return respond(404, { error: 'Student not found' });
+        // Random suffix instead of Date.now() so the key isn't predictable.
+        const key = `classrooms/${cid}/students/${sid}/${randomUUID()}.jpg`;
         const url = await getSignedUrl(s3, new PutObjectCommand({
           Bucket: PHOTO_BUCKET, Key: key, ContentType: 'image/jpeg',
         }), { expiresIn: 300 });
-        return respond(200, { url, key, publicUrl: `https://${PHOTO_BUCKET}.s3.amazonaws.com/${key}` });
+        return respond(200, { url, key });
       }
     }
 

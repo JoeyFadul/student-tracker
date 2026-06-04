@@ -50,6 +50,9 @@ Resources:
         PointInTimeRecoveryEnabled: true
 
   # ===== PHOTOS: S3 bucket =====
+  # Private bucket. All access goes through the Lambda, which issues short-lived
+  # presigned PUT urls for uploads and presigned GET urls for reads. The bucket
+  # is never publicly readable.
   PhotoBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
@@ -59,26 +62,18 @@ Resources:
       CorsConfiguration:
         CorsRules:
           - AllowedOrigins: !Ref AllowedOrigins
-            AllowedMethods: [GET, PUT]
+            AllowedMethods: [PUT]
             AllowedHeaders: ['*']
             ExposedHeaders: [ETag]
             MaxAge: 3000
       PublicAccessBlockConfiguration:
-        BlockPublicPolicy: false
-        RestrictPublicBuckets: false
+        BlockPublicPolicy: true
+        RestrictPublicBuckets: true
         BlockPublicAcls: true
         IgnorePublicAcls: true
-
-  PhotoBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !Ref PhotoBucket
-      PolicyDocument:
-        Statement:
-          - Effect: Allow
-            Principal: '*'
-            Action: s3:GetObject
-            Resource: !Sub ${PhotoBucket.Arn}/*
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
 
   # ===== AUTH: Cognito user pool =====
   UserPool:
@@ -146,8 +141,14 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref StudentsTable
-        - S3WritePolicy:
-            BucketName: !Ref PhotoBucket
+        # GetObject is needed to *sign* GET URLs even though the Lambda never
+        # reads object bytes itself; PutObject for upload presigning.
+        - Statement:
+            - Effect: Allow
+              Action:
+                - s3:PutObject
+                - s3:GetObject
+              Resource: !Sub ${PhotoBucket.Arn}/*
       Events:
         # Authenticated routes - JWT required
         ApiEvents:

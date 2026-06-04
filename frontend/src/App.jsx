@@ -90,9 +90,12 @@ export function App() {
     if (!selectedStudent || !api || !cid) return;
     setUploadingPhoto(true);
     try {
-      const { url, publicUrl } = await api.getPhotoUploadUrl(cid, selectedStudent.id);
-      await fetch(url, { method: 'PUT', body: file, headers: { 'Content-Type': 'image/jpeg' } });
-      const updated = await studentsApi.updateStudent(selectedStudent.id, { photo: publicUrl });
+      const { url, key } = await api.getPhotoUploadUrl(cid, selectedStudent.id);
+      const putRes = await fetch(url, { method: 'PUT', body: file, headers: { 'Content-Type': 'image/jpeg' } });
+      if (!putRes.ok) throw new Error(`Photo upload failed (${putRes.status})`);
+      // Persist the S3 key; backend converts it to a short-lived presigned GET
+      // URL on every read so the bucket can stay private.
+      const updated = await studentsApi.updateStudent(selectedStudent.id, { photo: key });
       setSelectedStudent(prev => prev ? { ...prev, photo: updated.photo } : prev);
     } catch (err) {
       studentsApi.setError(err.message);
