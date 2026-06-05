@@ -4,7 +4,7 @@ import { theme } from '../../theme';
 import { usePressable } from '../../hooks/usePressable';
 import { ReasonPrompt } from './ReasonPrompt';
 
-const QUICK_AMOUNTS = [1, 5, 10];
+const QUICK_AMOUNTS = [1, 2, 5];
 
 export function QuickGrantRow({ onQuickGrant, onMore }) {
   const [pendingAmount, setPendingAmount] = useState(null);

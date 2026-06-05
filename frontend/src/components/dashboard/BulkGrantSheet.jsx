@@ -3,19 +3,23 @@ import { Plus, Minus, ChevronLeft } from 'lucide-react';
 import { theme } from '../../theme';
 import { Sheet } from '../ui/Sheet';
 import { Button } from '../ui/Button';
+import { CustomAmountSheet } from '../ui/CustomAmountSheet';
 import { DEFAULT_AVATAR } from '../../lib/avatars';
 import { getTier } from '../../lib/tiers';
 import { PRESET_REASONS } from '../../lib/reasons';
 import { usePressable } from '../../hooks/usePressable';
 
-const PRESET_AMOUNTS = [1, 5, 10];
+const PRESET_AMOUNTS = [1, 2, 5];
 
 export function BulkGrantSheet({ open, selected, onBack, onGrant }) {
-  const [amount, setAmount] = useState(5);
+  const [amount, setAmount] = useState(2);
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
+  const [showCustom, setShowCustom] = useState(false);
 
-  useEffect(() => { if (open) { setAmount(5); setReason(''); } }, [open]);
+  const isPreset = PRESET_AMOUNTS.includes(amount);
+
+  useEffect(() => { if (open) { setAmount(2); setReason(''); } }, [open]);
 
   const submit = async (delta) => {
     if (busy || selected.length === 0) return;
@@ -47,12 +51,9 @@ export function BulkGrantSheet({ open, selected, onBack, onGrant }) {
         {PRESET_AMOUNTS.map(n => (
           <AmountChip key={n} active={amount === n} onClick={() => setAmount(n)}>{n}</AmountChip>
         ))}
-        <input
-          type="number"
-          value={amount}
-          onChange={e => setAmount(Math.max(1, parseInt(e.target.value) || 1))}
-          style={numberInputStyle}
-        />
+        <CustomChip active={!isPreset} onClick={() => setShowCustom(true)}>
+          {isPreset ? 'Custom' : amount}
+        </CustomChip>
       </div>
 
       <div style={sectionLabelStyle}>Reason</div>
@@ -90,7 +91,33 @@ export function BulkGrantSheet({ open, selected, onBack, onGrant }) {
           Grant {amount} to {selected.length}
         </Button>
       </div>
+
+      <CustomAmountSheet
+        open={showCustom}
+        initial={isPreset ? '' : amount}
+        onClose={() => setShowCustom(false)}
+        onConfirm={(n) => { setAmount(n); setShowCustom(false); }}
+      />
     </Sheet>
+  );
+}
+
+function CustomChip({ active, onClick, children }) {
+  const { handlers, pressedStyle } = usePressable();
+  return (
+    <button
+      onClick={onClick}
+      {...handlers}
+      style={{
+        ...amountChipStyle,
+        ...pressedStyle,
+        background: active ? theme.colors.text : theme.colors.surfaceAlt,
+        color: active ? '#fff' : theme.colors.textMuted,
+        flex: 1,
+      }}
+    >
+      {children}
+    </button>
   );
 }
 
@@ -275,19 +302,6 @@ const reasonChipStyle = {
   fontFamily: theme.font.family,
   WebkitTapHighlightColor: 'transparent',
   transition: 'transform 0.1s ease, background 0.15s ease',
-};
-
-const numberInputStyle = {
-  width: 64,
-  padding: '8px 12px',
-  fontSize: theme.font.sizes.body,
-  border: 'none',
-  borderRadius: theme.radius.md,
-  fontFamily: theme.font.family,
-  background: theme.colors.surfaceAlt,
-  outline: 'none',
-  minHeight: 40,
-  WebkitAppearance: 'none',
 };
 
 const buttonRowStyle = {

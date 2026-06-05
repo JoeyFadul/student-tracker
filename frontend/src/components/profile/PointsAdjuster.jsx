@@ -3,17 +3,21 @@ import { Plus, Minus } from 'lucide-react';
 import { theme } from '../../theme';
 import { Sheet } from '../ui/Sheet';
 import { Button } from '../ui/Button';
+import { CustomAmountSheet } from '../ui/CustomAmountSheet';
 import { usePressable } from '../../hooks/usePressable';
 
-const PRESET_AMOUNTS = [1, 5, 10];
+const PRESET_AMOUNTS = [1, 2, 5];
 const PRESET_REASONS = [
   'Kindness', 'Effort', 'Helping', 'Homework',
   'Participation', 'Listening', 'Cleanup', 'Teamwork',
 ];
 
 export function PointsAdjuster({ open, onClose, onAdjust }) {
-  const [amount, setAmount] = useState(5);
+  const [amount, setAmount] = useState(2);
   const [reason, setReason] = useState('');
+  const [showCustom, setShowCustom] = useState(false);
+
+  const isPreset = PRESET_AMOUNTS.includes(amount);
 
   const handleAdjust = (delta) => {
     onAdjust(delta, reason);
@@ -26,12 +30,9 @@ export function PointsAdjuster({ open, onClose, onAdjust }) {
         {PRESET_AMOUNTS.map(n => (
           <AmountChip key={n} active={amount === n} onClick={() => setAmount(n)}>{n}</AmountChip>
         ))}
-        <input
-          type="number"
-          value={amount}
-          onChange={e => setAmount(Math.max(1, parseInt(e.target.value) || 1))}
-          style={numberInputStyle}
-        />
+        <CustomChip active={!isPreset} onClick={() => setShowCustom(true)}>
+          {isPreset ? 'Custom' : amount}
+        </CustomChip>
       </div>
 
       <input
@@ -56,7 +57,33 @@ export function PointsAdjuster({ open, onClose, onAdjust }) {
           Revoke
         </Button>
       </div>
+
+      <CustomAmountSheet
+        open={showCustom}
+        initial={isPreset ? '' : amount}
+        onClose={() => setShowCustom(false)}
+        onConfirm={(n) => { setAmount(n); setShowCustom(false); }}
+      />
     </Sheet>
+  );
+}
+
+function CustomChip({ active, onClick, children }) {
+  const { handlers, pressedStyle } = usePressable();
+  return (
+    <button
+      onClick={onClick}
+      {...handlers}
+      style={{
+        ...amountChipStyle,
+        ...pressedStyle,
+        background: active ? theme.colors.text : theme.colors.surfaceAlt,
+        color: active ? '#fff' : theme.colors.textMuted,
+        flex: 1,
+      }}
+    >
+      {children}
+    </button>
   );
 }
 
@@ -150,15 +177,3 @@ const reasonChipStyle = {
   transition: 'transform 0.1s ease, background 0.15s ease',
 };
 
-const numberInputStyle = {
-  width: 64,
-  padding: '8px 12px',
-  fontSize: theme.font.sizes.body,
-  border: 'none',
-  borderRadius: theme.radius.md,
-  fontFamily: theme.font.family,
-  background: theme.colors.surfaceAlt,
-  outline: 'none',
-  minHeight: 40,
-  WebkitAppearance: 'none',
-};
