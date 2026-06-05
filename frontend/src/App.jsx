@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { Users, BarChart3, Settings } from 'lucide-react';
 import { useAuth } from './hooks/useAuth';
 import { useStudents } from './hooks/useStudents';
@@ -37,6 +37,12 @@ export function App() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [toast, setToast] = useState(null);
   const [archiveYear, setArchiveYear] = useState(null);
+
+  // Reset scroll position when navigating between top-level screens so each
+  // view starts at the top instead of inheriting the previous one's position.
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [activeTab, settingsScreen, selectedStudent?.id, archiveYear?.yearId]);
 
   const openStudent = useCallback(async (id) => {
     try {
@@ -170,88 +176,94 @@ export function App() {
     />
   );
 
-  if (archiveYear) {
-    return (
-      <>
-        <YearArchive
-          classroomId={cid}
-          year={archiveYear}
-          api={api}
-          onBack={() => setArchiveYear(null)}
-        />
-        {toastEl}
-      </>
-    );
-  }
-
+  // Pick the screen to render. Student profile and year archive overlay on
+  // top of whichever tab is active so the tab bar stays visible everywhere.
+  let screen = null;
   if (selectedStudent) {
-    return (
-      <>
-        <StudentProfile
-          student={selectedStudent}
-          onBack={closeStudent}
-          onGrantPoints={handleGrantPoints}
-          onSaveNotes={handleSaveNotes}
-          onDelete={handleDeleteStudent}
-          onPhotoUpload={handlePhotoUpload}
-          uploadingPhoto={uploadingPhoto}
-        />
-        {toastEl}
-      </>
+    screen = (
+      <StudentProfile
+        student={selectedStudent}
+        onBack={closeStudent}
+        onGrantPoints={handleGrantPoints}
+        onSaveNotes={handleSaveNotes}
+        onDelete={handleDeleteStudent}
+        onPhotoUpload={handlePhotoUpload}
+        uploadingPhoto={uploadingPhoto}
+      />
+    );
+  } else if (archiveYear) {
+    screen = (
+      <YearArchive
+        classroomId={cid}
+        year={archiveYear}
+        api={api}
+        onBack={() => setArchiveYear(null)}
+      />
+    );
+  } else if (activeTab === 'students') {
+    screen = (
+      <Dashboard
+        students={studentsApi.students}
+        loading={studentsApi.loading}
+        yearLoading={schoolYear.loading}
+        error={studentsApi.error}
+        activeYear={schoolYear.active}
+        classroomName={classrooms.active?.classroomName}
+        onDismissError={() => studentsApi.setError('')}
+        onSelectStudent={openStudent}
+        onCreateStudent={studentsApi.createStudent}
+        onBulkGrant={handleBulkGrant}
+        onGoToSettings={() => setActiveTab('settings')}
+      />
+    );
+  } else if (activeTab === 'stats') {
+    screen = (
+      <StatsScreen students={studentsApi.students} api={api} classroomId={cid} activeYear={schoolYear.active} />
+    );
+  } else if (activeTab === 'settings' && settingsScreen === 'classroom') {
+    screen = (
+      <ClassroomDetailScreen
+        api={api}
+        classroomsState={classrooms}
+        onBack={() => setSettingsScreen(null)}
+      />
+    );
+  } else if (activeTab === 'settings' && settingsScreen === 'schoolyear') {
+    screen = (
+      <SchoolYearDetailScreen
+        schoolYear={schoolYear}
+        isOwner={classrooms.active?.role === 'owner'}
+        onStartYear={handleStartYear}
+        onEndYear={handleEndYear}
+        onDeleteYear={handleDeleteYear}
+        onOpenArchive={(y) => { setSettingsScreen(null); setArchiveYear(y); }}
+        onBack={() => setSettingsScreen(null)}
+      />
+    );
+  } else if (activeTab === 'settings') {
+    screen = (
+      <SettingsScreen
+        onSignOut={auth.signOut}
+        activeClassroom={classrooms.active}
+        activeYearLabel={schoolYear.active?.label}
+        onOpenClassroom={() => setSettingsScreen('classroom')}
+        onOpenSchoolYear={() => setSettingsScreen('schoolyear')}
+      />
     );
   }
 
   return (
     <>
-      {activeTab === 'students' && (
-        <Dashboard
-          students={studentsApi.students}
-          loading={studentsApi.loading}
-          yearLoading={schoolYear.loading}
-          error={studentsApi.error}
-          activeYear={schoolYear.active}
-          classroomName={classrooms.active?.classroomName}
-          onDismissError={() => studentsApi.setError('')}
-          onSelectStudent={openStudent}
-          onCreateStudent={studentsApi.createStudent}
-          onBulkGrant={handleBulkGrant}
-          onGoToSettings={() => setActiveTab('settings')}
-        />
-      )}
-      {activeTab === 'stats' && (
-        <StatsScreen students={studentsApi.students} api={api} classroomId={cid} activeYear={schoolYear.active} />
-      )}
-      {activeTab === 'settings' && settingsScreen === null && (
-        <SettingsScreen
-          onSignOut={auth.signOut}
-          activeClassroom={classrooms.active}
-          activeYearLabel={schoolYear.active?.label}
-          onOpenClassroom={() => setSettingsScreen('classroom')}
-          onOpenSchoolYear={() => setSettingsScreen('schoolyear')}
-        />
-      )}
-      {activeTab === 'settings' && settingsScreen === 'classroom' && (
-        <ClassroomDetailScreen
-          api={api}
-          classroomsState={classrooms}
-          onBack={() => setSettingsScreen(null)}
-        />
-      )}
-      {activeTab === 'settings' && settingsScreen === 'schoolyear' && (
-        <SchoolYearDetailScreen
-          schoolYear={schoolYear}
-          isOwner={classrooms.active?.role === 'owner'}
-          onStartYear={handleStartYear}
-          onEndYear={handleEndYear}
-          onDeleteYear={handleDeleteYear}
-          onOpenArchive={(y) => { setSettingsScreen(null); setArchiveYear(y); }}
-          onBack={() => setSettingsScreen(null)}
-        />
-      )}
+      {screen}
       <TabBar
         tabs={TABS}
         active={activeTab}
-        onChange={(t) => { setActiveTab(t); setSettingsScreen(null); }}
+        onChange={(t) => {
+          setActiveTab(t);
+          setSettingsScreen(null);
+          setSelectedStudent(null);
+          setArchiveYear(null);
+        }}
       />
       {toastEl}
     </>

@@ -99,7 +99,7 @@ const pageStyle = {
 const containerStyle = {
   maxWidth: 720,
   margin: '0 auto',
-  padding: `8px 16px calc(40px + ${theme.safeBottom})`,
+  padding: `8px 16px calc(${theme.tabBarHeight}px + 24px + ${theme.safeBottom})`,
 };
 
 const headerIconBtnStyle = {
