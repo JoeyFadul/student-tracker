@@ -23,7 +23,7 @@ export function useClassrooms(api) {
         const stillThere = prev && list.some(c => c.classroomId === prev);
         if (stillThere) return prev;
         const fallback = list[0]?.classroomId || null;
-        try { fallback ? localStorage.setItem(STORAGE_KEY, fallback) : localStorage.removeItem(STORAGE_KEY); } catch {}
+        try { fallback ? localStorage.setItem(STORAGE_KEY, fallback) : localStorage.removeItem(STORAGE_KEY); } catch { /* storage unavailable (private mode, quota); fall through */ }
         return fallback;
       });
     } catch (err) {
@@ -37,7 +37,7 @@ export function useClassrooms(api) {
 
   const setActiveId = useCallback((id) => {
     setActiveIdState(id);
-    try { id ? localStorage.setItem(STORAGE_KEY, id) : localStorage.removeItem(STORAGE_KEY); } catch {}
+    try { id ? localStorage.setItem(STORAGE_KEY, id) : localStorage.removeItem(STORAGE_KEY); } catch { /* storage unavailable */ }
   }, []);
 
   const createClassroom = useCallback(async (name) => {

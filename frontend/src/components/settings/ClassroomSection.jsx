@@ -12,7 +12,6 @@ export function ClassroomSection({
   active,
   onSwitch,
   onCreate,
-  onRename,
   onDelete,
   isOwner,
 }) {

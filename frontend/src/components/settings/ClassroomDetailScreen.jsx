@@ -16,7 +16,6 @@ export function ClassroomDetailScreen({
         active={classroomsState.active}
         onSwitch={classroomsState.setActiveId}
         onCreate={classroomsState.createClassroom}
-        onRename={classroomsState.renameClassroom}
         onDelete={classroomsState.deleteClassroom}
         isOwner={isOwner}
       />
