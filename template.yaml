@@ -17,13 +17,14 @@ Parameters:
       stack can be deployed without colliding.
   AllowedOrigins:
     Type: CommaDelimitedList
-    Default: "https://welldonestudent.com,https://www.welldonestudent.com,https://d3ck42g5jjmjbj.cloudfront.net,https://localhost"
+    Default: "https://welldonestudent.com,https://www.welldonestudent.com,https://d3ck42g5jjmjbj.cloudfront.net,capacitor://localhost"
     Description: >-
-      Origins permitted by API + photo bucket CORS. https://localhost covers
-      the iOS native build — Capacitor's iosScheme is set to https so the
-      in-app origin is https://localhost (API Gateway HTTP API rejects
-      non-http(s) schemes like capacitor://). Add http://localhost:5173 for
-      dev when running vite directly.
+      Origins permitted by the photo bucket CORS only. capacitor://localhost
+      covers the iOS native build (Capacitor's default scheme). The API
+      Gateway HTTP API CORS uses a separate wildcard ('*') below since API
+      Gateway rejects non-http(s) schemes; auth is enforced via JWT on every
+      route so the wildcard is acceptable. Add http://localhost:5173 here for
+      dev when running vite directly against the photo bucket.
   AlertEmail:
     Type: String
     Default: joefadul@gmail.com
@@ -193,7 +194,14 @@ Resources:
         ThrottlingBurstLimit: 100
         ThrottlingRateLimit: 50
       CorsConfiguration:
-        AllowOrigins: !Ref AllowedOrigins
+        # Wildcard origin because:
+        # 1. API Gateway HTTP API rejects non-http(s) origins (no way to
+        #    allow capacitor://localhost from the iOS native shell).
+        # 2. Every route requires a Cognito JWT, so CORS isn't the auth
+        #    boundary — this is standard for token-authenticated APIs.
+        # AllowCredentials is unset so the wildcard is accepted by browsers.
+        AllowOrigins:
+          - "*"
         AllowHeaders:
           - Content-Type
           - Authorization

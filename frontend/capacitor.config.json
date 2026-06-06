@@ -3,7 +3,6 @@
   "appName": "Well Done",
   "webDir": "dist",
   "server": {
-    "androidScheme": "https",
-    "iosScheme": "https"
+    "androidScheme": "https"
   }
 }
