@@ -25,4 +25,14 @@ export async function setupNative() {
   } catch (e) {
     console.warn('Keyboard setup skipped:', e);
   }
+
+  try {
+    const { SplashScreen } = await import('@capacitor/splash-screen');
+    // launchAutoHide is false in capacitor.config.json so we control the
+    // dismissal here, right after the WebView and our setup are ready. No
+    // flicker between splash and app content.
+    await SplashScreen.hide({ fadeOutDuration: 250 });
+  } catch (e) {
+    console.warn('SplashScreen.hide skipped:', e);
+  }
 }

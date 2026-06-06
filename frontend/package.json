@@ -7,12 +7,15 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "assets:source": "node scripts/build-source-assets.mjs",
+    "assets:generate": "npm run assets:source && capacitor-assets generate --ios"
   },
   "dependencies": {
     "@capacitor/core": "^7.6.6",
     "@capacitor/ios": "^7.6.6",
     "@capacitor/keyboard": "^7.0.6",
+    "@capacitor/splash-screen": "^7.0.5",
     "@capacitor/status-bar": "^7.0.6",
     "amazon-cognito-identity-js": "^6.3.16",
     "capacitor-secure-storage-plugin": "^0.12.0",
@@ -21,6 +24,7 @@
     "react-dom": "^19.2.6"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^7.6.6",
     "@eslint/js": "^10.0.1",
     "@types/react": "^19.2.14",
