@@ -3,6 +3,13 @@
 
 import { CognitoUser, AuthenticationDetails } from 'amazon-cognito-identity-js';
 import { userPool } from './config';
+import { cognitoStorage } from './lib/secureStorage';
+
+// CognitoUser does NOT inherit storage from its Pool — it only honors a
+// Storage passed directly in its constructor. Without this every new
+// CognitoUser falls back to localStorage even when the Pool was configured
+// with our Keychain-backed adapter.
+const userOpts = (Username) => ({ Username, Pool: userPool, Storage: cognitoStorage });
 
 /**
  * Sign in a user. Returns one of:
@@ -12,7 +19,7 @@ import { userPool } from './config';
  */
 export function signIn(email, password) {
   return new Promise((resolve, reject) => {
-    const user = new CognitoUser({ Username: email, Pool: userPool });
+    const user = new CognitoUser(userOpts(email));
     const auth = new AuthenticationDetails({ Username: email, Password: password });
 
     user.authenticateUser(auth, {

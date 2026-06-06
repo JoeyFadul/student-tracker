@@ -20,12 +20,13 @@ let hydrated = !Capacitor.isNativePlatform();
 
 export async function hydrate() {
   if (hydrated) return;
+  let plugin = null;
   try {
-    const { SecureStoragePlugin } = await import('capacitor-secure-storage-plugin');
-    const { value: keys } = await SecureStoragePlugin.keys();
+    plugin = (await import('capacitor-secure-storage-plugin')).SecureStoragePlugin;
+    const { value: keys } = await plugin.keys();
     for (const key of keys) {
       try {
-        const { value } = await SecureStoragePlugin.get({ key });
+        const { value } = await plugin.get({ key });
         cache.set(key, value);
       } catch {
         // Key disappeared between keys() and get(), or value missing — ignore.
@@ -36,6 +37,27 @@ export async function hydrate() {
     // with an empty cache; the user will simply be asked to sign in.
     console.warn('Secure storage hydrate skipped:', e);
   }
+
+  // One-time migration: if Keychain is empty but localStorage still holds the
+  // Cognito tokens written by an older build (before this module was wired up
+  // correctly), copy them over so the user stays signed in across the upgrade.
+  if (plugin && cache.size === 0) {
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('CognitoIdentityServiceProvider.')) {
+          const v = localStorage.getItem(k);
+          if (v != null) {
+            cache.set(k, v);
+            plugin.set({ key: k, value: v }).catch(() => {});
+          }
+        }
+      }
+    } catch {
+      // localStorage unavailable (private mode etc.) — no migration possible.
+    }
+  }
+
   hydrated = true;
 }
 
