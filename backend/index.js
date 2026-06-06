@@ -99,13 +99,25 @@ async function getActiveYear(classroomId) {
   return r.Item || null;
 }
 
+// Drain a Query across pages. DynamoDB returns up to 1MB per page; classrooms
+// with thousands of events will exceed that and silently truncate without this.
+async function queryAllPages(params) {
+  const items = [];
+  let ExclusiveStartKey;
+  do {
+    const r = await ddb.send(new QueryCommand({ ...params, ExclusiveStartKey }));
+    if (r.Items) items.push(...r.Items);
+    ExclusiveStartKey = r.LastEvaluatedKey;
+  } while (ExclusiveStartKey);
+  return items;
+}
+
 async function listClassroomItems(classroomId, skPrefix) {
-  const r = await ddb.send(new QueryCommand({
+  return queryAllPages({
     TableName: TABLE,
     KeyConditionExpression: 'pk = :pk AND begins_with(sk, :prefix)',
     ExpressionAttributeValues: { ':pk': `CLASSROOM#${classroomId}`, ':prefix': skPrefix },
-  }));
-  return r.Items || [];
+  });
 }
 
 // Convert a stored profile.photo value into something the frontend can render.
@@ -181,12 +193,12 @@ exports.handler = async (event) => {
     // ===== /classrooms (list + create) =====
     if (path === '/classrooms') {
       if (method === 'GET') {
-        const r = await ddb.send(new QueryCommand({
+        const classrooms = await queryAllPages({
           TableName: TABLE,
           KeyConditionExpression: 'pk = :pk AND begins_with(sk, :prefix)',
           ExpressionAttributeValues: { ':pk': `USER#${callerEmail}`, ':prefix': 'MEMBERSHIP#' },
-        }));
-        return respond(200, { classrooms: r.Items || [] });
+        });
+        return respond(200, { classrooms });
       }
 
       if (method === 'POST') {
@@ -195,20 +207,24 @@ exports.handler = async (event) => {
         if (!name) return respond(400, { error: 'name required' });
         const id = randomUUID();
         const now = new Date().toISOString();
-        await Promise.all([
-          ddb.send(new PutCommand({
-            TableName: TABLE,
-            Item: { pk: `CLASSROOM#${id}`, sk: 'META', id, name, ownerEmail: callerEmail, createdAt: now },
-          })),
-          ddb.send(new PutCommand({
-            TableName: TABLE,
-            Item: { pk: `CLASSROOM#${id}`, sk: `MEMBER#${callerEmail}`, email: callerEmail, role: 'owner', joinedAt: now },
-          })),
-          ddb.send(new PutCommand({
-            TableName: TABLE,
-            Item: { pk: `USER#${callerEmail}`, sk: `MEMBERSHIP#${id}`, classroomId: id, classroomName: name, role: 'owner', joinedAt: now },
-          })),
-        ]);
+        // META + classroom-side owner row + user-side membership pointer, atomic
+        // so a partial failure can't leave a classroom with no owner pointer.
+        await ddb.send(new TransactWriteCommand({
+          TransactItems: [
+            { Put: {
+              TableName: TABLE,
+              Item: { pk: `CLASSROOM#${id}`, sk: 'META', id, name, ownerEmail: callerEmail, createdAt: now },
+            } },
+            { Put: {
+              TableName: TABLE,
+              Item: { pk: `CLASSROOM#${id}`, sk: `MEMBER#${callerEmail}`, email: callerEmail, role: 'owner', joinedAt: now },
+            } },
+            { Put: {
+              TableName: TABLE,
+              Item: { pk: `USER#${callerEmail}`, sk: `MEMBERSHIP#${id}`, classroomId: id, classroomName: name, role: 'owner', joinedAt: now },
+            } },
+          ],
+        }));
         return respond(201, { classroomId: id, name, role: 'owner' });
       }
     }
@@ -255,21 +271,24 @@ exports.handler = async (event) => {
       }
       if (method === 'DELETE') {
         if (!isOwner) return respond(403, { error: 'Only the owner can delete' });
-        // Wipe everything in this classroom's partition + each member's MEMBERSHIP record
-        const items = await ddb.send(new QueryCommand({
+        // Wipe everything in this classroom's partition + each member's MEMBERSHIP
+        // pointer. Chunked TransactWrites give atomicity within each batch (max
+        // 100 ops). If a mid-batch fails, retrying is safe — Delete on a missing
+        // key is a no-op so prior chunks won't re-fail.
+        const items = await queryAllPages({
           TableName: TABLE,
           KeyConditionExpression: 'pk = :pk',
           ExpressionAttributeValues: { ':pk': `CLASSROOM#${cid}` },
-        }));
-        const members = (items.Items || []).filter(i => i.sk?.startsWith('MEMBER#'));
-        await Promise.all([
-          ...(items.Items || []).map(i => ddb.send(new DeleteCommand({
-            TableName: TABLE, Key: { pk: i.pk, sk: i.sk },
-          }))),
-          ...members.map(m => ddb.send(new DeleteCommand({
-            TableName: TABLE, Key: { pk: `USER#${m.email}`, sk: `MEMBERSHIP#${cid}` },
-          }))),
-        ]);
+        });
+        const members = items.filter(i => i.sk?.startsWith('MEMBER#'));
+        const writes = [
+          ...items.map(i => ({ Delete: { TableName: TABLE, Key: { pk: i.pk, sk: i.sk } } })),
+          ...members.map(m => ({ Delete: { TableName: TABLE, Key: { pk: `USER#${m.email}`, sk: `MEMBERSHIP#${cid}` } } })),
+        ];
+        const CHUNK = 100;
+        for (let i = 0; i < writes.length; i += CHUNK) {
+          await ddb.send(new TransactWriteCommand({ TransactItems: writes.slice(i, i + CHUNK) }));
+        }
         return respond(204, {});
       }
     }
@@ -287,16 +306,19 @@ exports.handler = async (event) => {
         if (!email) return respond(400, { error: 'email required' });
         const meta = await getClassroomMeta(cid);
         const now = new Date().toISOString();
-        await Promise.all([
-          ddb.send(new PutCommand({
-            TableName: TABLE,
-            Item: { pk: `CLASSROOM#${cid}`, sk: `MEMBER#${email}`, email, role: 'member', joinedAt: now },
-          })),
-          ddb.send(new PutCommand({
-            TableName: TABLE,
-            Item: { pk: `USER#${email}`, sk: `MEMBERSHIP#${cid}`, classroomId: cid, classroomName: meta?.name || '', role: 'member', joinedAt: now },
-          })),
-        ]);
+        // Classroom-side MEMBER row + user-side MEMBERSHIP pointer, atomic.
+        await ddb.send(new TransactWriteCommand({
+          TransactItems: [
+            { Put: {
+              TableName: TABLE,
+              Item: { pk: `CLASSROOM#${cid}`, sk: `MEMBER#${email}`, email, role: 'member', joinedAt: now },
+            } },
+            { Put: {
+              TableName: TABLE,
+              Item: { pk: `USER#${email}`, sk: `MEMBERSHIP#${cid}`, classroomId: cid, classroomName: meta?.name || '', role: 'member', joinedAt: now },
+            } },
+          ],
+        }));
         return respond(201, { email, role: 'member', joinedAt: now });
       }
     }
@@ -307,10 +329,13 @@ exports.handler = async (event) => {
       const email = norm(decodeURIComponent(memberMatch[1]));
       const meta = await getClassroomMeta(cid);
       if (email === meta?.ownerEmail) return respond(400, { error: 'Cannot remove the owner' });
-      await Promise.all([
-        ddb.send(new DeleteCommand({ TableName: TABLE, Key: { pk: `CLASSROOM#${cid}`, sk: `MEMBER#${email}` } })),
-        ddb.send(new DeleteCommand({ TableName: TABLE, Key: { pk: `USER#${email}`, sk: `MEMBERSHIP#${cid}` } })),
-      ]);
+      // Classroom-side MEMBER row + user-side MEMBERSHIP pointer removed atomically.
+      await ddb.send(new TransactWriteCommand({
+        TransactItems: [
+          { Delete: { TableName: TABLE, Key: { pk: `CLASSROOM#${cid}`, sk: `MEMBER#${email}` } } },
+          { Delete: { TableName: TABLE, Key: { pk: `USER#${email}`, sk: `MEMBERSHIP#${cid}` } } },
+        ],
+      }));
       return respond(204, {});
     }
 
@@ -676,7 +701,12 @@ exports.handler = async (event) => {
 
     return respond(404, { error: 'Route not found' });
   } catch (err) {
-    console.error('Handler error:', err);
-    return respond(500, { error: 'Server error', message: err.message });
+    // Log full error server-side; never echo err.message to the client —
+    // DynamoDB/SDK exceptions can leak table names, item keys, and other
+    // implementation details. requestId is enough for support to find this
+    // log entry in CloudWatch.
+    const requestId = event.requestContext?.requestId;
+    console.error('Handler error:', { requestId, err });
+    return respond(500, { error: 'Server error', requestId });
   }
 };
