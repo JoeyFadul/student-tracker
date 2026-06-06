@@ -74,12 +74,19 @@ export function Sheet({ open, onClose, title, children, position = 'bottom' }) {
 
 const backdropStyle = {
   position: 'fixed',
-  inset: 0,
+  top: 0,
+  left: 0,
+  right: 0,
+  // Lift above the soft keyboard on native iOS. The --kb-height variable
+  // is set by native.js's keyboardWillShow/Hide listeners; the transition
+  // curve matches the UIKit default keyboard animation so the sheet
+  // tracks the keyboard slide-in/out without lag.
+  bottom: 'var(--kb-height, 0px)',
   background: 'rgba(28, 25, 23, 0.4)',
   zIndex: 200,
   display: 'flex',
   justifyContent: 'center',
-  transition: 'opacity 0.22s ease',
+  transition: 'opacity 0.22s ease, bottom 0.25s cubic-bezier(0.17, 0.59, 0.4, 0.77)',
 };
 
 const sheetStyle = {

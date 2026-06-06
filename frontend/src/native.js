@@ -18,13 +18,25 @@ export async function setupNative() {
 
   try {
     const { Keyboard, KeyboardResize } = await import('@capacitor/keyboard');
-    // Native resize shrinks the WebView frame itself when the keyboard
-    // opens, so anything fixed to bottom: 0 (sheets, toasts, the tab bar)
-    // re-anchors to the bottom of the now-visible viewport — i.e. above
-    // the keyboard. When the keyboard dismisses, everything snaps back.
-    // Body mode only resizes the document body and leaves bottom-anchored
-    // elements behind the keyboard, which is what bit us.
-    await Keyboard.setResizeMode({ mode: KeyboardResize.Native });
+
+    // Default value so CSS var() resolves before any keyboard event fires.
+    document.documentElement.style.setProperty('--kb-height', '0px');
+
+    // Native resize bakes the offset into the WebView frame but the
+    // resize animation fires at keyboard-show-completion, ~1s after the
+    // keyboard starts sliding in — feels choppy. Take manual control:
+    // keep the WebView at full height and surface the keyboard height
+    // as a CSS variable. keyboardWillShow fires at the START of the
+    // iOS keyboard animation, so a CSS transition that matches iOS's
+    // easing curve will run in sync with the keyboard.
+    await Keyboard.setResizeMode({ mode: KeyboardResize.None });
+
+    Keyboard.addListener('keyboardWillShow', (info) => {
+      document.documentElement.style.setProperty('--kb-height', `${info.keyboardHeight}px`);
+    });
+    Keyboard.addListener('keyboardWillHide', () => {
+      document.documentElement.style.setProperty('--kb-height', '0px');
+    });
   } catch (e) {
     console.warn('Keyboard setup skipped:', e);
   }
