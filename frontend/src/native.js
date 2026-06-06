@@ -18,10 +18,13 @@ export async function setupNative() {
 
   try {
     const { Keyboard, KeyboardResize } = await import('@capacitor/keyboard');
-    // Resize the WebView when the keyboard opens so the keyboard doesn't sit
-    // over inputs (the Add Student form opens from the top so this matters
-    // less, but bulk grant sheets and others still benefit).
-    await Keyboard.setResizeMode({ mode: KeyboardResize.Body });
+    // Native resize shrinks the WebView frame itself when the keyboard
+    // opens, so anything fixed to bottom: 0 (sheets, toasts, the tab bar)
+    // re-anchors to the bottom of the now-visible viewport — i.e. above
+    // the keyboard. When the keyboard dismisses, everything snaps back.
+    // Body mode only resizes the document body and leaves bottom-anchored
+    // elements behind the keyboard, which is what bit us.
+    await Keyboard.setResizeMode({ mode: KeyboardResize.Native });
   } catch (e) {
     console.warn('Keyboard setup skipped:', e);
   }
