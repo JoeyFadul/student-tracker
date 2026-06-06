@@ -18,7 +18,7 @@ export function CustomAmountSheet({ open, initial = 1, onClose, onConfirm }) {
   };
 
   return (
-    <Sheet open={open} onClose={onClose} title="Custom amount" position="top">
+    <Sheet open={open} onClose={onClose} title="Custom amount">
       <input
         type="number"
         inputMode="numeric"
