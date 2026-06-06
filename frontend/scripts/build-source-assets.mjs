@@ -11,42 +11,50 @@ import { fileURLToPath } from 'node:url';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT_DIR = resolve(ROOT, 'resources');
 
-// Navy from theme.colors.headerDark; accent from theme.colors.accent.
+// Navy from theme.colors.headerDark; a warm gold/amber for the star.
+// Gold is chosen over the theme accent orange because "gold star" is the
+// universal teacher-reward symbol — using #FBBF24 (modern amber-400) keeps
+// the tone classic but reads cleanly against the navy.
 const NAVY = '#0E1729';
-const ACCENT = '#E4572E';
+const GOLD = '#FBBF24';
 const WHITE = '#FFFFFF';
 
-// Logo: an "A+" mark — universal symbol for top marks in school. The "A" is
-// the volumetric anchor in white; the "+" sits at the upper-right shoulder
-// in the accent orange so the composition reads as a single graded stamp.
 const FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif';
+
+// SVG path for a regular n-pointed star centered at (cx, cy) with the top
+// point at angle -90°. innerR / outerR ≈ 0.382 gives the classic 5-point
+// silhouette (golden-ratio proportions).
+function starPath(cx, cy, outerR, innerR = outerR * 0.382, points = 5) {
+  const step = Math.PI / points;
+  const start = -Math.PI / 2;
+  const cmds = [];
+  for (let i = 0; i < points * 2; i++) {
+    const r = i % 2 === 0 ? outerR : innerR;
+    const a = start + i * step;
+    const x = cx + Math.cos(a) * r;
+    const y = cy + Math.sin(a) * r;
+    cmds.push(`${i === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`);
+  }
+  cmds.push('Z');
+  return cmds.join(' ');
+}
 
 const iconSvg = `
 <svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
   <rect width="1024" height="1024" fill="${NAVY}"/>
-  <text x="440" y="740"
-        font-family='${FONT}' font-size="620" font-weight="800"
-        fill="${WHITE}" text-anchor="middle">A</text>
-  <text x="730" y="450"
-        font-family='${FONT}' font-size="280" font-weight="800"
-        fill="${ACCENT}" text-anchor="middle">+</text>
+  <path d="${starPath(512, 540, 380)}" fill="${GOLD}"/>
 </svg>
 `;
 
 // Splash is 2732x2732 (Capacitor's recommended source size — iOS crops the
-// center to fit any device aspect). Mark sits above center so the wordmark
-// fits cleanly underneath.
+// center to fit any device aspect). Star sits above center so the wordmark
+// has room beneath.
 const splashSvg = `
 <svg width="2732" height="2732" viewBox="0 0 2732 2732" xmlns="http://www.w3.org/2000/svg">
   <rect width="2732" height="2732" fill="${NAVY}"/>
-  <text x="1235" y="1420"
-        font-family='${FONT}' font-size="720" font-weight="800"
-        fill="${WHITE}" text-anchor="middle">A</text>
-  <text x="1570" y="1080"
-        font-family='${FONT}' font-size="320" font-weight="800"
-        fill="${ACCENT}" text-anchor="middle">+</text>
-  <text x="1366" y="1780"
-        font-family='${FONT}' font-size="118" font-weight="600"
+  <path d="${starPath(1366, 1220, 440)}" fill="${GOLD}"/>
+  <text x="1366" y="1820"
+        font-family='${FONT}' font-size="120" font-weight="600"
         fill="${WHITE}" text-anchor="middle" letter-spacing="-2">Well Done</text>
 </svg>
 `;
