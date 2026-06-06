@@ -59,13 +59,12 @@ export function App() {
     try {
       const fresh = await studentsApi.grantPoints(id, delta, reason);
       setSelectedStudent(fresh);
-      const verb = delta > 0 ? 'Granted' : 'Revoked';
       const eventTimestamp = fresh.eventTimestamp;
       setToast({
-        message: `${verb} ${Math.abs(delta)} ${Math.abs(delta) === 1 ? 'dollar' : 'dollars'} for ${fresh.name}`,
+        delta,
+        message: fresh.name,
         actionLabel: 'Undo',
         onAction: async () => {
-          setToast(null);
           try {
             const undone = await studentsApi.deleteEvent(id, eventTimestamp);
             setSelectedStudent(undone);
@@ -113,10 +112,9 @@ export function App() {
   const handleBulkGrant = useCallback(async (ids, delta, reason) => {
     try {
       await studentsApi.bulkGrantPoints(ids, delta, reason);
-      const verb = delta > 0 ? 'Granted' : 'Revoked';
-      const noun = Math.abs(delta) === 1 ? 'dollar' : 'dollars';
       setToast({
-        message: `${verb} ${Math.abs(delta)} ${noun} to ${ids.length} ${ids.length === 1 ? 'student' : 'students'}`,
+        delta,
+        message: `${ids.length} ${ids.length === 1 ? 'student' : 'students'}`,
       });
     } catch (err) {
       studentsApi.setError(err.message);
@@ -169,6 +167,7 @@ export function App() {
 
   const toastEl = toast && (
     <Toast
+      delta={toast.delta}
       message={toast.message}
       actionLabel={toast.actionLabel}
       onAction={toast.onAction}
