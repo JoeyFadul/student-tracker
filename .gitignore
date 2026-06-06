@@ -7,3 +7,12 @@ dist/
 .DS_Store
 .aws-sam/
 .claude/
+
+# iOS / Capacitor
+frontend/ios/App/Pods/
+frontend/ios/App/build/
+frontend/ios/App/Podfile.lock.bak
+frontend/ios/DerivedData/
+*.xcuserdatad/
+xcuserdata/
+.xcode.env.local

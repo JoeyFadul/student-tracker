@@ -17,8 +17,11 @@ Parameters:
       stack can be deployed without colliding.
   AllowedOrigins:
     Type: CommaDelimitedList
-    Default: "https://welldonestudent.com,https://www.welldonestudent.com,https://d3ck42g5jjmjbj.cloudfront.net"
-    Description: Origins permitted by API + photo bucket CORS. Add localhost entries for dev.
+    Default: "https://welldonestudent.com,https://www.welldonestudent.com,https://d3ck42g5jjmjbj.cloudfront.net,capacitor://localhost"
+    Description: >-
+      Origins permitted by API + photo bucket CORS. capacitor://localhost
+      covers the iOS native build (Capacitor's default scheme). Add
+      http://localhost:5173 for dev when running vite directly.
   AlertEmail:
     Type: String
     Default: joefadul@gmail.com

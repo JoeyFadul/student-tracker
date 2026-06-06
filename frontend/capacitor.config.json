@@ -1,0 +1,8 @@
+{
+  "appId": "com.welldonestudent.app",
+  "appName": "Well Done",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}
