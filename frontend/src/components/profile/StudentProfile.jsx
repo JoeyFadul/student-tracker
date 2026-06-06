@@ -5,7 +5,6 @@ import { usePressable } from '../../hooks/usePressable';
 import { AppHeader } from '../ui/AppHeader';
 import { ProfileHero } from './ProfileHero';
 import { QuickGrantRow } from './QuickGrantRow';
-import { PointsAdjuster } from './PointsAdjuster';
 import { NotesEditor } from './NotesEditor';
 import { ActivityHistory } from './ActivityHistory';
 import { DeleteConfirmModal } from '../modals/DeleteConfirmModal';
@@ -20,7 +19,6 @@ export function StudentProfile({
   uploadingPhoto,
 }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showAdjuster, setShowAdjuster] = useState(false);
 
   const handleDelete = async () => {
     await onDelete(student.id);
@@ -45,7 +43,6 @@ export function StudentProfile({
 
         <QuickGrantRow
           onQuickGrant={(delta, reason) => onGrantPoints(student.id, delta, reason)}
-          onMore={() => setShowAdjuster(true)}
         />
 
         <NotesEditor
@@ -55,15 +52,6 @@ export function StudentProfile({
 
         <ActivityHistory history={student.history || []} />
       </div>
-
-      <PointsAdjuster
-        open={showAdjuster}
-        onClose={() => setShowAdjuster(false)}
-        onAdjust={(delta, reason) => {
-          onGrantPoints(student.id, delta, reason);
-          setShowAdjuster(false);
-        }}
-      />
 
       {showDeleteModal && (
         <DeleteConfirmModal

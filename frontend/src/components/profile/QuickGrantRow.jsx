@@ -3,30 +3,53 @@ import { MoreHorizontal, Plus } from 'lucide-react';
 import { theme } from '../../theme';
 import { usePressable } from '../../hooks/usePressable';
 import { ReasonPrompt } from './ReasonPrompt';
+import { CustomAmountSheet } from '../ui/CustomAmountSheet';
 
 const QUICK_AMOUNTS = [1, 2, 5];
 
-export function QuickGrantRow({ onQuickGrant, onMore }) {
+export function QuickGrantRow({ onQuickGrant }) {
+  // pendingAmount drives the ReasonPrompt. allowRevoke=true only when the
+  // user came in through the custom flow; the 1/2/5 buttons are Grant-only.
   const [pendingAmount, setPendingAmount] = useState(null);
+  const [allowRevoke, setAllowRevoke] = useState(false);
+  const [customOpen, setCustomOpen] = useState(false);
 
-  const confirm = (reason) => {
-    onQuickGrant(pendingAmount, reason);
+  const confirm = (delta, reason) => {
+    onQuickGrant(delta, reason);
     setPendingAmount(null);
+    setAllowRevoke(false);
+  };
+
+  const handleCustomAmount = (n) => {
+    setCustomOpen(false);
+    setPendingAmount(n);
+    setAllowRevoke(true);
   };
 
   return (
     <>
       <div style={wrapStyle}>
         {QUICK_AMOUNTS.map(n => (
-          <QuickButton key={n} amount={n} onClick={() => setPendingAmount(n)} />
+          <QuickButton
+            key={n}
+            amount={n}
+            onClick={() => { setAllowRevoke(false); setPendingAmount(n); }}
+          />
         ))}
-        <MoreButton onClick={onMore} />
+        <MoreButton onClick={() => setCustomOpen(true)} />
       </div>
+
+      <CustomAmountSheet
+        open={customOpen}
+        onClose={() => setCustomOpen(false)}
+        onConfirm={handleCustomAmount}
+      />
 
       <ReasonPrompt
         amount={pendingAmount}
+        allowRevoke={allowRevoke}
         open={pendingAmount !== null}
-        onClose={() => setPendingAmount(null)}
+        onClose={() => { setPendingAmount(null); setAllowRevoke(false); }}
         onConfirm={confirm}
       />
     </>
@@ -46,7 +69,12 @@ function QuickButton({ amount, onClick }) {
 function MoreButton({ onClick }) {
   const { handlers, pressedStyle } = usePressable();
   return (
-    <button onClick={onClick} {...handlers} style={{ ...moreButtonStyle, ...pressedStyle }}>
+    <button
+      onClick={onClick}
+      {...handlers}
+      style={{ ...moreButtonStyle, ...pressedStyle }}
+      aria-label="Custom amount"
+    >
       <MoreHorizontal size={20} color={theme.colors.text} />
     </button>
   );

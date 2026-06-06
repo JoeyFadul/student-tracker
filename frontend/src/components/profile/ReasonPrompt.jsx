@@ -1,23 +1,32 @@
 import { useEffect, useState } from 'react';
-import { Check } from 'lucide-react';
+import { Check, Plus, Minus } from 'lucide-react';
 import { theme } from '../../theme';
 import { Sheet } from '../ui/Sheet';
 import { Button } from '../ui/Button';
 import { PRESET_REASONS } from '../../lib/reasons';
 import { usePressable } from '../../hooks/usePressable';
 
-export function ReasonPrompt({ amount, open, onClose, onConfirm }) {
+// onConfirm is always invoked with (delta, reason). For the 1/2/5 path
+// allowRevoke is false and the single Grant button calls onConfirm(+amount).
+// The custom-amount path passes allowRevoke=true and shows both Grant and
+// Revoke buttons (calling with +amount or -amount respectively).
+export function ReasonPrompt({ amount, allowRevoke = false, open, onClose, onConfirm }) {
   const [reason, setReason] = useState('');
 
   useEffect(() => { if (open) setReason(''); }, [open]);
 
-  const confirm = () => {
-    onConfirm(reason.trim());
+  const submit = (delta) => {
+    onConfirm(delta, reason.trim());
     setReason('');
   };
 
+  const unit = amount === 1 ? 'dollar' : 'dollars';
+  const title = allowRevoke
+    ? (amount ? `Adjust ${amount} ${unit}` : '')
+    : (amount ? `Grant ${amount} ${unit}` : '');
+
   return (
-    <Sheet open={open} onClose={onClose} title={amount ? `Grant ${amount} ${amount === 1 ? 'dollar' : 'dollars'}` : ''}>
+    <Sheet open={open} onClose={onClose} title={title}>
       <div style={hintStyle}>What's it for? (optional)</div>
 
       <input
@@ -35,15 +44,38 @@ export function ReasonPrompt({ amount, open, onClose, onConfirm }) {
         ))}
       </div>
 
-      <Button
-        variant="primary"
-        size="lg"
-        fullWidth
-        onClick={confirm}
-        icon={<Check size={18} strokeWidth={2.5} />}
-      >
-        Grant {amount}
-      </Button>
+      {allowRevoke ? (
+        <div style={{ display: 'flex', gap: 8 }}>
+          <Button
+            variant="success"
+            size="lg"
+            fullWidth
+            onClick={() => submit(amount)}
+            icon={<Plus size={18} strokeWidth={2.5} />}
+          >
+            Grant
+          </Button>
+          <Button
+            variant="dangerSoft"
+            size="lg"
+            fullWidth
+            onClick={() => submit(-amount)}
+            icon={<Minus size={18} strokeWidth={2.5} />}
+          >
+            Revoke
+          </Button>
+        </div>
+      ) : (
+        <Button
+          variant="primary"
+          size="lg"
+          fullWidth
+          onClick={() => submit(amount)}
+          icon={<Check size={18} strokeWidth={2.5} />}
+        >
+          Grant {amount}
+        </Button>
+      )}
     </Sheet>
   );
 }
