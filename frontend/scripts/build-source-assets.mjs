@@ -16,12 +16,20 @@ const NAVY = '#0E1729';
 const ACCENT = '#E4572E';
 const WHITE = '#FFFFFF';
 
+// Logo: an "A+" mark — universal symbol for top marks in school. The "A" is
+// the volumetric anchor in white; the "+" sits at the upper-right shoulder
+// in the accent orange so the composition reads as a single graded stamp.
+const FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif';
+
 const iconSvg = `
 <svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
   <rect width="1024" height="1024" fill="${NAVY}"/>
-  <circle cx="512" cy="512" r="300" stroke="${ACCENT}" stroke-width="14" fill="none" opacity="0.55"/>
-  <path d="M 360 540 L 470 660 L 690 380"
-        stroke="${WHITE}" stroke-width="74" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <text x="440" y="740"
+        font-family='${FONT}' font-size="620" font-weight="800"
+        fill="${WHITE}" text-anchor="middle">A</text>
+  <text x="730" y="450"
+        font-family='${FONT}' font-size="280" font-weight="800"
+        fill="${ACCENT}" text-anchor="middle">+</text>
 </svg>
 `;
 
@@ -31,14 +39,15 @@ const iconSvg = `
 const splashSvg = `
 <svg width="2732" height="2732" viewBox="0 0 2732 2732" xmlns="http://www.w3.org/2000/svg">
   <rect width="2732" height="2732" fill="${NAVY}"/>
-  <g transform="translate(1366, 1240)">
-    <circle r="280" stroke="${ACCENT}" stroke-width="13" fill="none" opacity="0.55"/>
-    <path d="M -130 30 L -25 145 L 195 -115"
-          stroke="${WHITE}" stroke-width="60" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  </g>
-  <text x="1366" y="1750" font-family="-apple-system, system-ui, sans-serif"
-        font-size="116" font-weight="600" fill="${WHITE}" text-anchor="middle"
-        letter-spacing="-2">Well Done</text>
+  <text x="1235" y="1420"
+        font-family='${FONT}' font-size="720" font-weight="800"
+        fill="${WHITE}" text-anchor="middle">A</text>
+  <text x="1570" y="1080"
+        font-family='${FONT}' font-size="320" font-weight="800"
+        fill="${ACCENT}" text-anchor="middle">+</text>
+  <text x="1366" y="1780"
+        font-family='${FONT}' font-size="118" font-weight="600"
+        fill="${WHITE}" text-anchor="middle" letter-spacing="-2">Well Done</text>
 </svg>
 `;
 
