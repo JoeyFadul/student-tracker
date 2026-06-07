@@ -13,7 +13,9 @@ import { NoYearEmptyState } from './NoYearEmptyState';
 import { DashboardSkeleton } from './DashboardSkeleton';
 import { ErrorBanner } from '../ui/ErrorBanner';
 import { AddStudentModal } from '../modals/AddStudentModal';
+import { PullIndicator } from '../ui/PullIndicator';
 import { usePressable } from '../../hooks/usePressable';
+import { usePullToRefresh } from '../../hooks/usePullToRefresh';
 
 export function Dashboard({
   students,
@@ -27,7 +29,11 @@ export function Dashboard({
   onCreateStudent,
   onBulkGrant,
   onGoToSettings,
+  onRefresh,
 }) {
+  // Pull-to-refresh — disabled while bulk-selecting so swiping student rows
+  // doesn't accidentally trigger a refresh.
+  const { pullY, refreshing, threshold } = usePullToRefresh(onRefresh);
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState('recent');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -107,6 +113,7 @@ export function Dashboard({
         }
         action={selectMode ? <CancelButton onClick={exitSelectMode} /> : null}
       />
+      <PullIndicator pullY={pullY} refreshing={refreshing} threshold={threshold} />
       <div style={{ ...containerStyle, paddingBottom: bottomPadding }}>
         <ErrorBanner message={error} onDismiss={onDismissError} />
 

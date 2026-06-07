@@ -240,6 +240,7 @@ export function App() {
         onCreateStudent={studentsApi.createStudent}
         onBulkGrant={handleBulkGrant}
         onGoToSettings={() => setActiveTab('settings')}
+        onRefresh={studentsApi.refresh}
       />
     );
   } else if (activeTab === 'stats') {
