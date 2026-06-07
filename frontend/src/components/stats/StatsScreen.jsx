@@ -5,17 +5,17 @@ import { AppHeader } from '../ui/AppHeader';
 
 export function StatsScreen({ students, api, classroomId, activeYear }) {
   const totalStudents = students.length;
-  const totalDollars = students.reduce((sum, s) => sum + (s.points || 0), 0);
+  const totalPoints = students.reduce((sum, s) => sum + (s.points || 0), 0);
   const onFire = students.filter(s => (s.streak || 0) > 1).length;
-  const avg = totalStudents > 0 ? Math.round(totalDollars / totalStudents) : 0;
+  const avg = totalStudents > 0 ? Math.round(totalPoints / totalStudents) : 0;
 
   return (
     <div style={pageStyle}>
       <AppHeader title="Statistics" subtitle={activeYear?.label || 'No active school year'} />
       <div style={containerStyle}>
         <div style={heroCardStyle}>
-          <div style={heroLabelStyle}>Total dollars</div>
-          <div style={heroNumberStyle}>{totalDollars.toLocaleString()}</div>
+          <div style={heroLabelStyle}>Total points</div>
+          <div style={heroNumberStyle}>{totalPoints.toLocaleString()}</div>
           <div style={heroSubStyle}>
             across {totalStudents} {totalStudents === 1 ? 'student' : 'students'}
           </div>

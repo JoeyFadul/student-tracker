@@ -52,7 +52,7 @@ export function SchoolYearSection({ active, years, onStart, onEnd, onDelete, onO
       ) : (
         <div style={emptyCardStyle}>
           <div style={emptyTitleStyle}>No active school year</div>
-          <div style={emptyHintStyle}>Start one to begin tracking dollars.</div>
+          <div style={emptyHintStyle}>Start one to begin tracking points.</div>
         </div>
       )}
 

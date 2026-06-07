@@ -58,7 +58,7 @@ export function ProfileHero({ student, onPhotoUpload, uploading }) {
 
       <div style={pointsBlockStyle}>
         <div style={pointsValueStyle}>{student.points}</div>
-        <div style={pointsLabelStyle}>dollars earned</div>
+        <div style={pointsLabelStyle}>points earned</div>
       </div>
     </div>
   );

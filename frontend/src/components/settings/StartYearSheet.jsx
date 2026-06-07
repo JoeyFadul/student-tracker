@@ -39,7 +39,7 @@ export function StartYearSheet({ open, onClose, onStart, replacingYear }) {
         <div style={warnStyle}>
           <AlertTriangle size={16} color={theme.colors.warning} style={{ flexShrink: 0, marginTop: 2 }} />
           <div>
-            Starting a new year will <strong>end {replacingYear.label}</strong> and reset every student's dollars to 0. Past dollars will stay viewable as an archive.
+            Starting a new year will <strong>end {replacingYear.label}</strong> and reset every student's points to 0. Past points will stay viewable as an archive.
           </div>
         </div>
       )}

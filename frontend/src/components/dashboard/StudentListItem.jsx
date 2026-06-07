@@ -49,7 +49,7 @@ export function StudentListItem({ student, onClick, selectable, selected }) {
       </div>
       <div style={pointsWrapStyle}>
         <div style={pointsStyle}>{student.points}</div>
-        <div style={pointsLabelStyle}>dollars</div>
+        <div style={pointsLabelStyle}>points</div>
       </div>
       {!selectable && <ChevronRight size={18} color={theme.colors.textFaint} />}
     </button>

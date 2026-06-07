@@ -96,7 +96,7 @@ function StudentRow({ student, rank, onClick }) {
       </div>
       <div style={{ textAlign: 'right' }}>
         <div style={pointsStyle}>{student.points}</div>
-        <div style={pointsLabelStyle}>dollars</div>
+        <div style={pointsLabelStyle}>points</div>
       </div>
       <ChevronRight size={18} color={theme.colors.textFaint} />
     </button>

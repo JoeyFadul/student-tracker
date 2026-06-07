@@ -10,7 +10,7 @@ export function NoYearEmptyState({ onGoToSettings }) {
       </div>
       <h2 style={titleStyle}>No active school year</h2>
       <p style={bodyStyle}>
-        Start a school year to begin tracking dollars. Past years stay viewable as archives.
+        Start a school year to begin tracking points. Past years stay viewable as archives.
       </p>
       <Button
         variant="primary"

@@ -7,7 +7,7 @@ import { ReasonPicker } from './ReasonPicker';
 // path allowRevoke=true and the picker exposes a Grant/Revoke toggle.
 export function ReasonPrompt({ amount, allowRevoke = false, open, onClose, onConfirm }) {
   if (!amount && open) return null;
-  const unit = amount === 1 ? 'dollar' : 'dollars';
+  const unit = amount === 1 ? 'point' : 'points';
   const title = allowRevoke
     ? (amount ? `${amount} ${unit}` : '')
     : (amount ? `Award ${amount} ${unit}` : '');

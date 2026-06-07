@@ -63,7 +63,7 @@ export function YearStudentDetail({ classroomId, year, student, api, onBack }) {
 
           <div style={pointsBlockStyle}>
             <div style={pointsValueStyle}>{data?.points ?? student.points}</div>
-            <div style={pointsLabelStyle}>dollars earned</div>
+            <div style={pointsLabelStyle}>points earned</div>
           </div>
         </div>
 
