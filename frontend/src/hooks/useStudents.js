@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { compressImage } from '../lib/images';
 
 export function useStudents(api, classroomId) {
   const [students, setStudents] = useState([]);
@@ -24,33 +25,42 @@ export function useStudents(api, classroomId) {
     return api.getStudent(classroomId, id);
   }, [api, classroomId]);
 
-  const createStudent = useCallback(async (data, photoFile) => {
-    const created = await api.createStudent(classroomId, data);
-
-    // If the caller passed a File, fetch a presigned upload URL keyed to the
-    // newly-created student's id, PUT the file, and PATCH the student with
-    // the resulting S3 key. The backend requires the student to exist before
-    // it'll sign an upload URL, so this has to happen post-create.
-    let final = created;
-    if (photoFile) {
-      try {
-        const { url, key } = await api.getPhotoUploadUrl(classroomId, created.id);
-        const putRes = await fetch(url, {
-          method: 'PUT', body: photoFile,
-          headers: { 'Content-Type': 'image/jpeg' },
-        });
-        if (!putRes.ok) throw new Error(`Photo upload failed (${putRes.status})`);
-        final = await api.updateStudent(classroomId, created.id, { photo: key });
-      } catch (err) {
-        // Student was created OK; only the photo failed. Surface the error
-        // but keep the student so the user doesn't have to re-enter name/grade.
-        setError(`Photo upload for ${created.name} failed: ${err.message}`);
-      }
+  // Background photo upload — used both at create-time and from the profile
+  // edit path. Compresses on the device first (phone photos are 3–10 MB
+  // out of the camera; resized JPEG is usually 80–200 KB), then PUTs to
+  // the presigned URL and PATCHes the student with the resulting S3 key.
+  // Updates students-list state in place when the photo arrives.
+  const uploadStudentPhoto = useCallback(async (studentId, photoFile) => {
+    try {
+      const compressed = await compressImage(photoFile);
+      const { url, key } = await api.getPhotoUploadUrl(classroomId, studentId);
+      const putRes = await fetch(url, {
+        method: 'PUT', body: compressed,
+        headers: { 'Content-Type': 'image/jpeg' },
+      });
+      if (!putRes.ok) throw new Error(`Photo upload failed (${putRes.status})`);
+      const updated = await api.updateStudent(classroomId, studentId, { photo: key });
+      setStudents(prev => prev.map(s => s.id === studentId ? { ...s, ...updated } : s));
+      return updated;
+    } catch (err) {
+      setError(`Photo upload failed: ${err.message}`);
+      throw err;
     }
-
-    setStudents(prev => [...prev, final]);
-    return final;
   }, [api, classroomId]);
+
+  const createStudent = useCallback(async (data, photoFile) => {
+    // Create the student record first and return immediately — the modal
+    // can close while the photo continues uploading in the background. The
+    // new student renders in the list with the default emoji and the photo
+    // pops in once the upload + PATCH chain finishes.
+    const created = await api.createStudent(classroomId, data);
+    setStudents(prev => [...prev, created]);
+    if (photoFile) {
+      // Fire-and-forget. uploadStudentPhoto handles its own error display.
+      uploadStudentPhoto(created.id, photoFile).catch(() => {});
+    }
+    return created;
+  }, [api, classroomId, uploadStudentPhoto]);
 
   const updateStudent = useCallback(async (id, patch) => {
     const updated = await api.updateStudent(classroomId, id, patch);
@@ -99,5 +109,6 @@ export function useStudents(api, classroomId) {
     students, loading, error, setError, refresh,
     getStudent, createStudent, updateStudent, deleteStudent,
     grantPoints, deleteEvent, bulkGrantPoints, bulkRevertPoints,
+    uploadStudentPhoto,
   };
 }

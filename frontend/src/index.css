@@ -32,3 +32,11 @@ input:focus, textarea:focus, select:focus {
 button {
   -webkit-tap-highlight-color: transparent;
 }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.spin {
+  animation: spin 0.9s linear infinite;
+  transform-origin: 50% 50%;
+}

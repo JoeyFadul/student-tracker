@@ -114,15 +114,12 @@ export function App() {
     if (!selectedStudent || !api || !cid) return;
     setUploadingPhoto(true);
     try {
-      const { url, key } = await api.getPhotoUploadUrl(cid, selectedStudent.id);
-      const putRes = await fetch(url, { method: 'PUT', body: file, headers: { 'Content-Type': 'image/jpeg' } });
-      if (!putRes.ok) throw new Error(`Photo upload failed (${putRes.status})`);
-      // Persist the S3 key; backend converts it to a short-lived presigned GET
-      // URL on every read so the bucket can stay private.
-      const updated = await studentsApi.updateStudent(selectedStudent.id, { photo: key });
+      // Shared upload helper compresses the file, PUTs to S3, and PATCHes
+      // the student. Also keeps the dashboard students list in sync.
+      const updated = await studentsApi.uploadStudentPhoto(selectedStudent.id, file);
       setSelectedStudent(prev => prev ? { ...prev, photo: updated.photo } : prev);
-    } catch (err) {
-      studentsApi.setError(err.message);
+    } catch {
+      // Error is already surfaced via studentsApi.setError inside the hook.
     } finally {
       setUploadingPhoto(false);
     }

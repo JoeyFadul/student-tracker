@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Camera, Flame } from 'lucide-react';
+import { Camera, Flame, Loader2 } from 'lucide-react';
 import { theme } from '../../theme';
 import { getTier } from '../../lib/tiers';
 import { DEFAULT_AVATAR } from '../../lib/avatars';
@@ -28,7 +28,9 @@ export function ProfileHero({ student, onPhotoUpload, uploading }) {
           : <span style={{ fontSize: 56 }}>{student.photo || DEFAULT_AVATAR}</span>
         }
         <div style={{ ...overlayStyle, opacity: (uploading || hovered) ? 1 : 0 }}>
-          {uploading ? <span style={{ color: '#fff', fontSize: 22 }}>⏳</span> : <Camera size={26} color="#fff" />}
+          {uploading
+            ? <Loader2 size={28} color="#fff" strokeWidth={2.5} className="spin" />
+            : <Camera size={26} color="#fff" />}
         </div>
         <input
           ref={fileInputRef}
