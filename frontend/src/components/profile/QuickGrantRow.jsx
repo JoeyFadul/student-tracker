@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MoreHorizontal, Plus } from 'lucide-react';
+import { MoreHorizontal } from 'lucide-react';
 import { theme } from '../../theme';
 import { usePressable } from '../../hooks/usePressable';
 import { ReasonPrompt } from './ReasonPrompt';
@@ -33,7 +33,7 @@ export function QuickGrantRow({ onQuickGrant }) {
           <QuickButton
             key={n}
             amount={n}
-            onClick={() => { setAllowRevoke(false); setPendingAmount(n); }}
+            onClick={() => { setAllowRevoke(true); setPendingAmount(n); }}
           />
         ))}
         <MoreButton onClick={() => setCustomOpen(true)} />
@@ -60,8 +60,7 @@ function QuickButton({ amount, onClick }) {
   const { handlers, pressedStyle } = usePressable();
   return (
     <button onClick={onClick} {...handlers} style={{ ...buttonStyle, ...pressedStyle }}>
-      <Plus size={18} strokeWidth={2.5} />
-      <span style={{ marginLeft: 2 }}>{amount}</span>
+      {amount}
     </button>
   );
 }
