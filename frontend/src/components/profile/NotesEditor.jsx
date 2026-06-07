@@ -47,7 +47,14 @@ export function NotesEditor({ initialValue = '', onSave }) {
     <span style={titleRowStyle}>
       Notes
       {initialValue && !editing && (
-        <Pencil size={14} color={theme.colors.textFaint} aria-hidden />
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          style={pencilButtonStyle}
+          aria-label="Edit note"
+        >
+          <Pencil size={14} color={theme.colors.textFaint} />
+        </button>
       )}
     </span>
   );
@@ -63,7 +70,7 @@ export function NotesEditor({ initialValue = '', onSave }) {
           style={textareaStyle}
         />
         <div style={buttonRowStyle}>
-          <Button variant="outline" size="md" onClick={cancel}>
+          <Button variant="outline" size="md" fullWidth onClick={cancel}>
             Cancel
           </Button>
           <Button
@@ -99,7 +106,19 @@ export function NotesEditor({ initialValue = '', onSave }) {
 const titleRowStyle = {
   display: 'inline-flex',
   alignItems: 'center',
-  gap: 8,
+  gap: 6,
+};
+
+const pencilButtonStyle = {
+  background: 'transparent',
+  border: 'none',
+  padding: 6,
+  margin: -6,
+  cursor: 'pointer',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  WebkitTapHighlightColor: 'transparent',
 };
 
 const textareaStyle = {
