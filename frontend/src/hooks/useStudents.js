@@ -24,10 +24,32 @@ export function useStudents(api, classroomId) {
     return api.getStudent(classroomId, id);
   }, [api, classroomId]);
 
-  const createStudent = useCallback(async (data) => {
+  const createStudent = useCallback(async (data, photoFile) => {
     const created = await api.createStudent(classroomId, data);
-    setStudents(prev => [...prev, created]);
-    return created;
+
+    // If the caller passed a File, fetch a presigned upload URL keyed to the
+    // newly-created student's id, PUT the file, and PATCH the student with
+    // the resulting S3 key. The backend requires the student to exist before
+    // it'll sign an upload URL, so this has to happen post-create.
+    let final = created;
+    if (photoFile) {
+      try {
+        const { url, key } = await api.getPhotoUploadUrl(classroomId, created.id);
+        const putRes = await fetch(url, {
+          method: 'PUT', body: photoFile,
+          headers: { 'Content-Type': 'image/jpeg' },
+        });
+        if (!putRes.ok) throw new Error(`Photo upload failed (${putRes.status})`);
+        final = await api.updateStudent(classroomId, created.id, { photo: key });
+      } catch (err) {
+        // Student was created OK; only the photo failed. Surface the error
+        // but keep the student so the user doesn't have to re-enter name/grade.
+        setError(`Photo upload for ${created.name} failed: ${err.message}`);
+      }
+    }
+
+    setStudents(prev => [...prev, final]);
+    return final;
   }, [api, classroomId]);
 
   const updateStudent = useCallback(async (id, patch) => {
