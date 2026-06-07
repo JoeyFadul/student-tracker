@@ -1,19 +1,28 @@
 import { useState, useRef, useEffect } from 'react';
-import { Pencil } from 'lucide-react';
+import { Pencil, Check } from 'lucide-react';
 import { theme } from '../../theme';
 import { Card } from '../ui/Card';
+import { Button } from '../ui/Button';
 
-// Two display states + an edit state:
-//   - empty + read: subtle pencil + "Add a note" prompt
-//   - filled + read: just the note rendered as clean prose
-//   - editing: textarea focused at the end of the content
-// Saves on blur so there's no explicit save button.
+// Three states:
+//   empty + reading → faint pencil + 'Add a note' prompt
+//   filled + reading → clean prose, pencil next to the title
+//   editing → textarea + Save / Cancel buttons; nothing saves until Save
+//
+// Explicit Save (rather than blur autosave) avoids two problems with the
+// previous approach: an in-flight save landing while the user is still
+// typing could clobber the draft, and on iOS WKWebView a single tap-away
+// can fire blur multiple times, queuing redundant PATCH calls.
 export function NotesEditor({ initialValue = '', onSave }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(initialValue);
   const textareaRef = useRef(null);
 
-  useEffect(() => { setDraft(initialValue); }, [initialValue]);
+  // Only sync from props when not actively editing — protects an in-progress
+  // draft from being overwritten by a background re-fetch.
+  useEffect(() => {
+    if (!editing) setDraft(initialValue);
+  }, [initialValue, editing]);
 
   useEffect(() => {
     if (!editing) return;
@@ -24,8 +33,13 @@ export function NotesEditor({ initialValue = '', onSave }) {
     ta.setSelectionRange(end, end);
   }, [editing]);
 
-  const finishEditing = () => {
+  const save = () => {
     if (draft !== initialValue) onSave(draft);
+    setEditing(false);
+  };
+
+  const cancel = () => {
+    setDraft(initialValue);
     setEditing(false);
   };
 
@@ -38,18 +52,37 @@ export function NotesEditor({ initialValue = '', onSave }) {
     </span>
   );
 
-  return (
-    <Card title={titleNode}>
-      {editing ? (
+  if (editing) {
+    return (
+      <Card title={titleNode}>
         <textarea
           ref={textareaRef}
           value={draft}
           onChange={e => setDraft(e.target.value)}
-          onBlur={finishEditing}
           placeholder="Add a note"
           style={textareaStyle}
         />
-      ) : initialValue ? (
+        <div style={buttonRowStyle}>
+          <Button variant="outline" size="md" onClick={cancel}>
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            size="md"
+            fullWidth
+            onClick={save}
+            icon={<Check size={16} strokeWidth={2.5} />}
+          >
+            Save
+          </Button>
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <Card title={titleNode}>
+      {initialValue ? (
         <button type="button" onClick={() => setEditing(true)} style={readButtonStyle}>
           <div style={proseStyle}>{initialValue}</div>
         </button>
@@ -84,6 +117,12 @@ const textareaStyle = {
   color: theme.colors.text,
   outline: 'none',
   WebkitAppearance: 'none',
+};
+
+const buttonRowStyle = {
+  display: 'flex',
+  gap: 8,
+  marginTop: 12,
 };
 
 const readButtonStyle = {
