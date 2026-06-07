@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react';
 import { theme } from '../../theme';
 
-export function Sheet({ open, onClose, title, children, position = 'bottom' }) {
+// All popups in the app render through here. Layout is a centered modal —
+// vertically centered between the top of the screen and either the bottom
+// of the viewport or the top of the soft keyboard, whichever is higher.
+// The latter is wired via the --kb-height CSS variable that native.js sets
+// from Capacitor's keyboardWillShow/Hide events.
+export function Sheet({ open, onClose, title, children }) {
   const [mounted, setMounted] = useState(open);
   const [visible, setVisible] = useState(false);
 
@@ -11,7 +16,7 @@ export function Sheet({ open, onClose, title, children, position = 'bottom' }) {
       requestAnimationFrame(() => setVisible(true));
     } else {
       setVisible(false);
-      const id = setTimeout(() => setMounted(false), 220);
+      const id = setTimeout(() => setMounted(false), 200);
       return () => clearTimeout(id);
     }
   }, [open]);
@@ -25,48 +30,23 @@ export function Sheet({ open, onClose, title, children, position = 'bottom' }) {
 
   if (!mounted) return null;
 
-  const isTop = position === 'top';
-  const enterTransform = isTop ? 'translateY(-100%)' : 'translateY(100%)';
-
   return (
     <div
-      style={{
-        ...backdropStyle,
-        alignItems: isTop ? 'flex-start' : 'flex-end',
-        opacity: visible ? 1 : 0,
-      }}
+      style={{ ...backdropStyle, opacity: visible ? 1 : 0 }}
       onClick={onClose}
     >
       <div
         style={{
           ...sheetStyle,
-          borderTopLeftRadius: isTop ? 0 : 28,
-          borderTopRightRadius: isTop ? 0 : 28,
-          borderBottomLeftRadius: isTop ? 28 : 0,
-          borderBottomRightRadius: isTop ? 28 : 0,
-          boxShadow: isTop ? '0 8px 32px rgba(28, 25, 23, 0.18)' : theme.shadow.sheet,
-          paddingTop: isTop ? 'env(safe-area-inset-top)' : 0,
-          transform: visible ? 'translateY(0)' : enterTransform,
+          opacity: visible ? 1 : 0,
+          transform: visible ? 'scale(1)' : 'scale(0.95)',
         }}
         onClick={e => e.stopPropagation()}
       >
-        {!isTop && (
-          <div style={handleWrapStyle}>
-            <div style={handleStyle} />
-          </div>
-        )}
-        {title && <div style={{ ...titleStyle, paddingTop: isTop ? 18 : 6 }}>{title}</div>}
-        <div style={{
-          padding: '0 20px 20px',
-          paddingBottom: isTop ? 20 : `calc(20px + ${theme.safeBottom})`,
-        }}>
+        {title && <div style={titleStyle}>{title}</div>}
+        <div style={contentStyle}>
           {children}
         </div>
-        {isTop && (
-          <div style={handleBottomWrapStyle}>
-            <div style={handleStyle} />
-          </div>
-        )}
       </div>
     </div>
   );
@@ -77,50 +57,37 @@ const backdropStyle = {
   top: 0,
   left: 0,
   right: 0,
-  // Lift above the soft keyboard on native iOS. The --kb-height variable
-  // is set by native.js's keyboardWillShow/Hide listeners; the transition
-  // curve matches the UIKit default keyboard animation so the sheet
-  // tracks the keyboard slide-in/out without lag.
+  // Bottom inset is the keyboard height. native.js updates --kb-height via
+  // keyboardWillShow/Hide so the centered modal pops up between the top of
+  // the screen and the top of the keyboard whenever one is open.
   bottom: 'var(--kb-height, 0px)',
   background: 'rgba(28, 25, 23, 0.4)',
   zIndex: 200,
   display: 'flex',
+  alignItems: 'center',
   justifyContent: 'center',
   transition: 'opacity 0.22s ease, bottom 0.25s cubic-bezier(0.17, 0.59, 0.4, 0.77)',
 };
 
 const sheetStyle = {
-  width: '100%',
-  maxWidth: 560,
+  width: 'calc(100% - 32px)',
+  maxWidth: 480,
+  maxHeight: '85dvh',
   background: theme.colors.surface,
-  transition: 'transform 0.28s cubic-bezier(0.16, 1, 0.3, 1)',
-  maxHeight: '92dvh',
+  borderRadius: 24,
+  boxShadow: theme.shadow.lg,
   overflowY: 'auto',
-};
-
-const handleWrapStyle = {
-  padding: '10px 0 6px',
-  display: 'flex',
-  justifyContent: 'center',
-};
-
-const handleBottomWrapStyle = {
-  padding: '6px 0 12px',
-  display: 'flex',
-  justifyContent: 'center',
-};
-
-const handleStyle = {
-  width: 36,
-  height: 4,
-  background: '#d6d3d1',
-  borderRadius: 999,
+  transition: 'opacity 0.18s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
 };
 
 const titleStyle = {
-  padding: '6px 20px 14px',
+  padding: '20px 20px 12px',
   fontSize: theme.font.sizes.title3,
   fontWeight: 700,
   color: theme.colors.text,
   letterSpacing: '-0.01em',
+};
+
+const contentStyle = {
+  padding: '0 20px 20px',
 };

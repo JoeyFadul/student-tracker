@@ -28,7 +28,7 @@ export function DeleteClassroomModal({ classroom, onClose, onConfirm }) {
   if (!classroom) return null;
 
   return (
-    <Modal title="Delete this classroom?" onClose={onClose} position="top">
+    <Modal title="Delete this classroom?" onClose={onClose}>
       <div style={warnStyle}>
         <AlertTriangle size={18} color={theme.colors.danger} style={{ flexShrink: 0, marginTop: 1 }} />
         <div>

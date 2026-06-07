@@ -28,7 +28,7 @@ export function DeleteYearModal({ year, isActive, onClose, onConfirm }) {
   if (!year) return null;
 
   return (
-    <Modal title="Delete this school year?" onClose={onClose} position="top">
+    <Modal title="Delete this school year?" onClose={onClose}>
       <div style={warnStyle}>
         <AlertTriangle size={18} color={theme.colors.danger} style={{ flexShrink: 0, marginTop: 1 }} />
         <div>

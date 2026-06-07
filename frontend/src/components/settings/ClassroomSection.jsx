@@ -236,7 +236,7 @@ function InviteSheet({ open, onClose, onInvite }) {
   };
 
   return (
-    <Sheet open={open} onClose={onClose} title="Invite a teacher" position="top">
+    <Sheet open={open} onClose={onClose} title="Invite a teacher">
       <div style={hintStyle}>They'll see this classroom the next time they sign in.</div>
       <input
         type="email"
