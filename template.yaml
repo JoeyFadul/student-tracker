@@ -100,7 +100,13 @@ Resources:
     Properties:
       UserPoolName: !If [IsProd, !Sub "${AppName}-teachers", !Sub "${AppName}-${Env}-teachers"]
       AdminCreateUserConfig:
-        AllowAdminCreateUserOnly: true
+        # Self-serve signup is on — anyone can create an account via the
+        # public Cognito SignUp API. AutoVerifiedAttributes below requires
+        # the user to confirm their email with a code before the account
+        # can sign in, so spam accounts can't actually do anything.
+        AllowAdminCreateUserOnly: false
+      AutoVerifiedAttributes:
+        - email
       Policies:
         PasswordPolicy:
           MinimumLength: 12

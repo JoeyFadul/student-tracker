@@ -148,6 +148,9 @@ export function App() {
       <LoginScreen
         onSignIn={auth.signIn}
         onSubmitNewPassword={auth.submitNewPassword}
+        onSignUp={auth.signUp}
+        onConfirmSignUp={auth.confirmSignUp}
+        onResendCode={auth.resendCode}
       />
     );
   }

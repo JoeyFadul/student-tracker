@@ -1,7 +1,7 @@
 // Auth helpers. Wraps the Cognito SDK's callback API in promises so
 // components can use async/await instead of nested callbacks.
 
-import { CognitoUser, AuthenticationDetails } from 'amazon-cognito-identity-js';
+import { CognitoUser, AuthenticationDetails, CognitoUserAttribute } from 'amazon-cognito-identity-js';
 import { userPool } from './config';
 import { cognitoStorage } from './lib/secureStorage';
 
@@ -10,6 +10,42 @@ import { cognitoStorage } from './lib/secureStorage';
 // CognitoUser falls back to localStorage even when the Pool was configured
 // with our Keychain-backed adapter.
 const userOpts = (Username) => ({ Username, Pool: userPool, Storage: cognitoStorage });
+
+/**
+ * Create a new account. Cognito emails a 6-digit code; the account is
+ * UNCONFIRMED until confirmSignUp() is called with that code.
+ */
+export function signUp(email, password) {
+  return new Promise((resolve, reject) => {
+    const attrs = [new CognitoUserAttribute({ Name: 'email', Value: email })];
+    userPool.signUp(email, password, attrs, null, (err, result) => {
+      if (err) return reject(err);
+      resolve({ user: result.user, userConfirmed: result.userConfirmed });
+    });
+  });
+}
+
+/** Confirm an UNCONFIRMED account with the emailed code. */
+export function confirmSignUp(email, code) {
+  return new Promise((resolve, reject) => {
+    const user = new CognitoUser(userOpts(email));
+    user.confirmRegistration(code, true, (err, result) => {
+      if (err) return reject(err);
+      resolve(result);
+    });
+  });
+}
+
+/** Re-send the confirmation code (e.g. if the original email got lost). */
+export function resendCode(email) {
+  return new Promise((resolve, reject) => {
+    const user = new CognitoUser(userOpts(email));
+    user.resendConfirmationCode((err, result) => {
+      if (err) return reject(err);
+      resolve(result);
+    });
+  });
+}
 
 /**
  * Sign in a user. Returns one of:
