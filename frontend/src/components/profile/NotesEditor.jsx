@@ -29,15 +29,24 @@ export function NotesEditor({ initialValue = '', onSave }) {
     setEditing(false);
   };
 
+  const titleNode = (
+    <span style={titleRowStyle}>
+      Notes
+      {initialValue && !editing && (
+        <Pencil size={14} color={theme.colors.textFaint} aria-hidden />
+      )}
+    </span>
+  );
+
   return (
-    <Card title="Notes">
+    <Card title={titleNode}>
       {editing ? (
         <textarea
           ref={textareaRef}
           value={draft}
           onChange={e => setDraft(e.target.value)}
           onBlur={finishEditing}
-          placeholder="What stood out today?"
+          placeholder="Add a note"
           style={textareaStyle}
         />
       ) : initialValue ? (
@@ -53,6 +62,12 @@ export function NotesEditor({ initialValue = '', onSave }) {
     </Card>
   );
 }
+
+const titleRowStyle = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 8,
+};
 
 const textareaStyle = {
   width: '100%',
