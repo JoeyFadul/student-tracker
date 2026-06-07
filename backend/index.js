@@ -598,23 +598,26 @@ exports.handler = async (event) => {
         }));
         let history = events.Items || [];
         let payload = profile.Item;
-        // Streak is a current-year signal — never shown when viewing an
-        // archived year, and only counts positive events from the active
-        // year otherwise.
         let streak = 0;
-        if (!archiveYear) {
-          const activeYear = await getActiveYear(cid);
-          if (activeYear?.yearId) {
-            const positives = history
-              .filter(e => e.delta > 0 && e.yearId === activeYear.yearId)
-              .map(e => e.timestamp);
-            streak = computeStreak(positives);
-          }
-        }
         if (archiveYear) {
+          // Viewing an archived year — show only that year's events,
+          // recompute points from them, and don't show a streak (it's a
+          // current-behavior signal).
           history = history.filter(e => e.yearId === archiveYear);
           const points = history.reduce((sum, e) => sum + (e.delta || 0), 0);
           payload = { ...payload, points, archiveYear };
+        } else {
+          // Default (current) view — activity list and streak both scoped
+          // to the active year. With no active year (between end-year and
+          // start-year), the list is empty and streak is 0.
+          const activeYear = await getActiveYear(cid);
+          if (activeYear?.yearId) {
+            history = history.filter(e => e.yearId === activeYear.yearId);
+            const positives = history.filter(e => e.delta > 0).map(e => e.timestamp);
+            streak = computeStreak(positives);
+          } else {
+            history = [];
+          }
         }
         return respond(200, { ...payload, photo: await resolvePhoto(payload.photo), history, streak });
       }
