@@ -10,13 +10,13 @@ export function BulkGrantEntry({ onClick }) {
   return (
     <button onClick={onClick} {...handlers} style={{ ...wrapStyle, ...pressedStyle }}>
       <div style={iconCircleStyle}>
-        <CheckCheck size={18} color={theme.colors.accent} strokeWidth={2.4} />
+        <CheckCheck size={18} color="#fff" strokeWidth={2.6} />
       </div>
       <div style={{ flex: 1, textAlign: 'left' }}>
         <div style={titleStyle}>Bulk grant</div>
         <div style={subtitleStyle}>Reward multiple students at once</div>
       </div>
-      <ChevronRight size={18} color={theme.colors.textFaint} />
+      <ChevronRight size={18} color={theme.colors.textMuted} />
     </button>
   );
 }
@@ -24,12 +24,12 @@ export function BulkGrantEntry({ onClick }) {
 const wrapStyle = {
   display: 'flex',
   alignItems: 'center',
-  gap: 12,
-  padding: '12px 14px',
+  gap: 14,
+  padding: '14px 16px',
   background: theme.colors.surface,
   border: 'none',
   borderRadius: theme.radius.xl,
-  boxShadow: theme.shadow.sm,
+  boxShadow: theme.shadow.md,
   cursor: 'pointer',
   width: '100%',
   fontFamily: theme.font.family,
@@ -39,14 +39,15 @@ const wrapStyle = {
 };
 
 const iconCircleStyle = {
-  width: 36,
-  height: 36,
-  borderRadius: 18,
-  background: theme.colors.accentSoft,
+  width: 38,
+  height: 38,
+  borderRadius: 19,
+  background: theme.colors.accent,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   flexShrink: 0,
+  boxShadow: '0 1px 4px rgba(228, 87, 46, 0.28)',
 };
 
 const titleStyle = {
