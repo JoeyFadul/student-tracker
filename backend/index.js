@@ -500,7 +500,16 @@ exports.handler = async (event) => {
             (archiveByStudent[e.studentId] ||= []).push(e);
           }
         }
-        const enriched = profiles.map(p => {
+        // Current view: hide soft-deleted students. Archive view: include
+        // students who had any events in that year regardless of whether
+        // they were later deleted — soft-delete preserves the profile row
+        // so they remain identifiable in archives. Without the per-year
+        // event gate, students added in a later year would also bleed
+        // through.
+        const visibleProfiles = archiveYear
+          ? profiles.filter(p => (archiveByStudent[p.id] || []).length > 0)
+          : profiles.filter(p => !p.deletedAt);
+        const enriched = visibleProfiles.map(p => {
           const streak = computeStreak(positiveByStudent[p.id] || []);
           if (archiveYear) {
             const yearEvents = archiveByStudent[p.id] || [];
@@ -704,7 +713,16 @@ exports.handler = async (event) => {
       }
 
       if (method === 'DELETE' && !sub) {
-        await ddb.send(new DeleteCommand({ TableName: TABLE, Key: profileKey }));
+        // Soft-delete: stamp deletedAt and keep the profile row so the
+        // student still surfaces in archives of years they had events in.
+        // Hard-deleting the profile would orphan those events from any
+        // displayable identity.
+        await ddb.send(new UpdateCommand({
+          TableName: TABLE, Key: profileKey,
+          UpdateExpression: 'SET deletedAt = :now',
+          ConditionExpression: 'attribute_exists(pk)',
+          ExpressionAttributeValues: { ':now': new Date().toISOString() },
+        }));
         return respond(204, {});
       }
 
