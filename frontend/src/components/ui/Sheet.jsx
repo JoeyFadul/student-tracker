@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { theme } from '../../theme';
 
 // All popups in the app render through here. Layout is a centered modal —
@@ -30,7 +31,13 @@ export function Sheet({ open, onClose, title, children }) {
 
   if (!mounted) return null;
 
-  return (
+  // Portal to <body> so the backdrop's position: fixed is always positioned
+  // relative to the viewport, not the nearest transformed ancestor. Without
+  // this, a Sheet rendered inside another Sheet (e.g. CustomAmountSheet
+  // inside BulkGrantSheet) inherits the parent sheet's transform as its
+  // containing block and ends up sized to the parent panel instead of the
+  // screen.
+  return createPortal(
     <div
       style={{ ...backdropStyle, opacity: visible ? 1 : 0 }}
       onClick={onClose}
@@ -48,7 +55,8 @@ export function Sheet({ open, onClose, title, children }) {
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
