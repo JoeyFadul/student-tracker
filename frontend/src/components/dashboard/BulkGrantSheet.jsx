@@ -1,27 +1,25 @@
 import { useState, useEffect } from 'react';
-import { Plus, Minus, ChevronLeft } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import { theme } from '../../theme';
 import { Sheet } from '../ui/Sheet';
-import { Button } from '../ui/Button';
 import { CustomAmountSheet } from '../ui/CustomAmountSheet';
+import { ReasonPicker } from '../profile/ReasonPicker';
 import { DEFAULT_AVATAR } from '../../lib/avatars';
 import { getTier } from '../../lib/tiers';
-import { PRESET_REASONS } from '../../lib/reasons';
 import { usePressable } from '../../hooks/usePressable';
 
 const PRESET_AMOUNTS = [1, 2, 5];
 
 export function BulkGrantSheet({ open, selected, onBack, onGrant }) {
   const [amount, setAmount] = useState(2);
-  const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
   const [showCustom, setShowCustom] = useState(false);
 
   const isPreset = PRESET_AMOUNTS.includes(amount);
 
-  useEffect(() => { if (open) { setAmount(2); setReason(''); } }, [open]);
+  useEffect(() => { if (open) { setAmount(2); } }, [open]);
 
-  const submit = async (delta) => {
+  const submit = async (delta, reason) => {
     if (busy || selected.length === 0) return;
     setBusy(true);
     try {
@@ -32,19 +30,16 @@ export function BulkGrantSheet({ open, selected, onBack, onGrant }) {
   };
 
   return (
-    <Sheet open={open} onClose={onBack} title={`Reward ${selected.length} ${selected.length === 1 ? 'student' : 'students'}`}>
+    <Sheet
+      open={open}
+      onClose={onBack}
+      title={`Reward ${selected.length} ${selected.length === 1 ? 'student' : 'students'}`}
+    >
       <button onClick={onBack} style={backLinkStyle}>
         <ChevronLeft size={16} /> Change selection
       </button>
 
-      <div style={previewWrapStyle}>
-        {selected.slice(0, 8).map(s => (
-          <StudentPill key={s.id} student={s} />
-        ))}
-        {selected.length > 8 && (
-          <div style={overflowChipStyle}>+{selected.length - 8} more</div>
-        )}
-      </div>
+      <StudentStrip selected={selected} />
 
       <div style={sectionLabelStyle}>Amount</div>
       <div style={amountRowStyle}>
@@ -56,41 +51,8 @@ export function BulkGrantSheet({ open, selected, onBack, onGrant }) {
         </CustomChip>
       </div>
 
-      <div style={sectionLabelStyle}>Reason</div>
-      <input
-        type="text"
-        placeholder="Custom reason…"
-        value={reason}
-        onChange={e => setReason(e.target.value)}
-        style={reasonInputStyle}
-      />
-      <div style={reasonRowStyle}>
-        {PRESET_REASONS.map(r => (
-          <ReasonChip key={r} active={reason === r} onClick={() => setReason(r)}>{r}</ReasonChip>
-        ))}
-      </div>
-
-      <div style={buttonRowStyle}>
-        <Button
-          variant="dangerSoft"
-          size="lg"
-          disabled={busy}
-          onClick={() => submit(-amount)}
-          icon={<Minus size={18} strokeWidth={2.5} />}
-        >
-          Revoke
-        </Button>
-        <Button
-          variant="primary"
-          size="lg"
-          fullWidth
-          disabled={busy}
-          onClick={() => submit(amount)}
-          icon={<Plus size={18} strokeWidth={2.5} />}
-        >
-          Grant {amount} to {selected.length}
-        </Button>
-      </div>
+      <div style={sectionLabelStyle}>Why?</div>
+      <ReasonPicker amount={amount} allowRevoke={true} onSubmit={submit} />
 
       <CustomAmountSheet
         open={showCustom}
@@ -99,6 +61,46 @@ export function BulkGrantSheet({ open, selected, onBack, onGrant }) {
         onConfirm={(n) => { setAmount(n); setShowCustom(false); }}
       />
     </Sheet>
+  );
+}
+
+// Single-line horizontal strip of selected students. Overlapping avatars
+// + an overflow count is a much smaller surface than the wrapping pill
+// block this replaced, which is the bulk of why the bulk sheet felt tall.
+function StudentStrip({ selected }) {
+  const MAX = 6;
+  const overflow = Math.max(0, selected.length - MAX);
+  const shown = selected.slice(0, MAX);
+  return (
+    <div style={stripStyle}>
+      <div style={avatarStackStyle}>
+        {shown.map((s, i) => (
+          <Avatar key={s.id} student={s} index={i} />
+        ))}
+      </div>
+      <span style={stripCountStyle}>
+        {selected.length} {selected.length === 1 ? 'student' : 'students'}
+        {overflow > 0 && ` · +${overflow}`}
+      </span>
+    </div>
+  );
+}
+
+function Avatar({ student, index }) {
+  const tier = getTier(student.points);
+  const isPhotoUrl = student.photo?.startsWith('http');
+  return (
+    <div style={{
+      ...avatarStyle,
+      background: tier.bg,
+      marginLeft: index === 0 ? 0 : -10,
+      zIndex: 10 - index,
+    }}>
+      {isPhotoUrl
+        ? <img src={student.photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        : <span style={{ fontSize: 16 }}>{student.photo || DEFAULT_AVATAR}</span>
+      }
+    </div>
   );
 }
 
@@ -121,22 +123,6 @@ function CustomChip({ active, onClick, children }) {
   );
 }
 
-function StudentPill({ student }) {
-  const tier = getTier(student.points);
-  const isPhotoUrl = student.photo?.startsWith('http');
-  return (
-    <div style={pillStyle}>
-      <div style={{ ...pillAvatarStyle, background: tier.bg }}>
-        {isPhotoUrl
-          ? <img src={student.photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          : <span style={{ fontSize: 14 }}>{student.photo || DEFAULT_AVATAR}</span>
-        }
-      </div>
-      <span style={pillNameStyle}>{student.name.split(' ')[0]}</span>
-    </div>
-  );
-}
-
 function AmountChip({ active, onClick, children }) {
   const { handlers, pressedStyle } = usePressable();
   return (
@@ -148,25 +134,6 @@ function AmountChip({ active, onClick, children }) {
         ...pressedStyle,
         background: active ? theme.colors.text : theme.colors.surfaceAlt,
         color: active ? '#fff' : theme.colors.text,
-      }}
-    >
-      {children}
-    </button>
-  );
-}
-
-function ReasonChip({ active, onClick, children }) {
-  const { handlers, pressedStyle } = usePressable();
-  return (
-    <button
-      onClick={onClick}
-      {...handlers}
-      style={{
-        ...reasonChipStyle,
-        ...pressedStyle,
-        background: active ? theme.colors.accentSoft : theme.colors.surfaceAlt,
-        color: active ? theme.colors.accentDark : theme.colors.text,
-        fontWeight: active ? 600 : 500,
       }}
     >
       {children}
@@ -189,60 +156,44 @@ const backLinkStyle = {
   WebkitTapHighlightColor: 'transparent',
 };
 
-const previewWrapStyle = {
+const stripStyle = {
   display: 'flex',
-  flexWrap: 'wrap',
-  gap: 6,
+  alignItems: 'center',
+  gap: 10,
   marginBottom: 16,
-  padding: 12,
+  padding: '10px 12px',
   background: theme.colors.surfaceAlt,
   borderRadius: theme.radius.md,
 };
 
-const pillStyle = {
+const avatarStackStyle = {
   display: 'flex',
   alignItems: 'center',
-  gap: 6,
-  padding: '4px 10px 4px 4px',
-  background: theme.colors.surface,
-  borderRadius: theme.radius.pill,
-  boxShadow: theme.shadow.sm,
+  flexShrink: 0,
 };
 
-const pillAvatarStyle = {
-  width: 24,
-  height: 24,
-  borderRadius: 12,
+const avatarStyle = {
+  width: 32,
+  height: 32,
+  borderRadius: 16,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   overflow: 'hidden',
-  flexShrink: 0,
+  border: `2px solid ${theme.colors.surfaceAlt}`,
+  boxSizing: 'border-box',
 };
 
-const pillNameStyle = {
-  fontSize: theme.font.sizes.footnote,
-  fontWeight: 500,
-  color: theme.colors.text,
-  maxWidth: 80,
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  whiteSpace: 'nowrap',
-};
-
-const overflowChipStyle = {
-  padding: '4px 10px',
+const stripCountStyle = {
   fontSize: theme.font.sizes.footnote,
   fontWeight: 600,
-  color: theme.colors.textMuted,
-  background: theme.colors.surface,
-  borderRadius: theme.radius.pill,
-  display: 'flex',
-  alignItems: 'center',
+  color: theme.colors.text,
+  flex: 1,
+  textAlign: 'right',
 };
 
 const sectionLabelStyle = {
-  fontSize: theme.font.sizes.footnote,
+  fontSize: theme.font.sizes.caption,
   fontWeight: 600,
   color: theme.colors.textMuted,
   textTransform: 'uppercase',
@@ -258,28 +209,6 @@ const amountRowStyle = {
   alignItems: 'center',
 };
 
-const reasonInputStyle = {
-  width: '100%',
-  padding: '14px 16px',
-  fontSize: theme.font.sizes.body,
-  border: 'none',
-  borderRadius: theme.radius.md,
-  marginBottom: 10,
-  boxSizing: 'border-box',
-  fontFamily: theme.font.family,
-  background: theme.colors.surfaceAlt,
-  color: theme.colors.text,
-  outline: 'none',
-  WebkitAppearance: 'none',
-};
-
-const reasonRowStyle = {
-  display: 'flex',
-  flexWrap: 'wrap',
-  gap: 6,
-  marginBottom: 18,
-};
-
 const amountChipStyle = {
   padding: '8px 18px',
   borderRadius: theme.radius.pill,
@@ -291,20 +220,4 @@ const amountChipStyle = {
   minHeight: 40,
   WebkitTapHighlightColor: 'transparent',
   transition: 'transform 0.1s ease, background 0.15s ease',
-};
-
-const reasonChipStyle = {
-  padding: '6px 12px',
-  borderRadius: theme.radius.pill,
-  border: 'none',
-  fontSize: theme.font.sizes.footnote,
-  cursor: 'pointer',
-  fontFamily: theme.font.family,
-  WebkitTapHighlightColor: 'transparent',
-  transition: 'transform 0.1s ease, background 0.15s ease',
-};
-
-const buttonRowStyle = {
-  display: 'flex',
-  gap: 8,
 };
