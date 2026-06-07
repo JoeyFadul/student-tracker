@@ -38,9 +38,6 @@ export function ProfileHero({ student, onPhotoUpload, uploading }) {
         />
       </div>
 
-      <h1 style={nameStyle}>{student.name}</h1>
-      {student.grade && <div style={gradeStyle}>{student.grade}</div>}
-
       <div style={chipRowStyle}>
         {tier.name && (
           <div style={{ ...chipStyle, background: tier.bg, color: tier.color }}>
@@ -100,21 +97,6 @@ const overlayStyle = {
   alignItems: 'center',
   justifyContent: 'center',
   transition: 'opacity 0.15s ease',
-};
-
-const nameStyle = {
-  fontSize: theme.font.sizes.title1,
-  fontWeight: 700,
-  color: theme.colors.text,
-  margin: 0,
-  letterSpacing: '-0.02em',
-  textAlign: 'center',
-};
-
-const gradeStyle = {
-  fontSize: theme.font.sizes.body,
-  color: theme.colors.textMuted,
-  marginTop: 2,
 };
 
 const chipRowStyle = {

@@ -30,6 +30,7 @@ export function StudentProfile({
     <div style={pageStyle}>
       <AppHeader
         title={student.name}
+        subtitle={student.grade}
         left={<HeaderIconButton icon={<ChevronLeft size={22} color={theme.colors.headerDarkText} />} onClick={onBack} ariaLabel="Back" />}
         action={<HeaderIconButton icon={<Trash2 size={18} color="#FCA5A5" />} onClick={() => setShowDeleteModal(true)} ariaLabel="Delete student" />}
       />
