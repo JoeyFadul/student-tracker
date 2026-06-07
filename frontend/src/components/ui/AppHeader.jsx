@@ -19,6 +19,13 @@ export function AppHeader({ title, subtitle, action, left, dark = true }) {
 const baseWrap = {
   width: '100%',
   paddingTop: 'env(safe-area-inset-top)',
+  // Sticky to the top of the scroll viewport so the title/back button/avatar
+  // stay visible while the content scrolls underneath. zIndex sits between
+  // scrolling content (0) and modal surfaces (200) so it can't ever cover
+  // an open sheet.
+  position: 'sticky',
+  top: 0,
+  zIndex: 100,
 };
 
 const baseInner = {
