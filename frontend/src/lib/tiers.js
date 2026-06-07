@@ -8,6 +8,11 @@ export const TIERS = [
 ];
 
 /** Returns the highest tier the student has reached. */
-export function getTier(points) {
-  return [...TIERS].reverse().find(t => points >= t.min) || TIERS[0];
+export function getTier(/* points */) {
+  // Tiers are intentionally off right now — every student renders as the
+  // default tier so no achievement chip appears (the call sites only show
+  // the chip when tier.name is truthy) and all avatars share one neutral
+  // background. To bring tiers back, restore the previous logic:
+  //   return [...TIERS].reverse().find(t => points >= t.min) || TIERS[0];
+  return TIERS[0];
 }
