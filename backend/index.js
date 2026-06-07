@@ -141,6 +141,14 @@ const PHOTO_PRESIGN_TTL = 60 * 60 * 8; // 8 hours covers a teaching day.
 async function presignPhotoGet(key) {
   return getSignedUrl(s3, new GetObjectCommand({
     Bucket: PHOTO_BUCKET, Key: key,
+    // S3 echoes this back as the Cache-Control response header. Without it,
+    // S3 returns no caching hints and WKWebView/Safari fall back to weak
+    // heuristic caching — coupled with the per-call signature changes, the
+    // browser re-downloads every photo on every navigation. private +
+    // max-age=86400 lets the browser cache for a day; immutable signals
+    // that the underlying bytes never change for a given S3 key (we use a
+    // random suffix per upload, so old URLs point to old bytes forever).
+    ResponseCacheControl: 'private, max-age=86400, immutable',
   }), { expiresIn: PHOTO_PRESIGN_TTL });
 }
 

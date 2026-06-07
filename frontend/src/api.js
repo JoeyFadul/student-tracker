@@ -1,4 +1,9 @@
 import { API_URL } from './config';
+import { resolvePhotoUrl } from './lib/photoCache';
+
+// Replace presigned photo URLs with cache-stable versions so navigations
+// within a session don't re-download the same image. See lib/photoCache.js.
+const withCachedPhoto = (s) => (s ? { ...s, photo: resolvePhotoUrl(s.photo) } : s);
 
 const handleResponse = async (res) => {
   if (!res.ok) {
@@ -37,10 +42,15 @@ export function createApiClient(idToken) {
     removeMember: (cid, email) => del(`${cBase(cid)}/members/${encodeURIComponent(email)}`),
 
     // Students
-    listStudents: (cid, year) => get(`${cBase(cid)}/students${yearQuery(year)}`),
-    getStudent: (cid, id, year) => get(`${cBase(cid)}/students/${id}${yearQuery(year)}`),
-    createStudent: (cid, data) => post(`${cBase(cid)}/students`, data),
-    updateStudent: (cid, id, patchBody) => patch(`${cBase(cid)}/students/${id}`, patchBody),
+    listStudents: (cid, year) =>
+      get(`${cBase(cid)}/students${yearQuery(year)}`)
+        .then(d => ({ ...d, students: (d.students || []).map(withCachedPhoto) })),
+    getStudent: (cid, id, year) =>
+      get(`${cBase(cid)}/students/${id}${yearQuery(year)}`).then(withCachedPhoto),
+    createStudent: (cid, data) =>
+      post(`${cBase(cid)}/students`, data).then(withCachedPhoto),
+    updateStudent: (cid, id, patchBody) =>
+      patch(`${cBase(cid)}/students/${id}`, patchBody).then(withCachedPhoto),
     deleteStudent: (cid, id) => del(`${cBase(cid)}/students/${id}`),
     grantPoints: (cid, id, delta, reason) => post(`${cBase(cid)}/students/${id}/points`, { delta, reason }),
     getPhotoUploadUrl: (cid, id) => get(`${cBase(cid)}/students/${id}/photo-upload`),
