@@ -555,7 +555,54 @@ exports.handler = async (event) => {
           ])),
         }));
       }
-      return respond(200, { count: ids.length, delta, reason, timestamp });
+      return respond(200, { count: ids.length, delta, reason, timestamp, yearId: active.yearId });
+    }
+
+    // POST /students/bulk-revert - exact inverse of /bulk-points. Deletes the
+    // STUDENT_EVENT rows we just wrote (keyed by the same timestamp) and adds
+    // -delta back to each student's points, all atomic per chunk. Only reverses
+    // points when the supplied yearId still matches the active year — if a
+    // year flip happened between the grant and the undo, the events get
+    // removed but points stay at whatever end-year reset them to.
+    if (rest === '/students/bulk-revert' && method === 'POST') {
+      const body = JSON.parse(event.body || '{}');
+      const ids = Array.isArray(body.ids) ? body.ids : [];
+      const delta = parseInt(body.delta, 10);
+      const timestamp = body.timestamp;
+      const yearId = body.yearId;
+      if (!timestamp || !yearId || isNaN(delta) || ids.length === 0) {
+        return respond(400, { error: 'timestamp, yearId, delta, and ids[] required' });
+      }
+      const active = await getActiveYear(cid);
+      const reversePoints = active?.yearId === yearId;
+      const CHUNK = 50;
+      for (let i = 0; i < ids.length; i += CHUNK) {
+        const chunk = ids.slice(i, i + CHUNK);
+        await ddb.send(new TransactWriteCommand({
+          TransactItems: chunk.flatMap(sid => {
+            const items = [
+              { Delete: {
+                  TableName: TABLE,
+                  Key: { pk: `CLASSROOM#${cid}`, sk: `STUDENT_EVENT#${sid}#${timestamp}` },
+                  ConditionExpression: 'attribute_exists(sk) AND #d = :d',
+                  ExpressionAttributeNames: { '#d': 'delta' },
+                  ExpressionAttributeValues: { ':d': delta },
+              } },
+            ];
+            if (reversePoints) {
+              items.push({ Update: {
+                  TableName: TABLE,
+                  Key: { pk: `CLASSROOM#${cid}`, sk: `STUDENT_PROFILE#${sid}` },
+                  UpdateExpression: 'ADD points :d',
+                  ConditionExpression: 'attribute_exists(pk)',
+                  ExpressionAttributeValues: { ':d': -delta },
+              } });
+            }
+            return items;
+          }),
+        }));
+      }
+      return respond(204, {});
     }
 
     // Top reasons

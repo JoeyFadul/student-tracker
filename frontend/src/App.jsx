@@ -111,10 +111,18 @@ export function App() {
 
   const handleBulkGrant = useCallback(async (ids, delta, reason) => {
     try {
-      await studentsApi.bulkGrantPoints(ids, delta, reason);
+      const { timestamp, yearId } = await studentsApi.bulkGrantPoints(ids, delta, reason);
       setToast({
         delta,
         message: `${ids.length} ${ids.length === 1 ? 'student' : 'students'}`,
+        actionLabel: 'Undo',
+        onAction: async () => {
+          try {
+            await studentsApi.bulkRevertPoints(ids, delta, timestamp, yearId);
+          } catch (err) {
+            studentsApi.setError(err.message);
+          }
+        },
       });
     } catch (err) {
       studentsApi.setError(err.message);

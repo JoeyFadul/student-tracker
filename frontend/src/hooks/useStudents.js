@@ -78,13 +78,19 @@ export function useStudents(api, classroomId) {
   }, [api, classroomId]);
 
   const bulkGrantPoints = useCallback(async (ids, delta, reason) => {
-    await api.bulkGrantPoints(classroomId, ids, delta, reason);
+    const result = await api.bulkGrantPoints(classroomId, ids, delta, reason);
     setStudents(prev => prev.map(s => ids.includes(s.id) ? { ...s, points: s.points + delta } : s));
+    return result;
+  }, [api, classroomId]);
+
+  const bulkRevertPoints = useCallback(async (ids, delta, timestamp, yearId) => {
+    await api.bulkRevertPoints(classroomId, ids, delta, timestamp, yearId);
+    setStudents(prev => prev.map(s => ids.includes(s.id) ? { ...s, points: s.points - delta } : s));
   }, [api, classroomId]);
 
   return {
     students, loading, error, setError, refresh,
     getStudent, createStudent, updateStudent, deleteStudent,
-    grantPoints, deleteEvent, bulkGrantPoints,
+    grantPoints, deleteEvent, bulkGrantPoints, bulkRevertPoints,
   };
 }

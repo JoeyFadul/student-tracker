@@ -56,6 +56,8 @@ export function createApiClient(idToken) {
     getPhotoUploadUrl: (cid, id) => get(`${cBase(cid)}/students/${id}/photo-upload`),
     deleteEvent: (cid, id, timestamp) => del(`${cBase(cid)}/students/${id}/events/${encodeURIComponent(timestamp)}`),
     bulkGrantPoints: (cid, ids, delta, reason) => post(`${cBase(cid)}/students/bulk-points`, { ids, delta, reason }),
+    bulkRevertPoints: (cid, ids, delta, timestamp, yearId) =>
+      post(`${cBase(cid)}/students/bulk-revert`, { ids, delta, timestamp, yearId }),
 
     // School years
     listSchoolYears: (cid) => get(`${cBase(cid)}/school-years`),
