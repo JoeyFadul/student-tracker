@@ -481,10 +481,17 @@ exports.handler = async (event) => {
         const archiveYear = query.year;
         const profiles = await listClassroomItems(cid, 'STUDENT_PROFILE#');
         const events = await listClassroomItems(cid, 'STUDENT_EVENT#');
+        // Streak is a *current-year* signal — only positive events from the
+        // active year count. With no active year (between end-year and
+        // start-year), streak collapses to 0 for everyone.
+        const activeYear = await getActiveYear(cid);
+        const activeYearId = activeYear?.yearId;
         const positiveByStudent = {};
         const archiveByStudent = {};
         for (const e of events) {
-          if (e.delta > 0) (positiveByStudent[e.studentId] ||= []).push(e.timestamp);
+          if (e.delta > 0 && activeYearId && e.yearId === activeYearId) {
+            (positiveByStudent[e.studentId] ||= []).push(e.timestamp);
+          }
           if (archiveYear && e.yearId === archiveYear) {
             (archiveByStudent[e.studentId] ||= []).push(e);
           }
@@ -591,12 +598,25 @@ exports.handler = async (event) => {
         }));
         let history = events.Items || [];
         let payload = profile.Item;
+        // Streak is a current-year signal — never shown when viewing an
+        // archived year, and only counts positive events from the active
+        // year otherwise.
+        let streak = 0;
+        if (!archiveYear) {
+          const activeYear = await getActiveYear(cid);
+          if (activeYear?.yearId) {
+            const positives = history
+              .filter(e => e.delta > 0 && e.yearId === activeYear.yearId)
+              .map(e => e.timestamp);
+            streak = computeStreak(positives);
+          }
+        }
         if (archiveYear) {
           history = history.filter(e => e.yearId === archiveYear);
           const points = history.reduce((sum, e) => sum + (e.delta || 0), 0);
           payload = { ...payload, points, archiveYear };
         }
-        return respond(200, { ...payload, photo: await resolvePhoto(payload.photo), history });
+        return respond(200, { ...payload, photo: await resolvePhoto(payload.photo), history, streak });
       }
 
       if (method === 'PATCH' && !sub) {

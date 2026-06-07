@@ -3,14 +3,15 @@ import { Camera, Flame } from 'lucide-react';
 import { theme } from '../../theme';
 import { getTier } from '../../lib/tiers';
 import { DEFAULT_AVATAR } from '../../lib/avatars';
-import { computeStreak } from '../../lib/streaks';
 
 export function ProfileHero({ student, onPhotoUpload, uploading }) {
   const tier = getTier(student.points);
   const fileInputRef = useRef(null);
   const [hovered, setHovered] = useState(false);
   const isPhotoUrl = student.photo?.startsWith('http');
-  const streak = computeStreak(student.history);
+  // Backend filters to active-year-only positive events so a streak can't
+  // survive a year boundary.
+  const streak = student.streak || 0;
   const TierIcon = tier.icon;
 
   return (
