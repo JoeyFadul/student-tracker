@@ -40,6 +40,7 @@ export function ReasonPicker({ amount, allowRevoke = false, onSubmit }) {
           onChange={e => setCustomText(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') submit(customText.trim()); }}
           autoFocus
+          maxLength={50}
           style={inputStyle}
         />
         <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>

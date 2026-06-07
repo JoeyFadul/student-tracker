@@ -530,7 +530,7 @@ exports.handler = async (event) => {
       const delta = parseInt(body.delta, 10);
       const ids = Array.isArray(body.ids) ? body.ids : [];
       if (isNaN(delta) || ids.length === 0) return respond(400, { error: 'delta and ids[] required' });
-      const reason = body.reason || (delta > 0 ? 'Points awarded' : 'Points removed');
+      const reason = (body.reason || (delta > 0 ? 'Points awarded' : 'Points removed')).slice(0, 50);
       const timestamp = new Date().toISOString();
       const CHUNK = 50;
       for (let i = 0; i < ids.length; i += CHUNK) {
@@ -706,7 +706,9 @@ exports.handler = async (event) => {
         const body = JSON.parse(event.body || '{}');
         const delta = parseInt(body.delta, 10);
         if (isNaN(delta)) return respond(400, { error: 'delta required' });
-        const reason = body.reason || (delta > 0 ? 'Points awarded' : 'Points removed');
+        // 50-char cap so the activity row stays one line. Mirror this on the
+        // bulk endpoint below.
+        const reason = (body.reason || (delta > 0 ? 'Points awarded' : 'Points removed')).slice(0, 50);
         const timestamp = new Date().toISOString();
         // Atomic: profile.points increment + event record together.
         await ddb.send(new TransactWriteCommand({
