@@ -29,20 +29,29 @@ export function ReasonPicker({ amount, allowRevoke = false, onSubmit }) {
     onSubmit(delta, reason);
   };
 
+  const REASON_MAX = 50;
+  const remaining = REASON_MAX - customText.length;
+  const counterColor =
+    remaining < 0 ? theme.colors.danger :
+    remaining <= 10 ? theme.colors.warning :
+    theme.colors.textFaint;
+
   if (customMode) {
     return (
       <div>
         {allowRevoke && <ModeToggle mode={mode} setMode={setMode} amount={amount} />}
-        <input
-          type="text"
+        <textarea
           placeholder="Type a reason…"
           value={customText}
           onChange={e => setCustomText(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter') submit(customText.trim()); }}
           autoFocus
-          maxLength={50}
-          style={inputStyle}
+          maxLength={REASON_MAX}
+          rows={3}
+          style={textareaStyle}
         />
+        <div style={{ ...counterStyle, color: counterColor }}>
+          {customText.length} / {REASON_MAX}
+        </div>
         <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
           <Button
             variant="outline"
@@ -196,9 +205,9 @@ const otherButtonStyle = {
   WebkitTapHighlightColor: 'transparent',
 };
 
-const inputStyle = {
+const textareaStyle = {
   width: '100%',
-  padding: '16px 18px',
+  padding: '14px 16px',
   fontSize: theme.font.sizes.body,
   border: 'none',
   borderRadius: theme.radius.md,
@@ -208,4 +217,16 @@ const inputStyle = {
   color: theme.colors.text,
   outline: 'none',
   WebkitAppearance: 'none',
+  resize: 'none',
+  lineHeight: 1.4,
+  minHeight: 72,
+};
+
+const counterStyle = {
+  fontSize: theme.font.sizes.caption,
+  textAlign: 'right',
+  marginTop: 6,
+  marginBottom: 4,
+  fontVariantNumeric: 'tabular-nums',
+  fontWeight: 500,
 };
