@@ -479,12 +479,16 @@ exports.handler = async (event) => {
     if (rest === '/students') {
       if (method === 'GET') {
         const archiveYear = query.year;
-        const profiles = await listClassroomItems(cid, 'STUDENT_PROFILE#');
-        const events = await listClassroomItems(cid, 'STUDENT_EVENT#');
+        // The three reads are independent — fan them out instead of awaiting
+        // sequentially. Saves ~2 round-trips per request.
+        const [profiles, events, activeYear] = await Promise.all([
+          listClassroomItems(cid, 'STUDENT_PROFILE#'),
+          listClassroomItems(cid, 'STUDENT_EVENT#'),
+          getActiveYear(cid),
+        ]);
         // Streak is a *current-year* signal — only positive events from the
         // active year count. With no active year (between end-year and
         // start-year), streak collapses to 0 for everyone.
-        const activeYear = await getActiveYear(cid);
         const activeYearId = activeYear?.yearId;
         const positiveByStudent = {};
         const archiveByStudent = {};
@@ -635,14 +639,18 @@ exports.handler = async (event) => {
 
       if (method === 'GET' && !sub) {
         const archiveYear = query.year;
-        const profile = await ddb.send(new GetCommand({ TableName: TABLE, Key: profileKey }));
+        // Fan out the three reads — they don't depend on each other.
+        const [profile, events, activeYear] = await Promise.all([
+          ddb.send(new GetCommand({ TableName: TABLE, Key: profileKey })),
+          ddb.send(new QueryCommand({
+            TableName: TABLE,
+            KeyConditionExpression: 'pk = :pk AND begins_with(sk, :prefix)',
+            ExpressionAttributeValues: { ':pk': `CLASSROOM#${cid}`, ':prefix': `STUDENT_EVENT#${sid}#` },
+            ScanIndexForward: false, Limit: 200,
+          })),
+          archiveYear ? Promise.resolve(null) : getActiveYear(cid),
+        ]);
         if (!profile.Item) return respond(404, { error: 'Not found' });
-        const events = await ddb.send(new QueryCommand({
-          TableName: TABLE,
-          KeyConditionExpression: 'pk = :pk AND begins_with(sk, :prefix)',
-          ExpressionAttributeValues: { ':pk': `CLASSROOM#${cid}`, ':prefix': `STUDENT_EVENT#${sid}#` },
-          ScanIndexForward: false, Limit: 200,
-        }));
         let history = events.Items || [];
         let payload = profile.Item;
         let streak = 0;
@@ -656,8 +664,8 @@ exports.handler = async (event) => {
         } else {
           // Default (current) view — activity list and streak both scoped
           // to the active year. With no active year (between end-year and
-          // start-year), the list is empty and streak is 0.
-          const activeYear = await getActiveYear(cid);
+          // start-year), the list is empty and streak is 0. activeYear was
+          // fetched in the Promise.all above.
           if (activeYear?.yearId) {
             history = history.filter(e => e.yearId === activeYear.yearId);
             const positives = history.filter(e => e.delta > 0).map(e => e.timestamp);
@@ -730,7 +738,9 @@ exports.handler = async (event) => {
             },
           ],
         }));
-        return respond(200, { eventTimestamp: timestamp });
+        // yearId travels back so the client can append the new event to its
+        // local history without a follow-up GET /students/{id}.
+        return respond(200, { eventTimestamp: timestamp, reason, yearId: active.yearId });
       }
 
       if (method === 'DELETE' && sub.startsWith('/events/')) {

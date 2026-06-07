@@ -64,17 +64,24 @@ export function useStudents(api, classroomId) {
   }, [api, classroomId]);
 
   const grantPoints = useCallback(async (id, delta, reason) => {
+    // Optimistic update — bump points locally and return the event metadata
+    // the caller needs to append to history + offer Undo. Skips the
+    // previous trailing GET /students/{id} that doubled the round-trip on
+    // every grant. Streak might be a tick stale until the next dashboard
+    // load — that's fine, the points/history that the user sees update
+    // immediately.
     const result = await api.grantPoints(classroomId, id, delta, reason);
-    const fresh = await api.getStudent(classroomId, id);
-    setStudents(prev => prev.map(s => s.id === id ? { ...s, points: fresh.points } : s));
-    return { ...fresh, eventTimestamp: result.eventTimestamp };
+    setStudents(prev => prev.map(s => s.id === id ? { ...s, points: s.points + delta } : s));
+    return result;
   }, [api, classroomId]);
 
-  const deleteEvent = useCallback(async (id, timestamp) => {
+  const deleteEvent = useCallback(async (id, timestamp, delta) => {
+    // delta is what was originally granted; subtract it back from points.
+    // Caller (App.jsx handleGrantPoints undo) hands it in from the toast.
     await api.deleteEvent(classroomId, id, timestamp);
-    const fresh = await api.getStudent(classroomId, id);
-    setStudents(prev => prev.map(s => s.id === id ? { ...s, points: fresh.points } : s));
-    return fresh;
+    if (typeof delta === 'number') {
+      setStudents(prev => prev.map(s => s.id === id ? { ...s, points: s.points - delta } : s));
+    }
   }, [api, classroomId]);
 
   const bulkGrantPoints = useCallback(async (ids, delta, reason) => {

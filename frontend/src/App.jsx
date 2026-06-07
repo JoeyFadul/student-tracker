@@ -57,17 +57,36 @@ export function App() {
 
   const handleGrantPoints = useCallback(async (id, delta, reason) => {
     try {
-      const fresh = await studentsApi.grantPoints(id, delta, reason);
-      setSelectedStudent(fresh);
-      const eventTimestamp = fresh.eventTimestamp;
+      const result = await studentsApi.grantPoints(id, delta, reason);
+      const { eventTimestamp, yearId, reason: storedReason } = result;
+      // Optimistically extend selectedStudent so the activity row and the
+      // points number both update immediately — no follow-up GET.
+      let snapshotName = '';
+      setSelectedStudent(prev => {
+        if (!prev || prev.id !== id) return prev;
+        snapshotName = prev.name;
+        const newEvent = { studentId: id, delta, reason: storedReason, timestamp: eventTimestamp, yearId };
+        return {
+          ...prev,
+          points: prev.points + delta,
+          history: [newEvent, ...(prev.history || [])],
+        };
+      });
       setToast({
         delta,
-        message: fresh.name,
+        message: snapshotName,
         actionLabel: 'Undo',
         onAction: async () => {
           try {
-            const undone = await studentsApi.deleteEvent(id, eventTimestamp);
-            setSelectedStudent(undone);
+            await studentsApi.deleteEvent(id, eventTimestamp, delta);
+            setSelectedStudent(prev => {
+              if (!prev || prev.id !== id) return prev;
+              return {
+                ...prev,
+                points: prev.points - delta,
+                history: (prev.history || []).filter(e => e.timestamp !== eventTimestamp),
+              };
+            });
           } catch (err) {
             studentsApi.setError(err.message);
           }
