@@ -5,6 +5,11 @@ html, body {
   padding: 0;
   background: #0E1729;
   color: #1C1917;
+  /* Mirrors theme.font.family. Set globally because Sheet portals to
+     document.body, which breaks inheritance from the React tree —
+     without this, modal titles/labels fall back to the browser default
+     (a serif on iOS). */
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-size-adjust: 100%;
