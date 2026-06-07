@@ -3,6 +3,7 @@ import { ChevronLeft, Archive } from 'lucide-react';
 import { theme } from '../../theme';
 import { getTier } from '../../lib/tiers';
 import { DEFAULT_AVATAR } from '../../lib/avatars';
+import { formatGrade } from '../../lib/grades';
 import { ActivityHistory } from '../profile/ActivityHistory';
 import { usePressable } from '../../hooks/usePressable';
 import { AppHeader } from '../ui/AppHeader';
@@ -51,7 +52,7 @@ export function YearStudentDetail({ classroomId, year, student, api, onBack }) {
             }
           </div>
           <h1 style={nameStyle}>{student.name}</h1>
-          {student.grade && <div style={gradeStyle}>{student.grade}</div>}
+          {student.grade && <div style={gradeStyle}>{formatGrade(student.grade)}</div>}
 
           {tier.name && (
             <div style={chipStyle}>

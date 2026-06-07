@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ChevronLeft, Trash2 } from 'lucide-react';
 import { theme } from '../../theme';
 import { usePressable } from '../../hooks/usePressable';
+import { formatGrade } from '../../lib/grades';
 import { AppHeader } from '../ui/AppHeader';
 import { ProfileHero } from './ProfileHero';
 import { QuickGrantRow } from './QuickGrantRow';
@@ -30,7 +31,7 @@ export function StudentProfile({
     <div style={pageStyle}>
       <AppHeader
         title={student.name}
-        subtitle={student.grade}
+        subtitle={formatGrade(student.grade)}
         left={<HeaderIconButton icon={<ChevronLeft size={22} color={theme.colors.headerDarkText} />} onClick={onBack} ariaLabel="Back" />}
         action={<HeaderIconButton icon={<Trash2 size={18} color="#FCA5A5" />} onClick={() => setShowDeleteModal(true)} ariaLabel="Delete student" />}
       />

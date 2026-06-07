@@ -3,6 +3,7 @@ import { ChevronLeft, Archive, ChevronRight } from 'lucide-react';
 import { theme } from '../../theme';
 import { DEFAULT_AVATAR } from '../../lib/avatars';
 import { getTier } from '../../lib/tiers';
+import { formatGrade } from '../../lib/grades';
 import { usePressable } from '../../hooks/usePressable';
 import { AppHeader } from '../ui/AppHeader';
 import { YearStudentDetail } from './YearStudentDetail';
@@ -91,7 +92,7 @@ function StudentRow({ student, rank, onClick }) {
       </div>
       <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
         <div style={nameStyle}>{student.name}</div>
-        {student.grade && <div style={gradeStyle}>{student.grade}</div>}
+        {student.grade && <div style={gradeStyle}>{formatGrade(student.grade)}</div>}
       </div>
       <div style={{ textAlign: 'right' }}>
         <div style={pointsStyle}>{student.points}</div>
