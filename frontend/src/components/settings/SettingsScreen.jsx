@@ -5,6 +5,7 @@ import { AppHeader } from '../ui/AppHeader';
 import { SettingsRow } from './SettingsRow';
 import { DeleteAccountModal } from './DeleteAccountModal';
 import { usePressable } from '../../hooks/usePressable';
+import { openUrl } from '../../lib/openUrl';
 
 export function SettingsScreen({
   onSignOut,
@@ -46,13 +47,13 @@ export function SettingsScreen({
           <SettingsRow
             icon={<ShieldCheck size={18} color={theme.colors.textMuted} />}
             label="Privacy Policy"
-            onClick={() => window.open('/privacy', '_blank')}
+            onClick={() => openUrl('https://welldonestudent.com/privacy')}
             isFirst
           />
           <SettingsRow
             icon={<FileText size={18} color={theme.colors.textMuted} />}
             label="Terms of Service"
-            onClick={() => window.open('/terms', '_blank')}
+            onClick={() => openUrl('https://welldonestudent.com/terms')}
             isLast
           />
         </div>

@@ -12,6 +12,7 @@
     "assets:generate": "npm run assets:source && capacitor-assets generate --ios"
   },
   "dependencies": {
+    "@capacitor/browser": "^7.0.5",
     "@capacitor/core": "^7.6.6",
     "@capacitor/ios": "^7.6.6",
     "@capacitor/keyboard": "^7.0.6",
