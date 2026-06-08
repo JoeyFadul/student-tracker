@@ -31,9 +31,10 @@ export function Dashboard({
   onGoToSettings,
   onRefresh,
 }) {
-  // Pull-to-refresh — disabled while bulk-selecting so swiping student rows
-  // doesn't accidentally trigger a refresh.
-  const { pullY, refreshing, threshold } = usePullToRefresh(onRefresh);
+  // Pull-to-refresh — the hook drives transform on contentRef and opacity
+  // on spinnerRef directly via the DOM, no React state per touchmove. Only
+  // `refreshing` is re-rendered (start/end of the actual refresh).
+  const { contentRef, spinnerRef, refreshing } = usePullToRefresh(onRefresh);
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState('recent');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -113,8 +114,9 @@ export function Dashboard({
         }
         action={selectMode ? <CancelButton onClick={exitSelectMode} /> : null}
       />
-      <PullIndicator pullY={pullY} refreshing={refreshing} threshold={threshold} />
-      <div style={{ ...containerStyle, paddingBottom: bottomPadding }}>
+      <div ref={contentRef} style={pullWrapStyle}>
+        <PullIndicator ref={spinnerRef} refreshing={refreshing} />
+        <div style={{ ...containerStyle, paddingBottom: bottomPadding }}>
         <ErrorBanner message={error} onDismiss={onDismissError} />
 
         <div style={controlsRowStyle}>
@@ -134,6 +136,7 @@ export function Dashboard({
           selectable={selectMode}
           selectedIds={selectedIds}
         />
+        </div>
       </div>
 
       {!selectMode && <AddStudentButton onClick={() => setShowAddModal(true)} />}
@@ -187,6 +190,16 @@ const containerStyle = {
   maxWidth: 720,
   margin: '0 auto',
   padding: '16px 16px 100px',
+};
+
+const pullWrapStyle = {
+  // Establishes a positioning context for the absolute-positioned spinner
+  // above the content. translateZ(0) parks it on its own GPU layer so the
+  // transform updates from usePullToRefresh don't trigger paint/layout on
+  // anything outside this wrapper.
+  position: 'relative',
+  transform: 'translateZ(0)',
+  willChange: 'transform',
 };
 
 const controlsRowStyle = {

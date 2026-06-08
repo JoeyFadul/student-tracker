@@ -1,22 +1,41 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-const THRESHOLD = 70;     // px the user has to pull (after damping) before release triggers a refresh
-const MAX_PULL = 110;     // visual ceiling so the indicator can't grow forever
-const DRAG_RATIO = 0.5;   // damping — every px the finger moves grows the indicator by half
+const THRESHOLD = 70;
+const MAX_PULL = 110;
+const DRAG_RATIO = 0.5;
 
-// Generic pull-to-refresh wired to the window scroll. Listens at the
-// document level instead of a specific scroll container so it works with
-// the existing screen layout (sticky AppHeader + document-body scroll)
-// without requiring a wrapper element. onRefresh can be sync or async; the
-// indicator stays in the "refreshing" state until it resolves.
+// Pull-to-refresh that mutates the DOM directly during the gesture instead
+// of going through React state. The hook exposes a contentRef (the element
+// that follows the finger via translate3d — GPU-accelerated, no layout) and
+// a spinnerRef (opacity tracks pull progress). React state is only flipped
+// at the start/end of the refresh so the visual gesture itself causes zero
+// re-renders.
 export function usePullToRefresh(onRefresh, enabled = true) {
-  const [{ pullY, refreshing }, setState] = useState({ pullY: 0, refreshing: false });
+  const contentRef = useRef(null);
+  const spinnerRef = useRef(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     if (!enabled) return;
     let startY = null;
     let currentPull = 0;
     let isRefreshing = false;
+
+    const apply = (pullY, animate = false) => {
+      const c = contentRef.current;
+      const s = spinnerRef.current;
+      if (c) {
+        c.style.transition = animate
+          ? 'transform 0.22s cubic-bezier(0.4, 0, 0.2, 1)'
+          : 'none';
+        c.style.transform = `translate3d(0, ${pullY}px, 0)`;
+      }
+      if (s) {
+        const progress = Math.min(1, pullY / THRESHOLD);
+        s.style.transition = animate ? 'opacity 0.22s ease' : 'none';
+        s.style.opacity = String(progress);
+      }
+    };
 
     const onStart = (e) => {
       if (isRefreshing) return;
@@ -29,22 +48,20 @@ export function usePullToRefresh(onRefresh, enabled = true) {
       if (window.scrollY > 0) {
         startY = null;
         currentPull = 0;
-        setState(s => (s.pullY === 0 ? s : { ...s, pullY: 0 }));
+        apply(0);
         return;
       }
       const dy = e.touches[0].clientY - startY;
       if (dy <= 0) {
-        // User reversed direction — abort.
         startY = null;
         currentPull = 0;
-        setState(s => (s.pullY === 0 ? s : { ...s, pullY: 0 }));
+        apply(0);
         return;
       }
-      // Eat the scroll bounce so the page itself doesn't elastic-scroll
-      // while we're driving the indicator.
+      // Suppress the browser's elastic bounce so we drive the gesture.
       e.preventDefault();
       currentPull = Math.min(MAX_PULL, dy * DRAG_RATIO);
-      setState(s => ({ ...s, pullY: currentPull }));
+      apply(currentPull);
     };
 
     const onEnd = async () => {
@@ -53,21 +70,24 @@ export function usePullToRefresh(onRefresh, enabled = true) {
       if (currentPull >= THRESHOLD) {
         isRefreshing = true;
         currentPull = THRESHOLD;
-        setState({ pullY: THRESHOLD, refreshing: true });
+        apply(THRESHOLD, true);
+        setRefreshing(true);
         try {
           await onRefresh?.();
         } finally {
           isRefreshing = false;
           currentPull = 0;
-          setState({ pullY: 0, refreshing: false });
+          apply(0, true);
+          setRefreshing(false);
         }
       } else {
         currentPull = 0;
-        setState(s => (s.pullY === 0 ? s : { ...s, pullY: 0 }));
+        apply(0, true);
       }
     };
 
-    window.addEventListener('touchstart', onStart, { passive: false });
+    // touchstart can stay passive (we never preventDefault there).
+    window.addEventListener('touchstart', onStart, { passive: true });
     window.addEventListener('touchmove', onMove, { passive: false });
     window.addEventListener('touchend', onEnd);
     window.addEventListener('touchcancel', onEnd);
@@ -79,5 +99,5 @@ export function usePullToRefresh(onRefresh, enabled = true) {
     };
   }, [enabled, onRefresh]);
 
-  return { pullY, refreshing, threshold: THRESHOLD };
+  return { contentRef, spinnerRef, refreshing };
 }
