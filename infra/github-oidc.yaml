@@ -49,8 +49,15 @@ Resources:
             Condition:
               StringEquals:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
-              StringLike:
-                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubRepo}:*
+                # Restrict role assumption to workflows whose job binds to the
+                # `prod` or `dev` GitHub Environment. With this, a workflow
+                # running on any branch (or a fork PR if forks were ever
+                # allowed) can no longer assume PowerUserAccess just by being
+                # in the repo — it has to use the protected environment,
+                # which is itself gated by branch-protection rules.
+                token.actions.githubusercontent.com:sub:
+                  - !Sub repo:${GitHubRepo}:environment:prod
+                  - !Sub repo:${GitHubRepo}:environment:dev
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/PowerUserAccess
       Policies:

@@ -120,6 +120,17 @@ async function listClassroomItems(classroomId, skPrefix) {
   });
 }
 
+// Cross-tenant guard. A stored profile.photo is either an emoji/short string
+// (no S3 key — passes through) or an S3 key. If it's an S3 key, it must live
+// under this specific classroom + student namespace. Without this check, an
+// authenticated user could PATCH their own student with someone else's S3
+// key and the next read would presign a URL to that other tenant's photo.
+function isPhotoOwnedBy(photo, cid, sid) {
+  if (!photo || typeof photo !== 'string') return true;
+  if (!photo.startsWith('classrooms/')) return true;
+  return photo.startsWith(`classrooms/${cid}/students/${sid}/`);
+}
+
 // Convert a stored profile.photo value into something the frontend can render.
 // Modern data stores just the S3 key. Legacy data may still have a full s3://
 // or https:// URL — normalize to a key and presign for read. Returns the
@@ -566,10 +577,18 @@ exports.handler = async (event) => {
       if (method === 'POST') {
         const body = JSON.parse(event.body || '{}');
         const id = randomUUID();
+        // A photo S3 key can't legitimately be passed at creation time —
+        // the student doesn't exist yet, so any classrooms/... key would
+        // necessarily belong to a different student. Emoji/default values
+        // are fine.
+        const rawPhoto = typeof body.photo === 'string' ? body.photo : '';
+        if (rawPhoto.startsWith('classrooms/')) {
+          return respond(400, { error: 'photo cannot be set during creation' });
+        }
         const student = {
           pk: `CLASSROOM#${cid}`, sk: `STUDENT_PROFILE#${id}`,
           id, name: body.name || 'New student', grade: body.grade || '',
-          points: 0, photo: body.photo || '', notes: body.notes || '',
+          points: 0, photo: rawPhoto, notes: body.notes || '',
           createdAt: new Date().toISOString(),
         };
         await ddb.send(new PutCommand({ TableName: TABLE, Item: student }));
@@ -788,6 +807,12 @@ exports.handler = async (event) => {
         if (typeof body.photo === 'string' && body.photo.startsWith('http')) {
           const key = photoKeyFromStored(body.photo);
           body.photo = key || '';
+        }
+        // Cross-tenant guard: reject any photo S3 key that doesn't live in
+        // this specific student's namespace. Emoji values and empty strings
+        // pass through. See isPhotoOwnedBy for the threat model.
+        if (body.photo !== undefined && !isPhotoOwnedBy(body.photo, cid, sid)) {
+          return respond(403, { error: 'photo key does not belong to this student' });
         }
         const allowed = ['name', 'grade', 'photo', 'notes'];
         const sets = [], names = {}, values = {};
