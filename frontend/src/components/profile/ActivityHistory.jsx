@@ -1,16 +1,74 @@
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { Loader2 } from 'lucide-react';
 import { theme } from '../../theme';
 import { Card } from '../ui/Card';
 
-export function ActivityHistory({ history = [] }) {
+// Activity list with cursor-based infinite scroll. Renders the initial page
+// (passed in as initialItems + initialCursor by the parent — the profile fetch
+// already returns the first 30 plus a nextCursor), then a sentinel at the
+// bottom that triggers onLoadMore the moment it scrolls into view. Server
+// uses a FilterExpression so a page can come back smaller than 30 even when
+// more events exist; we just keep walking the cursor.
+export function ActivityHistory({ initialItems, initialCursor, onLoadMore }) {
+  const [items, setItems] = useState(initialItems || []);
+  const [cursor, setCursor] = useState(initialCursor || null);
+  const [loading, setLoading] = useState(false);
+  const sentinelRef = useRef(null);
+
+  // Reset when the parent passes a new student (different initialItems
+  // identity) — otherwise opening a second student would append to the
+  // first student's activity list.
+  useEffect(() => {
+    setItems(initialItems || []);
+    setCursor(initialCursor || null);
+  }, [initialItems, initialCursor]);
+
+  const loadMore = useCallback(async () => {
+    if (!cursor || loading || !onLoadMore) return;
+    setLoading(true);
+    try {
+      const { items: nextItems = [], nextCursor = null } = await onLoadMore(cursor) || {};
+      setItems(prev => [...prev, ...nextItems]);
+      setCursor(nextCursor);
+    } catch (err) {
+      console.warn('Activity load-more failed:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [cursor, loading, onLoadMore]);
+
+  // IntersectionObserver fires the moment the sentinel scrolls into view —
+  // no scroll-position math, no resize listeners. Re-attaches whenever the
+  // cursor or sentinel ref changes.
+  useEffect(() => {
+    if (!cursor) return;
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) loadMore();
+    }, { rootMargin: '120px 0px' });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [cursor, loadMore]);
+
   return (
     <Card title="Activity">
-      {history.length === 0 ? (
+      {items.length === 0 && !cursor ? (
         <div style={emptyStyle}>No activity yet</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          {history.map((entry, i) => (
-            <ActivityEntry key={i} entry={entry} isLast={i === history.length - 1} />
+          {items.map((entry, i) => (
+            <ActivityEntry
+              key={entry.timestamp || i}
+              entry={entry}
+              isLast={i === items.length - 1 && !cursor}
+            />
           ))}
+          {cursor && (
+            <div ref={sentinelRef} style={sentinelStyle}>
+              {loading && <Loader2 size={18} color={theme.colors.textMuted} className="spin" />}
+            </div>
+          )}
         </div>
       )}
     </Card>
@@ -83,4 +141,12 @@ const deltaStyle = {
   borderRadius: theme.radius.pill,
   minWidth: 38,
   textAlign: 'center',
+};
+
+const sentinelStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: '16px 0',
+  minHeight: 36,
 };

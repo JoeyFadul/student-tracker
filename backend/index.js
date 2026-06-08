@@ -648,42 +648,95 @@ exports.handler = async (event) => {
 
       if (method === 'GET' && !sub) {
         const archiveYear = query.year;
-        // Fan out the three reads — they don't depend on each other.
-        const [profile, events, activeYear] = await Promise.all([
+        // Parallel: profile + (activeYear if needed). Events get a separate
+        // query below because it needs the yearId to apply a FilterExpression
+        // — the 200-item full-history fetch was the bulk of payload size
+        // before; 30 is plenty for the first-page render and the new
+        // /activity endpoint walks the rest.
+        const [profile, activeYear] = await Promise.all([
           ddb.send(new GetCommand({ TableName: TABLE, Key: profileKey })),
-          ddb.send(new QueryCommand({
-            TableName: TABLE,
-            KeyConditionExpression: 'pk = :pk AND begins_with(sk, :prefix)',
-            ExpressionAttributeValues: { ':pk': `CLASSROOM#${cid}`, ':prefix': `STUDENT_EVENT#${sid}#` },
-            ScanIndexForward: false, Limit: 200,
-          })),
           archiveYear ? Promise.resolve(null) : getActiveYear(cid),
         ]);
         if (!profile.Item) return respond(404, { error: 'Not found' });
-        let history = events.Items || [];
+
+        const yearId = archiveYear || activeYear?.yearId;
+        let history = [];
+        let nextCursor = null;
+        if (yearId) {
+          const events = await ddb.send(new QueryCommand({
+            TableName: TABLE,
+            KeyConditionExpression: 'pk = :pk AND begins_with(sk, :prefix)',
+            FilterExpression: 'yearId = :y',
+            ExpressionAttributeValues: {
+              ':pk': `CLASSROOM#${cid}`,
+              ':prefix': `STUDENT_EVENT#${sid}#`,
+              ':y': yearId,
+            },
+            ScanIndexForward: false,
+            Limit: 30,
+          }));
+          history = events.Items || [];
+          if (events.LastEvaluatedKey) {
+            nextCursor = Buffer.from(JSON.stringify(events.LastEvaluatedKey)).toString('base64');
+          }
+        }
+
         let payload = profile.Item;
         let streak = 0;
         if (archiveYear) {
-          // Viewing an archived year — show only that year's events,
-          // recompute points from them, and don't show a streak (it's a
-          // current-behavior signal).
-          history = history.filter(e => e.yearId === archiveYear);
           const points = history.reduce((sum, e) => sum + (e.delta || 0), 0);
           payload = { ...payload, points, archiveYear };
-        } else {
-          // Default (current) view — activity list and streak both scoped
-          // to the active year. With no active year (between end-year and
-          // start-year), the list is empty and streak is 0. activeYear was
-          // fetched in the Promise.all above.
-          if (activeYear?.yearId) {
-            history = history.filter(e => e.yearId === activeYear.yearId);
-            const positives = history.filter(e => e.delta > 0).map(e => e.timestamp);
-            streak = computeStreak(positives);
-          } else {
-            history = [];
+        } else if (activeYear?.yearId) {
+          const positives = history.filter(e => e.delta > 0).map(e => e.timestamp);
+          streak = computeStreak(positives);
+        }
+        return respond(200, {
+          ...payload,
+          photo: await resolvePhoto(payload.photo),
+          history,
+          historyCursor: nextCursor,
+          streak,
+        });
+      }
+
+      // GET /students/{sid}/activity?cursor=X[&year=Y]
+      // Paginated activity-only endpoint. Walks the same student STUDENT_EVENT
+      // query forward via the LastEvaluatedKey returned in historyCursor.
+      // FilterExpression is server-side so a chunk can come back with fewer
+      // than the Limit if some scanned items don't match the year — the
+      // client just requests the next page.
+      if (sub === '/activity' && method === 'GET') {
+        const archiveYear = query.year;
+        const cursorParam = query.cursor;
+        const activeYear = archiveYear ? null : await getActiveYear(cid);
+        const yearId = archiveYear || activeYear?.yearId;
+        if (!yearId) return respond(200, { items: [], nextCursor: null });
+
+        const params = {
+          TableName: TABLE,
+          KeyConditionExpression: 'pk = :pk AND begins_with(sk, :prefix)',
+          FilterExpression: 'yearId = :y',
+          ExpressionAttributeValues: {
+            ':pk': `CLASSROOM#${cid}`,
+            ':prefix': `STUDENT_EVENT#${sid}#`,
+            ':y': yearId,
+          },
+          ScanIndexForward: false,
+          Limit: 30,
+        };
+        if (cursorParam) {
+          try {
+            params.ExclusiveStartKey = JSON.parse(Buffer.from(cursorParam, 'base64').toString());
+          } catch {
+            // Bad cursor — silently treat as first page rather than 400ing
+            // the user who pulled a stale link.
           }
         }
-        return respond(200, { ...payload, photo: await resolvePhoto(payload.photo), history, streak });
+        const r = await ddb.send(new QueryCommand(params));
+        const nextCursor = r.LastEvaluatedKey
+          ? Buffer.from(JSON.stringify(r.LastEvaluatedKey)).toString('base64')
+          : null;
+        return respond(200, { items: r.Items || [], nextCursor });
       }
 
       if (method === 'PATCH' && !sub) {

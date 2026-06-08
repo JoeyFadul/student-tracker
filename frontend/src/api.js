@@ -53,6 +53,13 @@ export function createApiClient(idToken) {
       patch(`${cBase(cid)}/students/${id}`, patchBody).then(withCachedPhoto),
     deleteStudent: (cid, id) => del(`${cBase(cid)}/students/${id}`),
     grantPoints: (cid, id, delta, reason) => post(`${cBase(cid)}/students/${id}/points`, { delta, reason }),
+    getStudentActivity: (cid, id, cursor, year) => {
+      const params = new URLSearchParams();
+      if (cursor) params.set('cursor', cursor);
+      if (year) params.set('year', year);
+      const qs = params.toString();
+      return get(`${cBase(cid)}/students/${id}/activity${qs ? `?${qs}` : ''}`);
+    },
     getPhotoUploadUrl: (cid, id) => get(`${cBase(cid)}/students/${id}/photo-upload`),
     deleteEvent: (cid, id, timestamp) => del(`${cBase(cid)}/students/${id}/events/${encodeURIComponent(timestamp)}`),
     bulkGrantPoints: (cid, ids, delta, reason) => post(`${cBase(cid)}/students/bulk-points`, { ids, delta, reason }),

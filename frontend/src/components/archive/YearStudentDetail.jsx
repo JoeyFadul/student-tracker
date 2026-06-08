@@ -69,7 +69,11 @@ export function YearStudentDetail({ classroomId, year, student, api, onBack }) {
 
         {error && <div style={errorStyle}>{error}</div>}
 
-        <ActivityHistory history={data?.history || []} />
+        <ActivityHistory
+          initialItems={data?.history || []}
+          initialCursor={data?.historyCursor || null}
+          onLoadMore={(cursor) => api.getStudentActivity(classroomId, student.id, cursor, year.yearId)}
+        />
       </div>
     </div>
   );

@@ -18,6 +18,7 @@ export function StudentProfile({
   onDelete,
   onPhotoUpload,
   uploadingPhoto,
+  onLoadMoreActivity,
 }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
@@ -52,7 +53,11 @@ export function StudentProfile({
           onSave={(notes) => onSaveNotes(student.id, notes)}
         />
 
-        <ActivityHistory history={student.history || []} />
+        <ActivityHistory
+          initialItems={student.history || []}
+          initialCursor={student.historyCursor || null}
+          onLoadMore={onLoadMoreActivity}
+        />
       </div>
 
       {showDeleteModal && (

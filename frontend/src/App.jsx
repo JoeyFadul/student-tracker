@@ -53,6 +53,16 @@ export function App() {
     }
   }, [studentsApi]);
 
+  // Activity pagination — ActivityHistory calls this with the previous
+  // page's nextCursor; we just hand the request to the api client. Kept on
+  // App because it has the api + cid handles selected here.
+  const loadMoreActivity = useCallback(
+    (cursor) => api && cid && selectedStudent
+      ? api.getStudentActivity(cid, selectedStudent.id, cursor)
+      : Promise.resolve({ items: [], nextCursor: null }),
+    [api, cid, selectedStudent]
+  );
+
   const closeStudent = useCallback(() => setSelectedStudent(null), []);
 
   const handleGrantPoints = useCallback(async (id, delta, reason) => {
@@ -215,6 +225,7 @@ export function App() {
         onDelete={handleDeleteStudent}
         onPhotoUpload={handlePhotoUpload}
         uploadingPhoto={uploadingPhoto}
+        onLoadMoreActivity={loadMoreActivity}
       />
     );
   } else if (archiveYear) {
