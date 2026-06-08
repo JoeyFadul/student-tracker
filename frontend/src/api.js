@@ -29,6 +29,9 @@ export function createApiClient(idToken) {
   const cBase = (cid) => `${API_URL}/classrooms/${cid}`;
 
   return {
+    // Account
+    deleteAccount: () => del(`${API_URL}/account`),
+
     // Classrooms
     listClassrooms: () => get(`${API_URL}/classrooms`),
     createClassroom: (name) => post(`${API_URL}/classrooms`, { name }),

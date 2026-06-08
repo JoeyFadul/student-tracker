@@ -10,6 +10,7 @@ import {
   signUp as signUpApi,
   confirmSignUp as confirmSignUpApi,
   resendCode as resendCodeApi,
+  deleteCognitoUser,
 } from '../auth';
 
 // JWT exp is seconds-since-epoch; we use milliseconds throughout the hook.
@@ -131,6 +132,18 @@ export function useAuth() {
 
   const resendCode = useCallback((email) => resendCodeApi(email), []);
 
+  // Two-step account deletion: 1) backend tears down every classroom this
+  // user owns and detaches them from any they joined as a member; 2) the
+  // Cognito identity is removed. Caller passes the api client because the
+  // hook can't know it on its own. On success, local auth state clears so
+  // the app falls back to the login screen.
+  const deleteAccount = useCallback(async (api) => {
+    if (api) await api.deleteAccount();
+    await deleteCognitoUser(cognitoUser);
+    setIdToken(null);
+    setCognitoUser(null);
+  }, [cognitoUser]);
+
   return {
     idToken,
     email: cognitoUser?.getUsername?.() || null,
@@ -142,5 +155,6 @@ export function useAuth() {
     signUp,
     confirmSignUp,
     resendCode,
+    deleteAccount,
   };
 }

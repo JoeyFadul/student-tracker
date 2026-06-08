@@ -237,6 +237,48 @@ exports.handler = async (event) => {
       }
     }
 
+    // DELETE /account — required for App Store submission (iOS 14.5+).
+    // Wipes every classroom this user owns, removes their membership from
+    // every classroom they joined as a member but don't own, then returns
+    // 204. The frontend follows up with cognitoUser.deleteUser() to remove
+    // the Cognito identity itself.
+    if (path === '/account' && method === 'DELETE') {
+      const memberships = await queryAllPages({
+        TableName: TABLE,
+        KeyConditionExpression: 'pk = :pk AND begins_with(sk, :prefix)',
+        ExpressionAttributeValues: { ':pk': `USER#${callerEmail}`, ':prefix': 'MEMBERSHIP#' },
+      });
+      const CHUNK = 100;
+      for (const m of memberships) {
+        const cid = m.classroomId;
+        if (m.role === 'owner') {
+          // Same teardown pattern the classroom DELETE handler uses.
+          const items = await queryAllPages({
+            TableName: TABLE,
+            KeyConditionExpression: 'pk = :pk',
+            ExpressionAttributeValues: { ':pk': `CLASSROOM#${cid}` },
+          });
+          const members = items.filter(i => i.sk?.startsWith('MEMBER#'));
+          const writes = [
+            ...items.map(i => ({ Delete: { TableName: TABLE, Key: { pk: i.pk, sk: i.sk } } })),
+            ...members.map(mem => ({ Delete: { TableName: TABLE, Key: { pk: `USER#${mem.email}`, sk: `MEMBERSHIP#${cid}` } } })),
+          ];
+          for (let i = 0; i < writes.length; i += CHUNK) {
+            await ddb.send(new TransactWriteCommand({ TransactItems: writes.slice(i, i + CHUNK) }));
+          }
+        } else {
+          // Member only — just detach from this classroom.
+          await ddb.send(new TransactWriteCommand({
+            TransactItems: [
+              { Delete: { TableName: TABLE, Key: { pk: `CLASSROOM#${cid}`, sk: `MEMBER#${callerEmail}` } } },
+              { Delete: { TableName: TABLE, Key: { pk: `USER#${callerEmail}`, sk: `MEMBERSHIP#${cid}` } } },
+            ],
+          }));
+        }
+      }
+      return respond(204, {});
+    }
+
     // All routes below require a classroom and membership
     const cidMatch = path.match(/^\/classrooms\/([^/]+)(\/.*)?$/);
     if (!cidMatch) return respond(404, { error: 'Route not found' });

@@ -51,12 +51,12 @@ All traffic between the app and our servers is encrypted in transit (HTTPS / TLS
 - **While your account is active**, we keep everything you've entered so the app remains usable.
 - **When you delete a student**, the student is removed from the active classroom but their record is retained in archived school years so historical reports stay accurate.
 - **When you delete a classroom**, all of its content is removed permanently from our database.
-- **When you delete your account** (email joefadul@gmail.com to request), we will remove your account, classrooms, students, photos, and activity history within 30 days.
+- **When you delete your account** from Settings → Delete Account, every classroom you own is permanently removed (including its students, photos, and activity history). For any classroom you joined as a member but don't own, you are removed from it (the classroom and its owner's data are untouched). Your authentication record is then permanently removed.
 
 ## 6. Your choices
 
 - You can edit or delete any classroom, student, or activity record at any time from inside the app.
-- You can delete your account by emailing **joefadul@gmail.com** from the email address on the account.
+- You can delete your account directly from the app: **Settings → Delete Account**.
 - You can request a copy of your data by emailing the same address.
 
 ## 7. Children's information

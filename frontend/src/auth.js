@@ -36,6 +36,21 @@ export function confirmSignUp(email, code) {
   });
 }
 
+/**
+ * Permanently delete the currently-signed-in Cognito user. Caller must have
+ * already cleaned up their server-side data — this only removes the
+ * authentication record. Uses the access token in the existing session.
+ */
+export function deleteCognitoUser(user) {
+  return new Promise((resolve, reject) => {
+    if (!user) return resolve(null);
+    user.deleteUser((err, result) => {
+      if (err) return reject(err);
+      resolve(result);
+    });
+  });
+}
+
 /** Re-send the confirmation code (e.g. if the original email got lost). */
 export function resendCode(email) {
   return new Promise((resolve, reject) => {

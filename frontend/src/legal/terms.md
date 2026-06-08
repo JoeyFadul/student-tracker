@@ -4,7 +4,7 @@
 
 These terms govern your use of **Well Done** (the "app"), an iOS and web application built by Joey Fadul ("we", "us"). By creating an account or using the app, you agree to these terms. If you don't agree, please don't use the app.
 
-For privacy practices see the [Privacy Policy](./privacy.md).
+For privacy practices see the [Privacy Policy](/privacy).
 
 ---
 
@@ -51,7 +51,7 @@ The app is provided **as-is** and **as-available**. We try to keep it running an
 
 ## 7. Account termination
 
-- **You** can delete your account at any time by emailing **joefadul@gmail.com** from the address on the account. We will remove your account and associated data within 30 days, as described in the Privacy Policy.
+- **You** can delete your account at any time from inside the app: **Settings → Delete Account**. Removal is immediate, as described in the Privacy Policy.
 - **We** may suspend or terminate your account if you materially breach these terms, if your account becomes inactive for an extended period, or if continued operation creates legal risk for us. Where reasonable we will give notice before doing so.
 
 ## 8. Disclaimer
@@ -72,7 +72,7 @@ We may update these terms from time to time. If we make material changes we will
 
 ## 11. Governing law
 
-These terms are governed by the laws of the United States and the State of New Hampshire, without regard to conflict-of-laws principles. Any dispute will be resolved in the state or federal courts located there.
+These terms are governed by the laws of the United States and the Commonwealth of Virginia, without regard to conflict-of-laws principles. Any dispute will be resolved in the state or federal courts located there.
 
 ## 12. Contact
 

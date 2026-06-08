@@ -282,10 +282,12 @@ export function App() {
     screen = (
       <SettingsScreen
         onSignOut={auth.signOut}
+        email={auth.email}
         activeClassroom={classrooms.active}
         activeYearLabel={schoolYear.active?.label}
         onOpenClassroom={() => setSettingsScreen('classroom')}
         onOpenSchoolYear={() => setSettingsScreen('schoolyear')}
+        onDeleteAccount={() => auth.deleteAccount(api)}
       />
     );
   }

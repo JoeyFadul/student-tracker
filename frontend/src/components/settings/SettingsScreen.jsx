@@ -1,16 +1,22 @@
-import { LogOut, School, Calendar } from 'lucide-react';
+import { useState } from 'react';
+import { LogOut, School, Calendar, Trash2, FileText, ShieldCheck } from 'lucide-react';
 import { theme } from '../../theme';
 import { AppHeader } from '../ui/AppHeader';
 import { SettingsRow } from './SettingsRow';
+import { DeleteAccountModal } from './DeleteAccountModal';
 import { usePressable } from '../../hooks/usePressable';
 
 export function SettingsScreen({
   onSignOut,
+  email,
   activeClassroom,
   activeYearLabel,
   onOpenClassroom,
   onOpenSchoolYear,
+  onDeleteAccount,
 }) {
+  const [showDelete, setShowDelete] = useState(false);
+
   return (
     <div style={pageStyle}>
       <AppHeader title="Settings" />
@@ -35,8 +41,34 @@ export function SettingsScreen({
           )}
         </div>
 
+        {/* Legal — opens in the same window as full pages */}
+        <div style={groupStyle}>
+          <SettingsRow
+            icon={<ShieldCheck size={18} color={theme.colors.textMuted} />}
+            label="Privacy Policy"
+            onClick={() => window.open('/privacy', '_blank')}
+            isFirst
+          />
+          <SettingsRow
+            icon={<FileText size={18} color={theme.colors.textMuted} />}
+            label="Terms of Service"
+            onClick={() => window.open('/terms', '_blank')}
+            isLast
+          />
+        </div>
+
         <SignOutRow onClick={onSignOut} />
+
+        <DeleteAccountRow onClick={() => setShowDelete(true)} />
       </div>
+
+      {showDelete && (
+        <DeleteAccountModal
+          email={email}
+          onClose={() => setShowDelete(false)}
+          onConfirm={onDeleteAccount}
+        />
+      )}
     </div>
   );
 }
@@ -47,6 +79,16 @@ function SignOutRow({ onClick }) {
     <button onClick={onClick} {...handlers} style={{ ...signOutStyle, ...pressedStyle }}>
       <LogOut size={18} />
       <span>Sign out</span>
+    </button>
+  );
+}
+
+function DeleteAccountRow({ onClick }) {
+  const { handlers, pressedStyle } = usePressable();
+  return (
+    <button onClick={onClick} {...handlers} style={{ ...deleteAccountStyle, ...pressedStyle }}>
+      <Trash2 size={18} />
+      <span>Delete account</span>
     </button>
   );
 }
@@ -89,4 +131,25 @@ const signOutStyle = {
   cursor: 'pointer',
   transition: 'transform 0.1s ease',
   WebkitTapHighlightColor: 'transparent',
+  marginBottom: 12,
+};
+
+const deleteAccountStyle = {
+  width: '100%',
+  background: 'transparent',
+  border: 'none',
+  borderRadius: theme.radius.xl,
+  padding: '14px 18px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 8,
+  color: theme.colors.danger,
+  fontSize: theme.font.sizes.footnote,
+  fontWeight: 500,
+  fontFamily: theme.font.family,
+  cursor: 'pointer',
+  transition: 'transform 0.1s ease, background 0.15s ease',
+  WebkitTapHighlightColor: 'transparent',
+  opacity: 0.85,
 };
