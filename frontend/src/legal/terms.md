@@ -2,7 +2,7 @@
 
 **Last updated:** June 2026
 
-These terms govern your use of **Well Done** (the "app"), an iOS and web application built by Joey Fadul ("we", "us"). By creating an account or using the app, you agree to these terms. If you don't agree, please don't use the app.
+These terms govern your use of **Well Done** (the "app"), an iOS and web application ("we", "us"). By creating an account or using the app, you agree to these terms. If you don't agree, please don't use the app.
 
 For privacy practices see the [Privacy Policy](/privacy).
 
@@ -62,7 +62,7 @@ Nothing in the app constitutes educational, legal, or professional advice.
 
 ## 9. Limitation of liability
 
-To the maximum extent permitted by law, in no event will Joey Fadul or Well Done be liable for any indirect, incidental, special, consequential, or punitive damages, or for any loss of profits, data, or goodwill, arising out of or in connection with your use of the app — even if advised of the possibility of such damages.
+To the maximum extent permitted by law, in no event will Well Done be liable for any indirect, incidental, special, consequential, or punitive damages, or for any loss of profits, data, or goodwill, arising out of or in connection with your use of the app — even if advised of the possibility of such damages.
 
 Our total liability for any claim arising out of or related to these terms or the app is limited to the amount you have paid us in the twelve months preceding the claim, or US$50, whichever is greater. (The app is currently free, so in most cases this amount will be US$50.)
 
@@ -76,4 +76,4 @@ These terms are governed by the laws of the United States and the Commonwealth o
 
 ## 12. Contact
 
-**Joey Fadul** — joefadul@gmail.com
+**Well Done Support** — support@welldonestudent.com

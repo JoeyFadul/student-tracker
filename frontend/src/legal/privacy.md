@@ -2,7 +2,7 @@
 
 **Last updated:** June 2026
 
-Well Done ("the app", "we", "us") is built by Joey Fadul. This policy explains what data the app collects, how it's used, and the choices you have. The intent is for it to be short and honest. If anything here is unclear, email **joefadul@gmail.com**.
+Well Done ("the app", "we", "us") explains in this policy what data the app collects, how it's used, and the choices you have. The intent is for it to be short and honest. If anything here is unclear, email **support@welldonestudent.com**.
 
 ---
 
@@ -63,7 +63,7 @@ All traffic between the app and our servers is encrypted in transit (HTTPS / TLS
 
 Well Done is **not directed at children**. Accounts are intended for educators. Information *about* children (such as a student's name or photo) may be entered by a teacher as part of running their classroom. We rely on the teacher to have obtained any consent required by their school, district, or applicable law (including FERPA in the U.S.).
 
-If you believe a child's information has been entered into Well Done in a way that violates the law, please email **joefadul@gmail.com** and we will remove it.
+If you believe a child's information has been entered into Well Done in a way that violates the law, please email **support@welldonestudent.com** and we will remove it.
 
 ## 8. Security
 
@@ -86,4 +86,4 @@ If we update this policy, we will change the "Last updated" date at the top. Mat
 ## 11. Contact
 
 Questions, deletion requests, or anything else:
-**Joey Fadul** — joefadul@gmail.com
+**Well Done Support** — support@welldonestudent.com

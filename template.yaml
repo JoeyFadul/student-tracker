@@ -27,7 +27,7 @@ Parameters:
       dev when running vite directly against the photo bucket.
   AlertEmail:
     Type: String
-    Default: joefadul@gmail.com
+    Default: support@welldonestudent.com
     Description: Email address subscribed to the CloudWatch alarms SNS topic.
   CustomDomainCertArn:
     Type: String
