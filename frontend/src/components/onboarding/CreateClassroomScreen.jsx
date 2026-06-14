@@ -57,13 +57,16 @@ export function CreateClassroomScreen({ onCreate, onSignOut, hint }) {
 }
 
 const pageStyle = {
-  minHeight: '100vh',
+  // Shrink the centering box by the keyboard height (set by native.js on
+  // keyboardWillShow/Hide) so the card recenters above the keyboard.
+  minHeight: 'calc(100vh - var(--kb-height, 0px))',
   background: 'transparent',
   fontFamily: theme.font.family,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   padding: 20,
+  transition: 'min-height 0.25s cubic-bezier(0.17, 0.59, 0.4, 0.77)',
 };
 
 const containerStyle = {

@@ -226,13 +226,16 @@ export function LoginScreen({ onSignIn, onSubmitNewPassword, onSignUp, onConfirm
 }
 
 const containerStyle = {
-  minHeight: '100vh',
+  // Shrink the centering box by the keyboard height (set by native.js on
+  // keyboardWillShow/Hide) so the card recenters above the keyboard.
+  minHeight: 'calc(100vh - var(--kb-height, 0px))',
   background: '#F4F5F7',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   padding: 20,
   fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif',
+  transition: 'min-height 0.25s cubic-bezier(0.17, 0.59, 0.4, 0.77)',
 };
 
 const cardStyle = {
