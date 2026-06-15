@@ -48,7 +48,7 @@ export async function setupNative() {
     // the auth restore + initial fetches have a chance to land — without
     // this delay the splash hides before the dashboard data is in, and
     // the user sees a brief Loading… state.
-    await new Promise(resolve => setTimeout(resolve, 900));
+    await new Promise(resolve => setTimeout(resolve, 1500));
     await SplashScreen.hide({ fadeOutDuration: 350 });
   } catch (e) {
     console.warn('SplashScreen.hide skipped:', e);
