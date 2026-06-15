@@ -13,7 +13,7 @@ disable_rollback = false
 # isn't explicitly overridden — so changes to the template Default get silently
 # ignored on subsequent deploys. List value is wrapped in double quotes so the
 # SAM CLI tokenizer treats the comma-delimited list as one opaque value.
-parameter_overrides = 'AppName=well-done Env=prod AllowedOrigins="https://welldonestudent.com,https://www.welldonestudent.com,https://d3ck42g5jjmjbj.cloudfront.net,capacitor://localhost" AlertEmail=support@welldonestudent.com'
+parameter_overrides = 'AppName=well-done Env=prod AllowedOrigins="https://welldonestudent.com,https://www.welldonestudent.com,https://d3ck42g5jjmjbj.cloudfront.net,capacitor://localhost" AlertEmail=support@welldonestudent.com HostedZoneId=Z0272906345DHJEZJGGT CreateEmailIdentity=true'
 image_repositories = []
 
 [default.global.parameters]
@@ -30,7 +30,7 @@ s3_prefix = "well-done-dev"
 confirm_changeset = true
 capabilities = "CAPABILITY_IAM"
 disable_rollback = false
-parameter_overrides = 'AppName=well-done Env=dev AllowedOrigins="https://welldonestudent.com,https://www.welldonestudent.com,https://d3ck42g5jjmjbj.cloudfront.net,capacitor://localhost" AlertEmail=support@welldonestudent.com'
+parameter_overrides = 'AppName=well-done Env=dev AllowedOrigins="https://welldonestudent.com,https://www.welldonestudent.com,https://d3ck42g5jjmjbj.cloudfront.net,capacitor://localhost" AlertEmail=support@welldonestudent.com HostedZoneId=Z0272906345DHJEZJGGT CreateEmailIdentity=false'
 image_repositories = []
 
 [dev.global.parameters]

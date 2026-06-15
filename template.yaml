@@ -39,10 +39,35 @@ Parameters:
     Type: CommaDelimitedList
     Default: "welldonestudent.com,www.welldonestudent.com"
     Description: Aliases on the CloudFront distribution. Leave empty list if no custom domain.
+  HostedZoneId:
+    Type: String
+    Default: Z0272906345DHJEZJGGT
+    Description: Route 53 hosted zone ID for the email domain (welldonestudent.com).
+  EmailDomain:
+    Type: String
+    Default: welldonestudent.com
+    Description: Domain registered as the SES verified identity and used as the From-domain for outbound mail (Cognito verification + password reset).
+  EmailFromAddress:
+    Type: String
+    Default: "Well Done <support@welldonestudent.com>"
+    Description: Full From header. Must use an address on EmailDomain. The "Name <addr>" form gives a friendlier sender label in mail clients.
+  EmailReplyTo:
+    Type: String
+    Default: support@welldonestudent.com
+    Description: Reply-To header for outbound Cognito mail. Should be a real inbox you read.
+  CreateEmailIdentity:
+    Type: String
+    Default: "true"
+    AllowedValues: ["true", "false"]
+    Description: >-
+      Set "false" for non-prod stacks so they reuse the prod-created SES
+      domain identity. SES rejects two identities for the same domain in
+      the same region, so only one stack can own it.
 
 Conditions:
   IsProd: !Equals [!Ref Env, prod]
   HasCustomDomain: !Not [!Equals [!Ref CustomDomainCertArn, ""]]
+  ShouldCreateEmailIdentity: !Equals [!Ref CreateEmailIdentity, "true"]
 
 Resources:
   # ===== DATA: DynamoDB single-table =====
@@ -92,6 +117,77 @@ Resources:
         Rules:
           - ObjectOwnership: BucketOwnerEnforced
 
+  # ===== EMAIL: SES domain identity =====
+  # Cognito sends verification + password-reset mail through this identity
+  # instead of the default no-reply@verificationemail.com (which gets
+  # aggressively spam-filtered). DKIM signing is enabled and the matching
+  # CNAME tokens are added to Route 53 in EmailDnsRecords below. SES
+  # auto-verifies the domain ~10 min after the records propagate.
+  #
+  # Sandbox-mode SES (the default) only delivers to verified RECIPIENT
+  # addresses — you must request production access in the SES console to
+  # send to arbitrary signups (including App Review).
+  EmailIdentity:
+    Type: AWS::SES::EmailIdentity
+    Condition: ShouldCreateEmailIdentity
+    Properties:
+      EmailIdentity: !Ref EmailDomain
+      DkimAttributes:
+        SigningEnabled: true
+
+  # DKIM CNAMEs prove ownership and let SES sign every outbound message; SPF
+  # authorizes SES as a sender for the domain; DMARC tells receivers what to
+  # do with mail that fails alignment + where to send aggregate reports.
+  # Inbox placement requires all three.
+  #
+  # Apex TXT note: Route 53 allows multiple values on one TXT record set, and
+  # the existing google-site-verification token lives at this name. CFN can't
+  # absorb a pre-existing record, so on first deploy of this stack you must
+  # one-time delete the existing apex TXT via:
+  #   aws route53 change-resource-record-sets --hosted-zone-id <ZONE> ...
+  # Both values are then re-created here as a single CFN-owned RecordSet. If
+  # you add another verification (Apple, Microsoft, etc.) in the future,
+  # append it to ResourceRecords below so CFN keeps owning the whole set.
+  EmailDnsRecords:
+    Type: AWS::Route53::RecordSetGroup
+    Condition: ShouldCreateEmailIdentity
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      RecordSets:
+        - Name: !GetAtt EmailIdentity.DkimDNSTokenName1
+          Type: CNAME
+          TTL: "1800"
+          ResourceRecords:
+            - !GetAtt EmailIdentity.DkimDNSTokenValue1
+        - Name: !GetAtt EmailIdentity.DkimDNSTokenName2
+          Type: CNAME
+          TTL: "1800"
+          ResourceRecords:
+            - !GetAtt EmailIdentity.DkimDNSTokenValue2
+        - Name: !GetAtt EmailIdentity.DkimDNSTokenName3
+          Type: CNAME
+          TTL: "1800"
+          ResourceRecords:
+            - !GetAtt EmailIdentity.DkimDNSTokenValue3
+        # SPF on the apex. ~all (softfail) during rollout — flip to -all
+        # (hardfail) after a couple weeks of clean DMARC reports. Second
+        # value is the Google Search Console domain-ownership token that was
+        # at this name before the stack took it over.
+        - Name: !Sub "${EmailDomain}."
+          Type: TXT
+          TTL: "1800"
+          ResourceRecords:
+            - '"v=spf1 include:amazonses.com ~all"'
+            - '"google-site-verification=tIA7RSW0jKEBB24GMAvTmIxr02E7-_kEtJMA6N8yBfk"'
+        # DMARC in monitor-only mode (p=none) so nothing gets rejected during
+        # ramp-up. Aggregate reports land at support@. Harden to p=quarantine
+        # then p=reject once reports are clean.
+        - Name: !Sub "_dmarc.${EmailDomain}."
+          Type: TXT
+          TTL: "1800"
+          ResourceRecords:
+            - '"v=DMARC1; p=none; rua=mailto:support@welldonestudent.com; pct=100"'
+
   # ===== AUTH: Cognito user pool =====
   UserPool:
     Type: AWS::Cognito::UserPool
@@ -107,6 +203,28 @@ Resources:
         AllowAdminCreateUserOnly: false
       AutoVerifiedAttributes:
         - email
+      EmailConfiguration:
+        # DEVELOPER mode = send through the project's own SES identity
+        # (instead of Cognito's shared low-deliverability default). The
+        # SourceArn must point at a SES identity that is already in the
+        # Verified state, so a fresh stack-from-scratch deploy needs two
+        # passes: first creates the SES identity + DNS records, then
+        # ~10 min later (after SES auto-verifies the DKIM CNAMEs) the
+        # second pass adds this block.
+        EmailSendingAccount: DEVELOPER
+        From: !Ref EmailFromAddress
+        ReplyToEmailAddress: !Ref EmailReplyTo
+        SourceArn: !Sub "arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/${EmailDomain}"
+      VerificationMessageTemplate:
+        DefaultEmailOption: CONFIRM_WITH_CODE
+        EmailSubject: "Your Well Done verification code"
+        EmailMessage: |
+          <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;color:#1c1917;">
+            <h1 style="font-size:24px;font-weight:700;margin:0 0 16px;letter-spacing:-0.01em;">Welcome to Well Done</h1>
+            <p style="font-size:16px;line-height:1.5;margin:0 0 24px;color:#44403c;">Use the code below to verify your email and finish setting up your account.</p>
+            <div style="background:#f4f5f7;border-radius:12px;padding:20px;text-align:center;font-size:28px;font-weight:700;letter-spacing:6px;color:#1c1917;">{####}</div>
+            <p style="font-size:13px;color:#78716c;margin:24px 0 0;">If you didn't sign up for Well Done, you can ignore this email.</p>
+          </div>
       Policies:
         PasswordPolicy:
           MinimumLength: 12
