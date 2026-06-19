@@ -29,6 +29,21 @@ function getTokenExpMs(token) {
 // check below — if we're within this window of expiry on resume, refresh now.
 const REFRESH_LEAD_MS = 5 * 60 * 1000;
 
+// User-scoped state (currently just the remembered active classroom id) lives
+// in localStorage under a wd: prefix. Cognito's signOut clears its own token
+// keys but knows nothing about ours, so without this sweep the next account to
+// sign in would inherit the previous user's active classroom and fire a 403.
+function clearLocalUserState() {
+  try {
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k?.startsWith('wd:')) keys.push(k);
+    }
+    keys.forEach(k => localStorage.removeItem(k));
+  } catch { /* storage unavailable (private mode, quota) — nothing to clean */ }
+}
+
 export function useAuth() {
   const [idToken, setIdToken] = useState(null);
   const [cognitoUser, setCognitoUser] = useState(null);
@@ -66,6 +81,7 @@ export function useAuth() {
 
   const signOut = useCallback(() => {
     signOutApi(cognitoUser);
+    clearLocalUserState();
     setIdToken(null);
     setCognitoUser(null);
   }, [cognitoUser]);
@@ -83,6 +99,7 @@ export function useAuth() {
           // Refresh token itself is no longer valid — kick the user to the
           // login screen rather than leaving them stuck on 401s.
           signOutApi(cognitoUser);
+          clearLocalUserState();
           setIdToken(null);
           setCognitoUser(null);
           resolve(null);
@@ -140,6 +157,7 @@ export function useAuth() {
   const deleteAccount = useCallback(async (api) => {
     if (api) await api.deleteAccount();
     await deleteCognitoUser(cognitoUser);
+    clearLocalUserState();
     setIdToken(null);
     setCognitoUser(null);
   }, [cognitoUser]);

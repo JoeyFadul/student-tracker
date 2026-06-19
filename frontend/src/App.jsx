@@ -26,7 +26,32 @@ const TABS = [
 
 export function App() {
   const auth = useAuth();
-  const api = useMemo(() => auth.idToken ? createApiClient(auth.idToken) : null, [auth.idToken]);
+
+  if (auth.initializing) {
+    return <FullPageMessage>Loading…</FullPageMessage>;
+  }
+
+  if (!auth.isAuthenticated) {
+    return (
+      <LoginScreen
+        onSignIn={auth.signIn}
+        onSubmitNewPassword={auth.submitNewPassword}
+        onSignUp={auth.signUp}
+        onConfirmSignUp={auth.confirmSignUp}
+        onResendCode={auth.resendCode}
+      />
+    );
+  }
+
+  // Mount the rest of the app in a subtree that only exists while signed in.
+  // Sign-out unmounts AuthedApp, which torches every cached classroom /
+  // student / school-year state so the next account can't inherit the
+  // previous user's data through stale React state.
+  return <AuthedApp auth={auth} />;
+}
+
+function AuthedApp({ auth }) {
+  const api = useMemo(() => createApiClient(auth.idToken), [auth.idToken]);
   const classrooms = useClassrooms(api);
   const cid = classrooms.activeId;
   const studentsApi = useStudents(api, cid);
@@ -172,22 +197,6 @@ export function App() {
     await studentsApi.refresh();
     setToast({ message: 'School year deleted' });
   }, [schoolYear, studentsApi]);
-
-  if (auth.initializing) {
-    return <FullPageMessage>Loading…</FullPageMessage>;
-  }
-
-  if (!auth.isAuthenticated) {
-    return (
-      <LoginScreen
-        onSignIn={auth.signIn}
-        onSubmitNewPassword={auth.submitNewPassword}
-        onSignUp={auth.signUp}
-        onConfirmSignUp={auth.confirmSignUp}
-        onResendCode={auth.resendCode}
-      />
-    );
-  }
 
   if (classrooms.loading) {
     return <FullPageMessage>Loading…</FullPageMessage>;
