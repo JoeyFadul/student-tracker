@@ -39,6 +39,8 @@ export function App() {
         onSignUp={auth.signUp}
         onConfirmSignUp={auth.confirmSignUp}
         onResendCode={auth.resendCode}
+        onForgotPassword={auth.forgotPassword}
+        onConfirmForgotPassword={auth.confirmForgotPassword}
       />
     );
   }

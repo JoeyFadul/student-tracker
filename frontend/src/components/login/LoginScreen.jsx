@@ -1,21 +1,33 @@
-// LoginScreen: signin / signup / verify flows. The three modes share the
-// same card chrome so the visual stays steady — only the form swaps.
+// LoginScreen: signin / signup / verify / forgot / forgotConfirm flows.
+// All modes share the same card chrome so the visual stays steady — only
+// the form swaps.
 //
-//   signin → email + password → onSignIn(). Forced-password-change branch
-//            is preserved from the legacy admin-create flow.
-//   signup → email + password + confirm → onSignUp() emails a 6-digit
-//            code, then mode advances to verify.
-//   verify → code input → onConfirmSignUp() then auto-onSignIn() using
-//            the password we still hold in state. Drops the user straight
-//            into the create-classroom onboarding screen.
+//   signin        → email + password → onSignIn(). Forced-password-change
+//                   branch is preserved from the legacy admin-create flow.
+//   signup        → email + password + confirm → onSignUp() emails a
+//                   6-digit code, then mode advances to verify.
+//   verify        → code input → onConfirmSignUp() then auto-onSignIn()
+//                   using the password we still hold in state.
+//   forgot        → email → onForgotPassword() emails a 6-digit code,
+//                   then mode advances to forgotConfirm.
+//   forgotConfirm → code + new password → onConfirmForgotPassword() then
+//                   auto-onSignIn() with the new password.
 
 import { useState } from 'react';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { ErrorBanner } from '../ui/ErrorBanner';
 
-export function LoginScreen({ onSignIn, onSubmitNewPassword, onSignUp, onConfirmSignUp, onResendCode }) {
-  const [mode, setMode] = useState('signin'); // 'signin' | 'signup' | 'verify'
+export function LoginScreen({
+  onSignIn,
+  onSubmitNewPassword,
+  onSignUp,
+  onConfirmSignUp,
+  onResendCode,
+  onForgotPassword,
+  onConfirmForgotPassword,
+}) {
+  const [mode, setMode] = useState('signin'); // 'signin' | 'signup' | 'verify' | 'forgot' | 'forgotConfirm'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -31,6 +43,7 @@ export function LoginScreen({ onSignIn, onSubmitNewPassword, onSignUp, onConfirm
     setError(''); setInfo('');
     setCode('');
     if (next === 'signup') setConfirmPassword('');
+    if (next === 'forgot' || next === 'signin') setNewPassword('');
   };
 
   const handleSignIn = async (e) => {
@@ -103,6 +116,35 @@ export function LoginScreen({ onSignIn, onSubmitNewPassword, onSignUp, onConfirm
     }
   };
 
+  const handleForgot = async (e) => {
+    e.preventDefault();
+    setError(''); setInfo('');
+    setBusy(true);
+    try {
+      await onForgotPassword(email);
+      setMode('forgotConfirm');
+      setInfo(`We emailed a 6-digit code to ${email}.`);
+    } catch (err) {
+      setError(err.message || 'Could not start password reset');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleForgotConfirm = async (e) => {
+    e.preventDefault();
+    setError(''); setBusy(true);
+    try {
+      await onConfirmForgotPassword(email, code.trim(), newPassword);
+      // Drop them straight into the app with the brand-new password so
+      // they don't have to re-type it on the signin screen.
+      await onSignIn(email, newPassword);
+    } catch (err) {
+      setError(err.message || 'Could not reset password');
+      setBusy(false);
+    }
+  };
+
   return (
     <div style={containerStyle}>
       <div style={cardStyle}>
@@ -111,6 +153,8 @@ export function LoginScreen({ onSignIn, onSubmitNewPassword, onSignUp, onConfirm
           {mode === 'signin' && 'Sign in to your classroom'}
           {mode === 'signup' && 'Create your teacher account'}
           {mode === 'verify' && 'Verify your email'}
+          {mode === 'forgot' && 'Reset your password'}
+          {mode === 'forgotConfirm' && 'Enter your reset code'}
         </p>
 
         {pendingUser ? (
@@ -149,6 +193,11 @@ export function LoginScreen({ onSignIn, onSubmitNewPassword, onSignUp, onConfirm
             <Button type="submit" disabled={busy} fullWidth>
               {busy ? 'Signing in…' : 'Sign in'}
             </Button>
+            <div style={footerStyle}>
+              <button type="button" onClick={() => flipTo('forgot')} style={linkStyle}>
+                Forgot password?
+              </button>
+            </div>
             <div style={footerStyle}>
               New here?{' '}
               <button type="button" onClick={() => flipTo('signup')} style={linkStyle}>
@@ -193,7 +242,7 @@ export function LoginScreen({ onSignIn, onSubmitNewPassword, onSignUp, onConfirm
               </button>
             </div>
           </form>
-        ) : (
+        ) : mode === 'verify' ? (
           <form onSubmit={handleVerify}>
             <Input
               type="text"
@@ -212,6 +261,67 @@ export function LoginScreen({ onSignIn, onSubmitNewPassword, onSignUp, onConfirm
             <div style={footerStyle}>
               Didn't get the code?{' '}
               <button type="button" onClick={handleResend} style={linkStyle}>
+                Resend
+              </button>
+            </div>
+          </form>
+        ) : mode === 'forgot' ? (
+          <form onSubmit={handleForgot}>
+            <p style={hintStyle}>Enter your email and we'll send a 6-digit code to reset your password.</p>
+            <Input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
+              autoFocus
+              autoCapitalize="off"
+              autoCorrect="off"
+            />
+            <Button type="submit" disabled={busy || email.trim().length === 0} fullWidth>
+              {busy ? 'Sending…' : 'Send reset code'}
+            </Button>
+            <div style={footerStyle}>
+              <button type="button" onClick={() => flipTo('signin')} style={linkStyle}>
+                Back to sign in
+              </button>
+            </div>
+          </form>
+        ) : (
+          <form onSubmit={handleForgotConfirm}>
+            <Input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              autoComplete="one-time-code"
+              placeholder="6-digit code"
+              value={code}
+              onChange={e => setCode(e.target.value)}
+              required
+              autoFocus
+            />
+            <Input
+              type="password"
+              placeholder="New password (12+ chars, mixed case, number, symbol)"
+              value={newPassword}
+              onChange={e => setNewPassword(e.target.value)}
+              required
+              minLength={12}
+            />
+            <Button type="submit" disabled={busy || code.trim().length === 0 || newPassword.length < 12} fullWidth>
+              {busy ? 'Resetting…' : 'Reset & sign in'}
+            </Button>
+            <div style={footerStyle}>
+              Didn't get the code?{' '}
+              <button type="button" onClick={async () => {
+                setError(''); setInfo('');
+                try {
+                  await onForgotPassword(email);
+                  setInfo('A new code is on its way.');
+                } catch (err) {
+                  setError(err.message || 'Resend failed');
+                }
+              }} style={linkStyle}>
                 Resend
               </button>
             </div>

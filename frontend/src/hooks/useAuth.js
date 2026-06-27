@@ -10,6 +10,8 @@ import {
   signUp as signUpApi,
   confirmSignUp as confirmSignUpApi,
   resendCode as resendCodeApi,
+  forgotPassword as forgotPasswordApi,
+  confirmForgotPassword as confirmForgotPasswordApi,
   deleteCognitoUser,
 } from '../auth';
 
@@ -149,6 +151,13 @@ export function useAuth() {
 
   const resendCode = useCallback((email) => resendCodeApi(email), []);
 
+  const forgotPassword = useCallback((email) => forgotPasswordApi(email), []);
+
+  const confirmForgotPassword = useCallback(
+    (email, code, newPassword) => confirmForgotPasswordApi(email, code, newPassword),
+    []
+  );
+
   // Two-step account deletion: 1) backend tears down every classroom this
   // user owns and detaches them from any they joined as a member; 2) the
   // Cognito identity is removed. Caller passes the api client because the
@@ -173,6 +182,8 @@ export function useAuth() {
     signUp,
     confirmSignUp,
     resendCode,
+    forgotPassword,
+    confirmForgotPassword,
     deleteAccount,
   };
 }

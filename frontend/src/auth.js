@@ -71,6 +71,35 @@ export function resendCode(email) {
 }
 
 /**
+ * Kick off the password-reset flow. Cognito emails a 6-digit code that the
+ * caller hands to confirmForgotPassword() along with the new password.
+ */
+export function forgotPassword(email) {
+  return new Promise((resolve, reject) => {
+    const user = new CognitoUser(userOpts(normalizeEmail(email)));
+    user.forgotPassword({
+      onSuccess: (result) => resolve(result),
+      onFailure: (err) => reject(err),
+    });
+  });
+}
+
+/**
+ * Complete the password-reset flow by submitting the emailed code + chosen
+ * new password. Caller is expected to immediately call signIn() afterwards
+ * so the user lands directly in the app.
+ */
+export function confirmForgotPassword(email, code, newPassword) {
+  return new Promise((resolve, reject) => {
+    const user = new CognitoUser(userOpts(normalizeEmail(email)));
+    user.confirmPassword(code, newPassword, {
+      onSuccess: () => resolve(),
+      onFailure: (err) => reject(err),
+    });
+  });
+}
+
+/**
  * Sign in a user. Returns one of:
  *   { type: 'success', token, user }
  *   { type: 'newPasswordRequired', user }  // Forced password change
