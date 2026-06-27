@@ -11,14 +11,22 @@ import { cognitoStorage } from './lib/secureStorage';
 // with our Keychain-backed adapter.
 const userOpts = (Username) => ({ Username, Pool: userPool, Storage: cognitoStorage });
 
+// Cognito user pools default to case-sensitive usernames, and the setting
+// can't be changed after the pool is created. Lowercase + trim every email
+// at the SDK entry points so "Joey@…", "joey@…", and "JOEY@…" all resolve
+// to the same account. Anything still passing through with mixed case is a
+// pre-existing user from before this normalization landed.
+const normalizeEmail = (email) => email.trim().toLowerCase();
+
 /**
  * Create a new account. Cognito emails a 6-digit code; the account is
  * UNCONFIRMED until confirmSignUp() is called with that code.
  */
 export function signUp(email, password) {
+  const username = normalizeEmail(email);
   return new Promise((resolve, reject) => {
-    const attrs = [new CognitoUserAttribute({ Name: 'email', Value: email })];
-    userPool.signUp(email, password, attrs, null, (err, result) => {
+    const attrs = [new CognitoUserAttribute({ Name: 'email', Value: username })];
+    userPool.signUp(username, password, attrs, null, (err, result) => {
       if (err) return reject(err);
       resolve({ user: result.user, userConfirmed: result.userConfirmed });
     });
@@ -28,7 +36,7 @@ export function signUp(email, password) {
 /** Confirm an UNCONFIRMED account with the emailed code. */
 export function confirmSignUp(email, code) {
   return new Promise((resolve, reject) => {
-    const user = new CognitoUser(userOpts(email));
+    const user = new CognitoUser(userOpts(normalizeEmail(email)));
     user.confirmRegistration(code, true, (err, result) => {
       if (err) return reject(err);
       resolve(result);
@@ -54,7 +62,7 @@ export function deleteCognitoUser(user) {
 /** Re-send the confirmation code (e.g. if the original email got lost). */
 export function resendCode(email) {
   return new Promise((resolve, reject) => {
-    const user = new CognitoUser(userOpts(email));
+    const user = new CognitoUser(userOpts(normalizeEmail(email)));
     user.resendConfirmationCode((err, result) => {
       if (err) return reject(err);
       resolve(result);
@@ -69,9 +77,10 @@ export function resendCode(email) {
  * Throws on auth failure.
  */
 export function signIn(email, password) {
+  const username = normalizeEmail(email);
   return new Promise((resolve, reject) => {
-    const user = new CognitoUser(userOpts(email));
-    const auth = new AuthenticationDetails({ Username: email, Password: password });
+    const user = new CognitoUser(userOpts(username));
+    const auth = new AuthenticationDetails({ Username: username, Password: password });
 
     user.authenticateUser(auth, {
       onSuccess: (session) => {
