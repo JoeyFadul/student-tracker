@@ -44,7 +44,7 @@ export function Dashboard({
 
   const filteredAndSorted = useMemo(() => {
     const filtered = search
-      ? students.filter(s => s.name.toLowerCase().includes(search.toLowerCase()))
+      ? students.filter(s => (s.name || '').toLowerCase().includes(search.toLowerCase()))
       : students;
     return sortStudents(filtered, sortKey);
   }, [students, search, sortKey]);

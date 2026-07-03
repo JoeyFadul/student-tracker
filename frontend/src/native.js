@@ -11,7 +11,8 @@ export async function setupNative() {
     const { StatusBar, Style } = await import('@capacitor/status-bar');
     // Our top AppHeader is dark navy on every screen, so the system clock,
     // battery, and signal icons need to render in light/white text.
-    await StatusBar.setStyle({ style: Style.Light });
+    // Style.Dark = "dark background" = light text (not dark text!).
+    await StatusBar.setStyle({ style: Style.Dark });
   } catch (e) {
     console.warn('StatusBar setup skipped:', e);
   }

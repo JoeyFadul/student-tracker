@@ -55,7 +55,17 @@ export function LoginScreen({
         setPendingUser(result.user);
       }
     } catch (err) {
-      setError(err.message || 'Sign in failed');
+      // Signed up but never entered the code (e.g. quit the app first) —
+      // Cognito refuses to authenticate until the email is confirmed.
+      // Send a fresh code and route them to the verify step instead of
+      // dead-ending on the error banner.
+      if (err.code === 'UserNotConfirmedException') {
+        try { await onResendCode(email); } catch { /* verify screen has its own Resend */ }
+        flipTo('verify');
+        setInfo(`Your email isn't verified yet. We sent a new 6-digit code to ${email}.`);
+      } else {
+        setError(err.message || 'Sign in failed');
+      }
     } finally {
       setBusy(false);
     }
