@@ -196,6 +196,9 @@ function computeStreak(positiveTimestamps) {
   return streak;
 }
 
+// Exported for unit tests only — not part of the Lambda contract.
+exports.computeStreak = computeStreak;
+
 // ===== Handler =====
 
 exports.handler = async (event) => {

@@ -1,6 +1,7 @@
 name: pr
 
-# Runs on every PR. Lints the frontend, builds it, validates the SAM
+# Runs on every PR. Lints, unit-tests, and builds the frontend; runs the
+# Playwright smoke suite; unit-tests the backend and validates the SAM
 # template. No AWS deploys.
 
 on:
@@ -11,7 +12,7 @@ on:
 
 jobs:
   frontend:
-    name: frontend lint + build
+    name: frontend lint + test + build
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -25,10 +26,28 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       - run: npm run lint
+      - run: npm test
       - run: npm run build
 
+  e2e:
+    name: e2e smoke (playwright)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+
   backend:
-    name: backend validate
+    name: backend test + validate
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -42,8 +61,14 @@ jobs:
           use-installer: true
       - name: SAM validate (with linter)
         run: sam validate --lint --region us-east-1
-      - name: npm install (backend)
+      - name: npm install (backend, with dev deps for tests)
         working-directory: backend
-        run: npm install --omit=dev
+        run: npm install
+      - name: backend unit tests
+        working-directory: backend
+        run: npm test
+      - name: prune to production deps for packaging
+        working-directory: backend
+        run: npm prune --omit=dev
       - name: SAM build
         run: sam build

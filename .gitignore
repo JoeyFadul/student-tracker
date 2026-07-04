@@ -16,3 +16,7 @@ frontend/ios/DerivedData/
 *.xcuserdatad/
 xcuserdata/
 .xcode.env.local
+
+# Test artifacts
+test-results/
+playwright-report/
