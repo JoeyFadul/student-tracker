@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Well Done 2.0 — Warm Craft wireframes</title>
+<style>
+  :root{
+    --bg:#FAF7F2; --surface:#FFFFFF; --surface-alt:#F1ECE3;
+    --ink:#2A2521; --ink-muted:#6E655C; --ink-faint:#9C938A;
+    --border:#EAE3D8;
+    --accent:#E05B35; --accent-soft:#FBEAE2; --accent-deep:#B94A2C;
+    --sage:#7A9E7E; --sage-soft:#E7F0E7;
+    --honey:#F4C95D; --honey-soft:#FBF3DE;
+    --danger:#B3372B; --danger-soft:#F7E3DF;
+    --shadow:0 2px 10px rgba(42,37,33,.07);
+    --shadow-float:0 10px 30px rgba(42,37,33,.16);
+    --display:ui-rounded,"SF Pro Rounded","Nunito","Quicksand",-apple-system,sans-serif;
+    --body:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",sans-serif;
+  }
+  .dark{
+    --bg:#1E1B17; --surface:#2A2620; --surface-alt:#353028;
+    --ink:#F5EFE7; --ink-muted:#A89E92; --ink-faint:#7D746A;
+    --border:rgba(245,239,231,.08);
+    --accent:#F0714A; --accent-soft:#3A2B23; --accent-deep:#F58B6A;
+    --sage:#8FB694; --sage-soft:#28312A;
+    --honey:#F6D174; --honey-soft:#332E22;
+    --shadow:0 2px 10px rgba(0,0,0,.3);
+    --shadow-float:0 10px 30px rgba(0,0,0,.5);
+  }
+  *{box-sizing:border-box;margin:0}
+  body{background:#3B3733;font-family:var(--body);padding:40px;color:#fff}
+  h1{font-family:var(--display);font-size:22px;margin-bottom:6px}
+  .note{color:#B8AFA5;font-size:13px;margin-bottom:32px;max-width:720px;line-height:1.5}
+  .frames{display:flex;gap:36px;flex-wrap:wrap;align-items:flex-start}
+  .slot>.cap{font-size:13px;color:#B8AFA5;margin:0 0 10px 6px;font-weight:600}
+  .phone{width:375px;height:812px;border-radius:44px;overflow:hidden;position:relative;
+    background:var(--bg);color:var(--ink);box-shadow:0 24px 60px rgba(0,0,0,.45);
+    display:flex;flex-direction:column;font-family:var(--body)}
+  .screen{flex:1;overflow:hidden;padding:64px 20px 0;position:relative;display:flex;flex-direction:column}
+
+  /* shared bits */
+  .kicker{font-size:12px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--ink-faint)}
+  .big-title{font-family:var(--display);font-weight:800;font-size:30px;letter-spacing:-.4px;line-height:1.1}
+  .sub{font-size:13px;color:var(--ink-muted);margin-top:4px}
+  .card{background:var(--surface);border-radius:22px;box-shadow:var(--shadow);padding:16px}
+  .chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;
+    font-size:12px;font-weight:700}
+  .avatar{width:52px;height:52px;border-radius:20px;background:var(--honey-soft);
+    display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0}
+  .points{font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:-.5px;text-align:right}
+  .pts-label{font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:var(--ink-faint);text-align:right}
+  .row{display:flex;align-items:center;gap:12px;background:var(--surface);border-radius:22px;
+    box-shadow:var(--shadow);padding:12px 14px;margin-bottom:10px}
+  .row .name{font-weight:650;font-size:16px}
+  .dock{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:space-around;
+    background:color-mix(in srgb,var(--surface) 90%,transparent);
+    backdrop-filter:blur(14px);border-top:1px solid var(--border);
+    padding:8px 12px 26px}
+  .dock .tab{display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;max-width:110px;
+    padding:8px 0;font-size:10px;font-weight:600;color:var(--ink-faint)}
+  .dock .tab.on{color:var(--accent);font-weight:700}
+  .dock .ico{width:22px;height:22px}
+  .fab{position:absolute;right:20px;bottom:112px;width:58px;height:58px;border-radius:24px;
+    background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;
+    font-size:28px;font-weight:700;box-shadow:0 8px 22px rgba(224,91,53,.42);font-family:var(--display)}
+  .search{flex:1;display:flex;align-items:center;gap:8px;background:var(--surface-alt);
+    border-radius:999px;padding:11px 14px;color:var(--ink-faint);font-size:14px}
+  .pillbtn{display:flex;align-items:center;gap:6px;background:var(--surface-alt);border-radius:999px;
+    padding:11px 14px;font-size:13px;font-weight:700;color:var(--ink)}
+  .btn{font-family:var(--display);font-weight:800;border-radius:18px;display:flex;
+    align-items:center;justify-content:center;cursor:default}
+  .btn.primary{background:var(--accent);color:#fff;box-shadow:0 3px 10px rgba(224,91,53,.3)}
+  .seg{display:flex;background:var(--surface-alt);border-radius:16px;padding:4px;gap:4px;margin-bottom:14px}
+  .seg div{flex:1;text-align:center;padding:9px;border-radius:12px;font-size:13px;font-weight:700;color:var(--ink-muted)}
+  .seg .on{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+</style>
+</head>
+<body>
+<h1>Well Done 2.0 — “Warm Craft” wireframes</h1>
+<p class="note">Reference wireframes for the Phase 1 screen rebuilds (see docs/requirements/14-design-direction.md).
+Layout + tone are the point; spacing and copy are directional. New-in-2.0 elements shown: light large-title headers
+(dark navy retired), frosted full-width tab bar (v1 shape, modern treatment), year switcher on the dashboard,
+class-point shortcut, editable student header, attribution chips, bento stats, and the warm dark mode.
+Emoji rule: emoji appears only as student avatar data. The tab bar uses real lucide line icons (as in v1);
+remaining flame/camera/trash glyphs are placeholders for their lucide equivalents; all other UI is text-only.</p>
+
+<div class="frames">
+
+<!-- ============ 1 · DASHBOARD ============ -->
+<div class="slot"><p class="cap">1 · Students (dashboard)</p>
+<div class="phone"><div class="screen">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start">
+    <div>
+      <div class="kicker">Classroom</div>
+      <div class="big-title">Mrs. Smith's<br>3rd Grade</div>
+    </div>
+    <span class="chip" style="background:var(--surface-alt);color:var(--ink-muted);margin-top:22px">2026–27 ▾</span>
+  </div>
+  <div class="sub" style="margin-bottom:16px">24 students · 812 points so far</div>
+
+  <div style="display:flex;gap:8px;margin-bottom:12px">
+    <div class="search">⌕&nbsp; Search students</div>
+    <div class="pillbtn">A–Z ▾</div>
+  </div>
+
+  <div style="display:flex;gap:8px;margin-bottom:14px">
+    <div class="chip" style="background:var(--honey-soft);color:#8a6d1f;padding:9px 14px">＋ Class point</div>
+    <div class="chip" style="background:var(--surface-alt);color:var(--ink-muted);padding:9px 14px">Select</div>
+  </div>
+
+  <div class="row">
+    <div class="avatar">🦊</div>
+    <div style="flex:1">
+      <div class="name">Maya Rodriguez</div>
+      <span class="chip" style="background:var(--honey-soft);color:#8a6d1f;margin-top:3px">🔥 6 days</span>
+    </div>
+    <div><div class="points">42</div><div class="pts-label">points</div></div>
+  </div>
+  <div class="row">
+    <div class="avatar" style="background:var(--sage-soft)">📷</div>
+    <div style="flex:1"><div class="name">Jordan Lee</div></div>
+    <div><div class="points">38</div><div class="pts-label">points</div></div>
+  </div>
+  <div class="row">
+    <div class="avatar">🐢</div>
+    <div style="flex:1">
+      <div class="name">Sam Okafor</div>
+      <span class="chip" style="background:var(--honey-soft);color:#8a6d1f;margin-top:3px">🔥 3 days</span>
+    </div>
+    <div><div class="points">35</div><div class="pts-label">points</div></div>
+  </div>
+  <div class="row">
+    <div class="avatar">🦉</div>
+    <div style="flex:1"><div class="name">Ava Chen</div></div>
+    <div><div class="points">31</div><div class="pts-label">points</div></div>
+  </div>
+  <div class="row" style="opacity:.55">
+    <div class="avatar">🌱</div>
+    <div style="flex:1"><div class="name">Liam Torres</div></div>
+    <div><div class="points">27</div><div class="pts-label">points</div></div>
+  </div>
+
+  <div class="fab">+</div>
+  <div class="dock">
+    <div class="tab on"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Students</div>
+    <div class="tab"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>Stats</div>
+    <div class="tab"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>Settings</div>
+  </div>
+</div></div></div>
+
+<!-- ============ 2 · PROFILE ============ -->
+<div class="slot"><p class="cap">2 · Student profile (now editable)</p>
+<div class="phone"><div class="screen">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+    <div class="pillbtn" style="width:42px;justify-content:center">‹</div>
+    <div class="pillbtn" style="width:42px;justify-content:center;color:var(--danger)">🗑</div>
+  </div>
+
+  <div style="text-align:center">
+    <div class="avatar" style="width:112px;height:112px;border-radius:40px;font-size:56px;margin:0 auto;position:relative">
+      🦊<span style="position:absolute;right:-4px;bottom:-4px;width:34px;height:34px;border-radius:14px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:16px">📷</span>
+    </div>
+    <div class="big-title" style="font-size:26px;margin-top:14px">Maya Rodriguez <span style="font-size:15px;color:var(--ink-faint)">✎</span></div>
+    <div class="sub">3rd grade</div>
+    <div style="margin:10px 0 4px">
+      <span class="chip" style="background:var(--honey-soft);color:#8a6d1f">🔥 6 day streak</span>
+    </div>
+    <div style="font-family:var(--display);font-weight:800;font-size:58px;letter-spacing:-2px;color:var(--accent)">42</div>
+    <div class="kicker">points earned</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin:18px 0 14px">
+    <div class="btn primary" style="height:54px;font-size:20px">1</div>
+    <div class="btn primary" style="height:54px;font-size:20px">2</div>
+    <div class="btn primary" style="height:54px;font-size:20px">5</div>
+    <div class="btn" style="height:54px;background:var(--surface);box-shadow:var(--shadow);font-size:20px;color:var(--ink-muted)">⋯</div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
+    <div class="kicker" style="margin-bottom:6px">Notes ✎</div>
+    <div style="font-size:14px;color:var(--ink-muted);line-height:1.4">Responds well to reading-corner time. Mom prefers email.</div>
+  </div>
+
+  <div class="card">
+    <div class="kicker" style="margin-bottom:8px">Activity</div>
+    <div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border)">
+      <div style="flex:1"><div style="font-size:14px;font-weight:600">Kindness</div><div style="font-size:12px;color:var(--ink-faint)">Today</div></div>
+      <span class="chip" style="background:var(--surface-alt);color:var(--ink-faint)">MS</span>
+      <span class="chip" style="background:var(--sage-soft);color:var(--sage)">+2</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;padding:9px 0">
+      <div style="flex:1"><div style="font-size:14px;font-weight:600">Homework</div><div style="font-size:12px;color:var(--ink-faint)">Yesterday</div></div>
+      <span class="chip" style="background:var(--surface-alt);color:var(--ink-faint)">JP</span>
+      <span class="chip" style="background:var(--sage-soft);color:var(--sage)">+1</span>
+    </div>
+  </div>
+
+  <div class="dock">
+    <div class="tab on"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Students</div>
+    <div class="tab"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>Stats</div>
+    <div class="tab"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>Settings</div>
+  </div>
+</div></div></div>
+
+<!-- ============ 3 · AWARD SHEET ============ -->
+<div class="slot"><p class="cap">3 · Award flow (reason sheet)</p>
+<div class="phone"><div class="screen" style="padding:64px 0 0">
+  <div style="padding:0 20px;filter:blur(2px);opacity:.45">
+    <div class="kicker">Classroom</div>
+    <div class="big-title">Mrs. Smith's<br>3rd Grade</div>
+    <div class="row" style="margin-top:16px"><div class="avatar">🦊</div>
+      <div style="flex:1"><div class="name">Maya Rodriguez</div></div>
+      <div class="points">42</div></div>
+  </div>
+  <div style="position:absolute;inset:0;background:rgba(42,37,33,.28)"></div>
+  <div style="position:absolute;left:0;right:0;bottom:0;background:var(--surface);
+       border-radius:32px 32px 0 0;box-shadow:var(--shadow-float);padding:22px 20px 34px">
+    <div style="width:36px;height:5px;border-radius:3px;background:var(--border);margin:0 auto 16px"></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <div class="avatar" style="width:40px;height:40px;font-size:20px;border-radius:15px">🦊</div>
+      <div style="font-family:var(--display);font-weight:800;font-size:19px">Award 2 points · Maya</div>
+    </div>
+    <div class="seg"><div class="on">＋ Award 2</div><div>－ Revoke 2</div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="btn" style="background:var(--surface-alt);height:54px;font-size:15px;font-weight:700">Kindness</div>
+      <div class="btn" style="background:var(--surface-alt);height:54px;font-size:15px;font-weight:700">Effort</div>
+      <div class="btn" style="background:var(--surface-alt);height:54px;font-size:15px;font-weight:700">Helping</div>
+      <div class="btn" style="background:var(--surface-alt);height:54px;font-size:15px;font-weight:700">Homework</div>
+      <div class="btn" style="background:var(--surface-alt);height:54px;font-size:15px;font-weight:700">Participation</div>
+      <div class="btn" style="background:var(--surface-alt);height:54px;font-size:15px;font-weight:700">Listening</div>
+    </div>
+    <div style="text-align:center;color:var(--ink-faint);font-size:13px;font-weight:600;padding-top:14px">
+      Custom reasons… <span style="opacity:.7">(per-classroom, item 1.5)</span>
+    </div>
+  </div>
+</div></div></div>
+
+<!-- ============ 4 · STATS BENTO ============ -->
+<div class="slot"><p class="cap">4 · Stats (bento, no more dark screen)</p>
+<div class="phone"><div class="screen">
+  <div class="kicker">Insights</div>
+  <div class="big-title">This year</div>
+  <div class="sub" style="margin-bottom:18px">2026–2027 · updated just now</div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div class="card" style="grid-column:1/3;background:var(--honey-soft)">
+      <div class="kicker" style="color:#8a6d1f">Total points</div>
+      <div style="font-family:var(--display);font-weight:800;font-size:56px;letter-spacing:-2px">812</div>
+      <div style="font-size:13px;color:#8a6d1f">across 24 students</div>
+    </div>
+    <div class="card">
+      <div class="kicker">Avg / student</div>
+      <div style="font-family:var(--display);font-weight:800;font-size:34px;letter-spacing:-1px">34</div>
+    </div>
+    <div class="card" style="background:var(--sage-soft)">
+      <div class="kicker" style="color:var(--sage)">On streak</div>
+      <div style="font-family:var(--display);font-weight:800;font-size:34px;letter-spacing:-1px">🔥 7</div>
+    </div>
+    <div class="card" style="grid-column:1/3">
+      <div class="kicker" style="margin-bottom:10px">Top reasons · 30 days</div>
+      <div style="display:flex;flex-direction:column;gap:7px;font-size:13px;font-weight:600">
+        <div style="position:relative;padding:9px 12px;border-radius:12px;background:var(--surface-alt);overflow:hidden">
+          <div style="position:absolute;inset:0;width:86%;background:var(--accent-soft)"></div>
+          <span style="position:relative">Kindness</span><span style="position:absolute;right:12px;color:var(--accent-deep)">31</span></div>
+        <div style="position:relative;padding:9px 12px;border-radius:12px;background:var(--surface-alt);overflow:hidden">
+          <div style="position:absolute;inset:0;width:62%;background:var(--accent-soft)"></div>
+          <span style="position:relative">Effort</span><span style="position:absolute;right:12px;color:var(--accent-deep)">22</span></div>
+        <div style="position:relative;padding:9px 12px;border-radius:12px;background:var(--surface-alt);overflow:hidden">
+          <div style="position:absolute;inset:0;width:39%;background:var(--accent-soft)"></div>
+          <span style="position:relative">Teamwork</span><span style="position:absolute;right:12px;color:var(--accent-deep)">14</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dock">
+    <div class="tab"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Students</div>
+    <div class="tab on"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>Stats</div>
+    <div class="tab"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>Settings</div>
+  </div>
+</div></div></div>
+
+<!-- ============ 5 · SETTINGS ============ -->
+<div class="slot"><p class="cap">5 · Settings</p>
+<div class="phone"><div class="screen">
+  <div class="kicker">You</div>
+  <div class="big-title">Settings</div>
+  <div class="sub" style="margin-bottom:18px">msmith@school.edu</div>
+
+  <div class="card" style="padding:4px 16px;margin-bottom:14px">
+    <div style="display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--border)">
+      <div style="flex:1"><div style="font-weight:650;font-size:15px">Classroom</div>
+      <div style="font-size:12px;color:var(--ink-faint)">Mrs. Smith's 3rd Grade · Owner</div></div><div style="color:var(--ink-faint)">›</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;padding:14px 0">
+      <div style="flex:1"><div style="font-weight:650;font-size:15px">School year</div>
+      <div style="font-size:12px;color:var(--ink-faint)">2026–2027 · started Aug 18</div></div><div style="color:var(--ink-faint)">›</div>
+    </div>
+  </div>
+
+  <div class="card" style="padding:4px 16px;margin-bottom:14px">
+    <div style="display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--border)">
+      <div style="flex:1;font-weight:650;font-size:15px">Appearance</div>
+      <div style="font-size:13px;color:var(--ink-faint)">System ▾</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--border)">
+      <div style="flex:1;font-weight:650;font-size:15px">Privacy Policy</div><div style="color:var(--ink-faint)">↗</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;padding:14px 0">
+      <div style="flex:1;font-weight:650;font-size:15px">Terms of Service</div><div style="color:var(--ink-faint)">↗</div>
+    </div>
+  </div>
+
+  <div class="card" style="text-align:center;font-weight:700;color:var(--ink-muted);margin-bottom:10px">Sign out</div>
+  <div style="text-align:center;font-weight:700;color:var(--danger);font-size:14px;padding:10px">Delete account</div>
+
+  <div class="dock">
+    <div class="tab"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Students</div>
+    <div class="tab"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>Stats</div>
+    <div class="tab on"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>Settings</div>
+  </div>
+</div></div></div>
+
+<!-- ============ 6 · DARK MODE ============ -->
+<div class="slot"><p class="cap">6 · Dashboard — dark (“evening”), system-follow</p>
+<div class="phone dark"><div class="screen">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start">
+    <div>
+      <div class="kicker">Classroom</div>
+      <div class="big-title">Mrs. Smith's<br>3rd Grade</div>
+    </div>
+    <span class="chip" style="background:var(--surface-alt);color:var(--ink-muted);margin-top:22px">2026–27 ▾</span>
+  </div>
+  <div class="sub" style="margin-bottom:16px">24 students · 812 points so far</div>
+
+  <div style="display:flex;gap:8px;margin-bottom:14px">
+    <div class="search">⌕&nbsp; Search students</div>
+    <div class="pillbtn">A–Z ▾</div>
+  </div>
+
+  <div class="row">
+    <div class="avatar">🦊</div>
+    <div style="flex:1">
+      <div class="name">Maya Rodriguez</div>
+      <span class="chip" style="background:var(--honey-soft);color:var(--honey);margin-top:3px">🔥 6 days</span>
+    </div>
+    <div><div class="points">42</div><div class="pts-label">points</div></div>
+  </div>
+  <div class="row">
+    <div class="avatar" style="background:var(--sage-soft)">📷</div>
+    <div style="flex:1"><div class="name">Jordan Lee</div></div>
+    <div><div class="points">38</div><div class="pts-label">points</div></div>
+  </div>
+  <div class="row">
+    <div class="avatar">🐢</div>
+    <div style="flex:1">
+      <div class="name">Sam Okafor</div>
+      <span class="chip" style="background:var(--honey-soft);color:var(--honey);margin-top:3px">🔥 3 days</span>
+    </div>
+    <div><div class="points">35</div><div class="pts-label">points</div></div>
+  </div>
+
+  <div class="fab">+</div>
+  <div class="dock">
+    <div class="tab on"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Students</div>
+    <div class="tab"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>Stats</div>
+    <div class="tab"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>Settings</div>
+  </div>
+</div></div></div>
+
+</div>
+</body>
+</html>
