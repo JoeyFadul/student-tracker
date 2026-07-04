@@ -15,6 +15,7 @@ export const theme = {
     danger: '#DC2626',
     dangerSoft: '#FEE2E2',
     warning: '#F59E0B',
+    avatarBg: '#fef3c7',
     headerDark: '#0E1729',
     headerDarkText: '#FFFFFF',
     headerDarkMuted: '#9CA3B8',

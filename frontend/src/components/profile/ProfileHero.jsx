@@ -1,23 +1,20 @@
 import { useRef, useState } from 'react';
 import { Camera, Flame, Loader2 } from 'lucide-react';
 import { theme } from '../../theme';
-import { getTier } from '../../lib/tiers';
 import { DEFAULT_AVATAR } from '../../lib/avatars';
 
 export function ProfileHero({ student, onPhotoUpload, uploading }) {
-  const tier = getTier(student.points);
   const fileInputRef = useRef(null);
   const [hovered, setHovered] = useState(false);
   const isPhotoUrl = student.photo?.startsWith('http');
   // Backend filters to active-year-only positive events so a streak can't
   // survive a year boundary.
   const streak = student.streak || 0;
-  const TierIcon = tier.icon;
 
   return (
     <div style={wrapStyle}>
       <div
-        style={{ ...avatarStyle, background: tier.bg }}
+        style={{ ...avatarStyle, background: theme.colors.avatarBg }}
         onClick={() => !uploading && fileInputRef.current?.click()}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
@@ -42,12 +39,6 @@ export function ProfileHero({ student, onPhotoUpload, uploading }) {
       </div>
 
       <div style={chipRowStyle}>
-        {tier.name && (
-          <div style={{ ...chipStyle, background: tier.bg, color: tier.color }}>
-            <TierIcon size={14} color={tier.color} />
-            <span>{tier.name}</span>
-          </div>
-        )}
         {streak > 1 && (
           <div style={{ ...chipStyle, background: theme.colors.dangerSoft, color: theme.colors.danger }}>
             <Flame size={14} color={theme.colors.danger} />

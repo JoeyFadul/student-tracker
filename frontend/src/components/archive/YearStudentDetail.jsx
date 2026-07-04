@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ChevronLeft, Archive } from 'lucide-react';
 import { theme } from '../../theme';
-import { getTier } from '../../lib/tiers';
 import { DEFAULT_AVATAR } from '../../lib/avatars';
 import { formatGrade } from '../../lib/grades';
 import { ActivityHistory } from '../profile/ActivityHistory';
@@ -21,8 +20,6 @@ export function YearStudentDetail({ classroomId, year, student, api, onBack }) {
     return () => { cancelled = true; };
   }, [api, classroomId, student.id, year.yearId]);
 
-  const tier = getTier((data?.points) ?? student.points);
-  const TierIcon = tier.icon;
   const back = usePressable();
   const isPhotoUrl = student.photo?.startsWith('http');
 
@@ -45,7 +42,7 @@ export function YearStudentDetail({ classroomId, year, student, api, onBack }) {
         </div>
 
         <div style={heroStyle}>
-          <div style={{ ...avatarStyle, background: tier.bg }}>
+          <div style={{ ...avatarStyle, background: theme.colors.avatarBg }}>
             {isPhotoUrl
               ? <img src={student.photo} alt={student.name} style={imgStyle} />
               : <span style={{ fontSize: 56 }}>{student.photo || DEFAULT_AVATAR}</span>
@@ -53,13 +50,6 @@ export function YearStudentDetail({ classroomId, year, student, api, onBack }) {
           </div>
           <h1 style={nameStyle}>{student.name}</h1>
           {student.grade && <div style={gradeStyle}>{formatGrade(student.grade)}</div>}
-
-          {tier.name && (
-            <div style={chipStyle}>
-              <TierIcon size={14} color={tier.color} />
-              <span style={{ color: tier.color }}>{tier.name}</span>
-            </div>
-          )}
 
           <div style={pointsBlockStyle}>
             <div style={pointsValueStyle}>{data?.points ?? student.points}</div>
@@ -154,18 +144,6 @@ const gradeStyle = {
   fontSize: theme.font.sizes.body,
   color: theme.colors.textMuted,
   marginTop: 2,
-};
-
-const chipStyle = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: 5,
-  padding: '6px 12px',
-  borderRadius: theme.radius.pill,
-  fontSize: theme.font.sizes.footnote,
-  fontWeight: 600,
-  marginTop: 12,
-  background: theme.colors.surfaceAlt,
 };
 
 const pointsBlockStyle = {

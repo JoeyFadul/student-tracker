@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { ChevronLeft, Archive, ChevronRight } from 'lucide-react';
 import { theme } from '../../theme';
 import { DEFAULT_AVATAR } from '../../lib/avatars';
-import { getTier } from '../../lib/tiers';
 import { formatGrade } from '../../lib/grades';
 import { usePressable } from '../../hooks/usePressable';
 import { AppHeader } from '../ui/AppHeader';
@@ -79,12 +78,11 @@ function HeaderBackButton({ onClick }) {
 }
 
 function StudentRow({ student, rank, onClick }) {
-  const tier = getTier(student.points);
   const { handlers, pressedStyle } = usePressable();
   return (
     <button onClick={onClick} {...handlers} style={{ ...rowStyle, ...pressedStyle }}>
       <div style={rankStyle}>{rank}</div>
-      <div style={{ ...avatarStyle, background: tier.bg }}>
+      <div style={{ ...avatarStyle, background: theme.colors.avatarBg }}>
         {student.photo?.startsWith('http')
           ? <img src={student.photo} alt={student.name} style={imgStyle} />
           : <span style={{ fontSize: 24 }}>{student.photo || DEFAULT_AVATAR}</span>

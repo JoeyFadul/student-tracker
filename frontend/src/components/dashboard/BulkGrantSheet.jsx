@@ -5,7 +5,6 @@ import { Sheet } from '../ui/Sheet';
 import { CustomAmountSheet } from '../ui/CustomAmountSheet';
 import { ReasonPicker } from '../profile/ReasonPicker';
 import { DEFAULT_AVATAR } from '../../lib/avatars';
-import { getTier } from '../../lib/tiers';
 import { usePressable } from '../../hooks/usePressable';
 
 const PRESET_AMOUNTS = [1, 2, 5];
@@ -87,12 +86,11 @@ function StudentStrip({ selected }) {
 }
 
 function Avatar({ student, index }) {
-  const tier = getTier(student.points);
   const isPhotoUrl = student.photo?.startsWith('http');
   return (
     <div style={{
       ...avatarStyle,
-      background: tier.bg,
+      background: theme.colors.avatarBg,
       marginLeft: index === 0 ? 0 : -10,
       zIndex: 10 - index,
     }}>

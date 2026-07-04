@@ -1,12 +1,9 @@
 import { Check, Flame, ChevronRight } from 'lucide-react';
 import { theme } from '../../theme';
-import { getTier } from '../../lib/tiers';
 import { DEFAULT_AVATAR } from '../../lib/avatars';
 import { usePressable } from '../../hooks/usePressable';
 
 export function StudentListItem({ student, onClick, selectable, selected }) {
-  const tier = getTier(student.points);
-  const TierIcon = tier.icon;
   const { handlers, pressedStyle } = usePressable();
 
   return (
@@ -24,7 +21,7 @@ export function StudentListItem({ student, onClick, selectable, selected }) {
           {selected && <Check size={14} color="#fff" strokeWidth={3} />}
         </div>
       )}
-      <div style={{ ...avatarStyle, background: tier.bg }}>
+      <div style={{ ...avatarStyle, background: theme.colors.avatarBg }}>
         {student.photo?.startsWith('http')
           ? <img src={student.photo} alt={student.name} style={imgStyle} />
           : <span style={{ fontSize: 30 }}>{student.photo || DEFAULT_AVATAR}</span>
@@ -33,12 +30,6 @@ export function StudentListItem({ student, onClick, selectable, selected }) {
       <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
         <div style={nameStyle}>{student.name}</div>
         <div style={subRowStyle}>
-          {tier.name && (
-            <span style={tierChipStyle}>
-              <TierIcon size={12} color={tier.color} />
-              <span style={{ fontSize: theme.font.sizes.caption, color: tier.color, fontWeight: 600 }}>{tier.name}</span>
-            </span>
-          )}
           {student.streak > 1 && (
             <span style={streakChipStyle}>
               <Flame size={12} color={theme.colors.danger} />
@@ -100,12 +91,6 @@ const subRowStyle = {
   display: 'flex',
   alignItems: 'center',
   gap: 8,
-};
-
-const tierChipStyle = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 4,
 };
 
 const streakChipStyle = {

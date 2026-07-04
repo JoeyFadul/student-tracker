@@ -8,22 +8,19 @@ import { CustomAmountSheet } from '../ui/CustomAmountSheet';
 const QUICK_AMOUNTS = [1, 2, 5];
 
 export function QuickGrantRow({ onQuickGrant }) {
-  // pendingAmount drives the ReasonPrompt. allowRevoke=true only when the
-  // user came in through the custom flow; the 1/2/5 buttons are Grant-only.
+  // pendingAmount drives the ReasonPrompt; the prompt always offers the
+  // Award/Revoke toggle regardless of which entry path set the amount.
   const [pendingAmount, setPendingAmount] = useState(null);
-  const [allowRevoke, setAllowRevoke] = useState(false);
   const [customOpen, setCustomOpen] = useState(false);
 
   const confirm = (delta, reason) => {
     onQuickGrant(delta, reason);
     setPendingAmount(null);
-    setAllowRevoke(false);
   };
 
   const handleCustomAmount = (n) => {
     setCustomOpen(false);
     setPendingAmount(n);
-    setAllowRevoke(true);
   };
 
   return (
@@ -33,7 +30,7 @@ export function QuickGrantRow({ onQuickGrant }) {
           <QuickButton
             key={n}
             amount={n}
-            onClick={() => { setAllowRevoke(true); setPendingAmount(n); }}
+            onClick={() => setPendingAmount(n)}
           />
         ))}
         <MoreButton onClick={() => setCustomOpen(true)} />
@@ -47,9 +44,9 @@ export function QuickGrantRow({ onQuickGrant }) {
 
       <ReasonPrompt
         amount={pendingAmount}
-        allowRevoke={allowRevoke}
+        allowRevoke
         open={pendingAmount !== null}
-        onClose={() => { setPendingAmount(null); setAllowRevoke(false); }}
+        onClose={() => setPendingAmount(null)}
         onConfirm={confirm}
       />
     </>
