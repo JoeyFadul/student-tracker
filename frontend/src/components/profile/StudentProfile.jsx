@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { ChevronLeft, Trash2 } from 'lucide-react';
 import { theme } from '../../theme';
-import { usePressable } from '../../hooks/usePressable';
 import { formatGrade } from '../../lib/grades';
 import { AppHeader } from '../ui/AppHeader';
+import { IconButton } from '../ui/IconButton';
 import { ProfileHero } from './ProfileHero';
 import { QuickGrantRow } from './QuickGrantRow';
 import { NotesEditor } from './NotesEditor';
@@ -33,8 +33,8 @@ export function StudentProfile({
       <AppHeader
         title={student.name}
         subtitle={formatGrade(student.grade)}
-        left={<HeaderIconButton icon={<ChevronLeft size={22} color={theme.colors.headerDarkText} />} onClick={onBack} ariaLabel="Back" />}
-        action={<HeaderIconButton icon={<Trash2 size={18} color="#FCA5A5" />} onClick={() => setShowDeleteModal(true)} ariaLabel="Delete student" />}
+        left={<IconButton tone="headerDark" icon={<ChevronLeft size={22} color={theme.colors.headerDarkText} />} onClick={onBack} ariaLabel="Back" />}
+        action={<IconButton tone="headerDark" icon={<Trash2 size={18} color="#FCA5A5" />} onClick={() => setShowDeleteModal(true)} ariaLabel="Delete student" />}
       />
 
       <div style={containerStyle}>
@@ -71,20 +71,6 @@ export function StudentProfile({
   );
 }
 
-function HeaderIconButton({ icon, onClick, ariaLabel }) {
-  const { handlers, pressedStyle } = usePressable();
-  return (
-    <button
-      onClick={onClick}
-      {...handlers}
-      style={{ ...headerIconBtnStyle, ...pressedStyle }}
-      aria-label={ariaLabel}
-    >
-      {icon}
-    </button>
-  );
-}
-
 const pageStyle = {
   minHeight: '100vh',
   background: 'transparent',
@@ -97,16 +83,3 @@ const containerStyle = {
   padding: `8px 16px calc(${theme.tabBarHeight}px + 24px + ${theme.safeBottom})`,
 };
 
-const headerIconBtnStyle = {
-  background: 'rgba(255,255,255,0.08)',
-  border: 'none',
-  width: 36,
-  height: 36,
-  borderRadius: 18,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  cursor: 'pointer',
-  WebkitTapHighlightColor: 'transparent',
-  transition: 'transform 0.1s ease',
-};

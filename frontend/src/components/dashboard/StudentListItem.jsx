@@ -1,6 +1,6 @@
 import { Check, Flame, ChevronRight } from 'lucide-react';
 import { theme } from '../../theme';
-import { DEFAULT_AVATAR } from '../../lib/avatars';
+import { Avatar } from '../ui/Avatar';
 import { usePressable } from '../../hooks/usePressable';
 
 export function StudentListItem({ student, onClick, selectable, selected }) {
@@ -21,12 +21,7 @@ export function StudentListItem({ student, onClick, selectable, selected }) {
           {selected && <Check size={14} color="#fff" strokeWidth={3} />}
         </div>
       )}
-      <div style={{ ...avatarStyle, background: theme.colors.avatarBg }}>
-        {student.photo?.startsWith('http')
-          ? <img src={student.photo} alt={student.name} style={imgStyle} />
-          : <span style={{ fontSize: 30 }}>{student.photo || DEFAULT_AVATAR}</span>
-        }
-      </div>
+      <Avatar student={student} size={56} emojiSize={30} />
       <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
         <div style={nameStyle}>{student.name}</div>
         <div style={subRowStyle}>
@@ -60,23 +55,6 @@ const itemStyle = {
   fontFamily: theme.font.family,
   transition: 'transform 0.1s ease, box-shadow 0.15s ease',
   WebkitTapHighlightColor: 'transparent',
-};
-
-const avatarStyle = {
-  width: 56,
-  height: 56,
-  borderRadius: theme.radius.lg,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  flexShrink: 0,
-  overflow: 'hidden',
-};
-
-const imgStyle = {
-  width: '100%',
-  height: '100%',
-  objectFit: 'cover',
 };
 
 const nameStyle = {

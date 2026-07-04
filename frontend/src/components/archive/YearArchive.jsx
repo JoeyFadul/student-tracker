@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { ChevronLeft, Archive, ChevronRight } from 'lucide-react';
 import { theme } from '../../theme';
-import { DEFAULT_AVATAR } from '../../lib/avatars';
 import { formatGrade } from '../../lib/grades';
 import { usePressable } from '../../hooks/usePressable';
 import { AppHeader } from '../ui/AppHeader';
+import { Avatar } from '../ui/Avatar';
+import { IconButton } from '../ui/IconButton';
+import { SkeletonList } from '../ui/Skeleton';
 import { YearStudentDetail } from './YearStudentDetail';
 
 export function YearArchive({ classroomId, year, api, onBack }) {
@@ -53,7 +55,7 @@ export function YearArchive({ classroomId, year, api, onBack }) {
         {error && <div style={errorStyle}>{error}</div>}
 
         {students === null ? (
-          <div style={loadingStyle}>Loading…</div>
+          <SkeletonList count={6} />
         ) : students.length === 0 ? (
           <div style={emptyStyle}>No students were tracked this year.</div>
         ) : (
@@ -69,11 +71,13 @@ export function YearArchive({ classroomId, year, api, onBack }) {
 }
 
 function HeaderBackButton({ onClick }) {
-  const { handlers, pressedStyle } = usePressable();
   return (
-    <button onClick={onClick} {...handlers} style={{ ...headerIconBtnStyle, ...pressedStyle }} aria-label="Back">
-      <ChevronLeft size={22} color={theme.colors.headerDarkText} />
-    </button>
+    <IconButton
+      tone="headerDark"
+      onClick={onClick}
+      ariaLabel="Back"
+      icon={<ChevronLeft size={22} color={theme.colors.headerDarkText} />}
+    />
   );
 }
 
@@ -82,12 +86,7 @@ function StudentRow({ student, rank, onClick }) {
   return (
     <button onClick={onClick} {...handlers} style={{ ...rowStyle, ...pressedStyle }}>
       <div style={rankStyle}>{rank}</div>
-      <div style={{ ...avatarStyle, background: theme.colors.avatarBg }}>
-        {student.photo?.startsWith('http')
-          ? <img src={student.photo} alt={student.name} style={imgStyle} />
-          : <span style={{ fontSize: 24 }}>{student.photo || DEFAULT_AVATAR}</span>
-        }
-      </div>
+      <Avatar student={student} size={48} radius={theme.radius.md} emojiSize={24} />
       <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
         <div style={nameStyle}>{student.name}</div>
         {student.grade && <div style={gradeStyle}>{formatGrade(student.grade)}</div>}
@@ -120,20 +119,6 @@ const containerStyle = {
   maxWidth: 720,
   margin: '0 auto',
   padding: `20px 16px calc(${theme.tabBarHeight}px + 24px + ${theme.safeBottom})`,
-};
-
-const headerIconBtnStyle = {
-  background: 'rgba(255,255,255,0.08)',
-  border: 'none',
-  width: 36,
-  height: 36,
-  borderRadius: 18,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  cursor: 'pointer',
-  WebkitTapHighlightColor: 'transparent',
-  transition: 'transform 0.1s ease',
 };
 
 const bannerStyle = {
@@ -174,23 +159,6 @@ const rankStyle = {
   textAlign: 'center',
 };
 
-const avatarStyle = {
-  width: 48,
-  height: 48,
-  borderRadius: theme.radius.md,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  overflow: 'hidden',
-  flexShrink: 0,
-};
-
-const imgStyle = {
-  width: '100%',
-  height: '100%',
-  objectFit: 'cover',
-};
-
 const nameStyle = {
   fontSize: theme.font.sizes.body,
   fontWeight: 600,
@@ -218,13 +186,6 @@ const pointsLabelStyle = {
   textTransform: 'uppercase',
   letterSpacing: 0.4,
   fontWeight: 500,
-};
-
-const loadingStyle = {
-  padding: 40,
-  textAlign: 'center',
-  color: theme.colors.textMuted,
-  fontSize: theme.font.sizes.footnote,
 };
 
 const emptyStyle = {

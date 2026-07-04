@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { ChevronLeft, Archive } from 'lucide-react';
 import { theme } from '../../theme';
-import { DEFAULT_AVATAR } from '../../lib/avatars';
 import { formatGrade } from '../../lib/grades';
 import { ActivityHistory } from '../profile/ActivityHistory';
-import { usePressable } from '../../hooks/usePressable';
 import { AppHeader } from '../ui/AppHeader';
+import { Avatar } from '../ui/Avatar';
+import { IconButton } from '../ui/IconButton';
 
 export function YearStudentDetail({ classroomId, year, student, api, onBack }) {
   const [data, setData] = useState(null);
@@ -20,8 +20,6 @@ export function YearStudentDetail({ classroomId, year, student, api, onBack }) {
     return () => { cancelled = true; };
   }, [api, classroomId, student.id, year.yearId]);
 
-  const back = usePressable();
-  const isPhotoUrl = student.photo?.startsWith('http');
 
   return (
     <div style={pageStyle}>
@@ -29,9 +27,12 @@ export function YearStudentDetail({ classroomId, year, student, api, onBack }) {
         title={student.name}
         subtitle={year.label}
         left={
-          <button onClick={onBack} {...back.handlers} style={{ ...headerIconBtnStyle, ...back.pressedStyle }} aria-label="Back">
-            <ChevronLeft size={22} color={theme.colors.headerDarkText} />
-          </button>
+          <IconButton
+            tone="headerDark"
+            onClick={onBack}
+            ariaLabel="Back"
+            icon={<ChevronLeft size={22} color={theme.colors.headerDarkText} />}
+          />
         }
       />
 
@@ -42,12 +43,13 @@ export function YearStudentDetail({ classroomId, year, student, api, onBack }) {
         </div>
 
         <div style={heroStyle}>
-          <div style={{ ...avatarStyle, background: theme.colors.avatarBg }}>
-            {isPhotoUrl
-              ? <img src={student.photo} alt={student.name} style={imgStyle} />
-              : <span style={{ fontSize: 56 }}>{student.photo || DEFAULT_AVATAR}</span>
-            }
-          </div>
+          <Avatar
+            student={student}
+            size={120}
+            radius={32}
+            emojiSize={56}
+            style={{ marginBottom: 16, boxShadow: theme.shadow.md }}
+          />
           <h1 style={nameStyle}>{student.name}</h1>
           {student.grade && <div style={gradeStyle}>{formatGrade(student.grade)}</div>}
 
@@ -81,20 +83,6 @@ const containerStyle = {
   padding: `20px 16px calc(${theme.tabBarHeight}px + 24px + ${theme.safeBottom})`,
 };
 
-const headerIconBtnStyle = {
-  background: 'rgba(255,255,255,0.08)',
-  border: 'none',
-  width: 36,
-  height: 36,
-  borderRadius: 18,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  cursor: 'pointer',
-  WebkitTapHighlightColor: 'transparent',
-  transition: 'transform 0.1s ease',
-};
-
 const bannerStyle = {
   display: 'flex',
   alignItems: 'center',
@@ -117,19 +105,6 @@ const heroStyle = {
   marginBottom: 4,
 };
 
-const avatarStyle = {
-  width: 120,
-  height: 120,
-  borderRadius: 32,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  overflow: 'hidden',
-  marginBottom: 16,
-  boxShadow: theme.shadow.md,
-};
-
-const imgStyle = { width: '100%', height: '100%', objectFit: 'cover' };
 
 const nameStyle = {
   fontSize: theme.font.sizes.title1,
