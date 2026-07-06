@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'react-router';
 import { StudentProfile } from '../components/profile/StudentProfile';
 import { SkeletonList } from '../components/ui/Skeleton';
@@ -11,15 +11,35 @@ export function StudentProfileRoute() {
   const cid = classrooms.activeId;
   const goBack = useBackOr('/students');
   const [student, setStudent] = useState(null);
+  const [historyLoading, setHistoryLoading] = useState(true);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
+  // Roster rows already carry everything but activity history (name,
+  // photo, points, streak, notes), so seed from there for an instant
+  // render and let the full fetch revalidate silently underneath — the
+  // skeleton only appears on deep links, where there's no seed. Read the
+  // roster through a ref so optimistic roster updates (grants) don't
+  // retrigger this effect and cause the refetch loop this seeding exists
+  // to avoid.
+  const studentsRef = useRef(studentsApi.students);
+  studentsRef.current = studentsApi.students;
 
   const { getStudent, setError } = studentsApi;
   useEffect(() => {
     let cancelled = false;
-    setStudent(null);
+    setStudent(studentsRef.current.find(s => s.id === studentId) || null);
+    setHistoryLoading(true);
     getStudent(studentId)
-      .then(full => { if (!cancelled) setStudent(full); })
-      .catch(err => { if (!cancelled) setError(err.message); });
+      .then(full => {
+        if (cancelled) return;
+        setStudent(full);
+        setHistoryLoading(false);
+      })
+      .catch(err => {
+        if (cancelled) return;
+        setError(err.message);
+        setHistoryLoading(false);
+      });
     return () => { cancelled = true; };
   }, [getStudent, setError, studentId]);
 
@@ -118,6 +138,7 @@ export function StudentProfileRoute() {
       onPhotoUpload={handlePhotoUpload}
       uploadingPhoto={uploadingPhoto}
       onLoadMoreActivity={loadMoreActivity}
+      historyLoading={historyLoading}
     />
   );
 }

@@ -19,6 +19,7 @@ export function StudentProfile({
   onPhotoUpload,
   uploadingPhoto,
   onLoadMoreActivity,
+  historyLoading = false,
 }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
@@ -57,6 +58,7 @@ export function StudentProfile({
           initialItems={student.history || []}
           initialCursor={student.historyCursor || null}
           onLoadMore={onLoadMoreActivity}
+          loading={historyLoading}
         />
       </div>
 
