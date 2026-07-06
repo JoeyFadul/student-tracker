@@ -7,12 +7,10 @@ import { AppHeader } from '../ui/AppHeader';
 import { Avatar } from '../ui/Avatar';
 import { IconButton } from '../ui/IconButton';
 import { SkeletonList } from '../ui/Skeleton';
-import { YearStudentDetail } from './YearStudentDetail';
 
-export function YearArchive({ classroomId, year, api, onBack }) {
+export function YearArchive({ classroomId, year, api, onBack, onSelectStudent }) {
   const [students, setStudents] = useState(null);
   const [error, setError] = useState('');
-  const [selected, setSelected] = useState(null);
 
   useEffect(() => {
     if (!classroomId) return;
@@ -26,18 +24,6 @@ export function YearArchive({ classroomId, year, api, onBack }) {
       .catch(err => { if (!cancelled) setError(err.message); });
     return () => { cancelled = true; };
   }, [api, classroomId, year.yearId]);
-
-  if (selected) {
-    return (
-      <YearStudentDetail
-        classroomId={classroomId}
-        year={year}
-        student={selected}
-        api={api}
-        onBack={() => setSelected(null)}
-      />
-    );
-  }
 
   return (
     <div style={pageStyle}>
@@ -61,7 +47,7 @@ export function YearArchive({ classroomId, year, api, onBack }) {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {students.map((s, i) => (
-              <StudentRow key={s.id} student={s} rank={i + 1} onClick={() => setSelected(s)} />
+              <StudentRow key={s.id} student={s} rank={i + 1} onClick={() => onSelectStudent(s)} />
             ))}
           </div>
         )}

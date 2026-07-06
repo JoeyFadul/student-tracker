@@ -20,11 +20,14 @@ export function YearStudentDetail({ classroomId, year, student, api, onBack }) {
     return () => { cancelled = true; };
   }, [api, classroomId, student.id, year.yearId]);
 
+  // On deep links the route only knows the student id; everything else
+  // fills in when the fetch lands.
+  const shown = { ...student, ...(data || {}) };
 
   return (
     <div style={pageStyle}>
       <AppHeader
-        title={student.name}
+        title={shown.name}
         subtitle={year.label}
         left={
           <IconButton
@@ -44,17 +47,17 @@ export function YearStudentDetail({ classroomId, year, student, api, onBack }) {
 
         <div style={heroStyle}>
           <Avatar
-            student={student}
+            student={shown}
             size={120}
             radius={32}
             emojiSize={56}
             style={{ marginBottom: 16, boxShadow: theme.shadow.md }}
           />
-          <h1 style={nameStyle}>{student.name}</h1>
-          {student.grade && <div style={gradeStyle}>{formatGrade(student.grade)}</div>}
+          <h1 style={nameStyle}>{shown.name}</h1>
+          {shown.grade && <div style={gradeStyle}>{formatGrade(shown.grade)}</div>}
 
           <div style={pointsBlockStyle}>
-            <div style={pointsValueStyle}>{data?.points ?? student.points}</div>
+            <div style={pointsValueStyle}>{shown.points ?? 0}</div>
             <div style={pointsLabelStyle}>points earned</div>
           </div>
         </div>

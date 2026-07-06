@@ -73,6 +73,14 @@ test('roster renders for a signed-in teacher', async ({ page }) => {
   await expect(page.getByText('Jordan Lee')).toBeVisible()
 })
 
+test('deep link straight to a student profile renders it', async ({ page }) => {
+  await signIn(page)
+  await mockApi(page)
+  await page.goto('/#/students/s1')
+  await expect(page.getByText('points earned')).toBeVisible()
+  await expect(page.getByText('Maya Rodriguez')).toBeVisible()
+})
+
 test('granting 2 points updates the profile and undo reverts it', async ({ page }) => {
   await signIn(page)
   await mockApi(page)
