@@ -33,8 +33,8 @@ export function StudentProfile({
       <AppHeader
         title={student.name}
         subtitle={formatGrade(student.grade)}
-        left={<IconButton tone="headerDark" icon={<ChevronLeft size={22} color={theme.colors.headerDarkText} />} onClick={onBack} ariaLabel="Back" />}
-        action={<IconButton tone="headerDark" icon={<Trash2 size={18} color="#FCA5A5" />} onClick={() => setShowDeleteModal(true)} ariaLabel="Delete student" />}
+        left={<IconButton icon={<ChevronLeft size={22} color={theme.colors.text} />} onClick={onBack} ariaLabel="Back" />}
+        action={<IconButton icon={<Trash2 size={18} color={theme.colors.danger} />} onClick={() => setShowDeleteModal(true)} ariaLabel="Delete student" />}
       />
 
       <div style={containerStyle}>

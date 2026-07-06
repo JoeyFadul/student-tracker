@@ -98,13 +98,13 @@ const warnStyle = {
 const warnTitleStyle = {
   fontSize: theme.font.sizes.body,
   fontWeight: 700,
-  color: '#991b1b',
+  color: theme.colors.danger,
   marginBottom: 4,
 };
 
 const warnBodyStyle = {
   fontSize: theme.font.sizes.footnote,
-  color: '#7f1d1d',
+  color: theme.colors.textMuted,
   lineHeight: 1.45,
 };
 

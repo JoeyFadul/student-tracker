@@ -2,26 +2,28 @@
    values here (and adds a prefers-color-scheme dark block) without
    touching component code. */
 :root {
-  --wd-bg: #F4F5F7;
+  /* "Warm Craft" light palette — docs/requirements/14. */
+  --wd-bg: #FAF7F2;
   --wd-surface: #FFFFFF;
-  --wd-surface-alt: #ECEEF2;
-  --wd-accent: #E4572E;
-  --wd-accent-soft: #FDEDE5;
-  --wd-accent-dark: #C4421F;
-  --wd-text: #1C1917;
-  --wd-text-muted: #6B7280;
-  --wd-text-faint: #9CA3AF;
-  --wd-border: #E5E7EB;
-  --wd-success: #16A34A;
-  --wd-success-soft: #DCFCE7;
-  --wd-danger: #DC2626;
-  --wd-danger-soft: #FEE2E2;
+  --wd-surface-alt: #F1ECE3;
+  --wd-surface-translucent: rgba(255, 255, 255, 0.92);
+  --wd-accent: #E05B35;
+  --wd-accent-soft: #FBEAE2;
+  --wd-accent-dark: #B94A2C;
+  --wd-text: #2A2521;
+  --wd-text-muted: #6E655C;
+  --wd-text-faint: #9C938A;
+  --wd-border: #EAE3D8;
+  --wd-success: #7A9E7E;
+  --wd-success-soft: #E7F0E7;
+  --wd-danger: #B3372B;
+  --wd-danger-soft: #F7E3DF;
   --wd-warning: #F59E0B;
-  --wd-avatar-bg: #fef3c7;
-  --wd-shimmer-mid: #efe7d8;
-  --wd-header-dark: #0E1729;
-  --wd-header-dark-text: #FFFFFF;
-  --wd-header-dark-muted: #9CA3B8;
+  --wd-honey: #F4C95D;
+  --wd-honey-soft: #FBF3DE;
+  --wd-honey-ink: #8A6D1F;
+  --wd-avatar-bg: #FBF3DE;
+  --wd-shimmer-mid: #EFE7D8;
 }
 
 * { box-sizing: border-box; }
@@ -29,7 +31,7 @@
 html, body {
   margin: 0;
   padding: 0;
-  background: var(--wd-header-dark);
+  background: var(--wd-bg);
   color: var(--wd-text);
   /* Mirrors theme.font.family. Set globally because Sheet portals to
      document.body, which breaks inheritance from the React tree —

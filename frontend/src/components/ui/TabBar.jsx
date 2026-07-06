@@ -45,7 +45,7 @@ const wrapStyle = {
   left: 0,
   right: 0,
   bottom: 0,
-  background: 'rgba(255, 255, 255, 0.92)',
+  background: theme.colors.surfaceTranslucent,
   backdropFilter: 'saturate(180%) blur(20px)',
   WebkitBackdropFilter: 'saturate(180%) blur(20px)',
   borderTop: `1px solid ${theme.colors.border}`,

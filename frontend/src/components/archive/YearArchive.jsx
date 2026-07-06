@@ -59,10 +59,9 @@ export function YearArchive({ classroomId, year, api, onBack, onSelectStudent })
 function HeaderBackButton({ onClick }) {
   return (
     <IconButton
-      tone="headerDark"
       onClick={onClick}
       ariaLabel="Back"
-      icon={<ChevronLeft size={22} color={theme.colors.headerDarkText} />}
+      icon={<ChevronLeft size={22} color={theme.colors.text} />}
     />
   );
 }

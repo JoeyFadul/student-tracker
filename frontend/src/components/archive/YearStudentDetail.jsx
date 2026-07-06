@@ -31,10 +31,9 @@ export function YearStudentDetail({ classroomId, year, student, api, onBack }) {
         subtitle={year.label}
         left={
           <IconButton
-            tone="headerDark"
             onClick={onBack}
             ariaLabel="Back"
-            icon={<ChevronLeft size={22} color={theme.colors.headerDarkText} />}
+            icon={<ChevronLeft size={22} color={theme.colors.text} />}
           />
         }
       />
