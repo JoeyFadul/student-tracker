@@ -1,26 +1,32 @@
+// Color tokens resolve through CSS variables (defined in index.css) so a
+// future color-scheme swap — Phase 1's palette and dark mode — changes
+// variable values only, with no JS re-render. Values today are identical
+// to the pre-variable palette.
 export const theme = {
   colors: {
-    bg: '#F4F5F7',
-    surface: '#FFFFFF',
-    surfaceAlt: '#ECEEF2',
-    accent: '#E4572E',
-    accentSoft: '#FDEDE5',
-    accentDark: '#C4421F',
-    text: '#1C1917',
-    textMuted: '#6B7280',
-    textFaint: '#9CA3AF',
-    border: '#E5E7EB',
-    success: '#16A34A',
-    successSoft: '#DCFCE7',
-    danger: '#DC2626',
-    dangerSoft: '#FEE2E2',
-    warning: '#F59E0B',
-    avatarBg: '#fef3c7',
-    headerDark: '#0E1729',
-    headerDarkText: '#FFFFFF',
-    headerDarkMuted: '#9CA3B8',
+    bg: 'var(--wd-bg)',
+    surface: 'var(--wd-surface)',
+    surfaceAlt: 'var(--wd-surface-alt)',
+    accent: 'var(--wd-accent)',
+    accentSoft: 'var(--wd-accent-soft)',
+    accentDark: 'var(--wd-accent-dark)',
+    text: 'var(--wd-text)',
+    textMuted: 'var(--wd-text-muted)',
+    textFaint: 'var(--wd-text-faint)',
+    border: 'var(--wd-border)',
+    success: 'var(--wd-success)',
+    successSoft: 'var(--wd-success-soft)',
+    danger: 'var(--wd-danger)',
+    dangerSoft: 'var(--wd-danger-soft)',
+    warning: 'var(--wd-warning)',
+    avatarBg: 'var(--wd-avatar-bg)',
+    shimmerMid: 'var(--wd-shimmer-mid)',
+    headerDark: 'var(--wd-header-dark)',
+    headerDarkText: 'var(--wd-header-dark-text)',
+    headerDarkMuted: 'var(--wd-header-dark-muted)',
   },
-  // Dark palette used for data/analytics surfaces.
+  // Dark palette for the Stats screen. Phase 1 retires this along with the
+  // dark screen itself (docs/requirements/14) — not worth tokenizing.
   dark: {
     bg: '#0E1729',
     surface: '#1A2440',

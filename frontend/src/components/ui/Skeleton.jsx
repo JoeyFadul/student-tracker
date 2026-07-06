@@ -44,7 +44,7 @@ const shimmerKeyframes = `
 `;
 
 const shimmerStyle = {
-  background: `linear-gradient(90deg, ${theme.colors.surfaceAlt} 0%, #efe7d8 50%, ${theme.colors.surfaceAlt} 100%)`,
+  background: `linear-gradient(90deg, ${theme.colors.surfaceAlt} 0%, ${theme.colors.shimmerMid} 50%, ${theme.colors.surfaceAlt} 100%)`,
   backgroundSize: '400px 100%',
   animation: 'wd-shimmer 1.4s ease-in-out infinite',
 };
