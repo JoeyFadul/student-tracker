@@ -21,8 +21,13 @@ export function StudentProfileRoute() {
   // roster through a ref so optimistic roster updates (grants) don't
   // retrigger this effect and cause the refetch loop this seeding exists
   // to avoid.
+  // Synced in an effect (not during render) per react-hooks/refs; this
+  // effect has no deps so it runs every commit, always before the fetch
+  // effect below reads it.
   const studentsRef = useRef(studentsApi.students);
-  studentsRef.current = studentsApi.students;
+  useEffect(() => {
+    studentsRef.current = studentsApi.students;
+  });
 
   const { getStudent, setError } = studentsApi;
   useEffect(() => {
