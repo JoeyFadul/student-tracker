@@ -28,13 +28,13 @@ export const theme = {
   },
   radius: { sm: 8, md: 12, lg: 16, xl: 20, pill: 999 },
   space: { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 24, xxxl: 32 },
-  // Warm-tinted (ink-based) shadows per doc 14.
+  // Neutral ink shadows, kept subtle per doc 14 (Clean Craft revision).
   shadow: {
-    sm: '0 1px 2px rgba(42, 37, 33, 0.05)',
-    md: '0 2px 8px rgba(42, 37, 33, 0.06), 0 1px 2px rgba(42, 37, 33, 0.04)',
-    lg: '0 10px 28px rgba(42, 37, 33, 0.09), 0 2px 6px rgba(42, 37, 33, 0.05)',
-    sheet: '0 -8px 32px rgba(42, 37, 33, 0.14)',
-    fab: '0 6px 20px rgba(224, 91, 53, 0.36)',
+    sm: '0 1px 2px rgba(17, 17, 19, 0.04)',
+    md: '0 2px 8px rgba(17, 17, 19, 0.05), 0 1px 2px rgba(17, 17, 19, 0.03)',
+    lg: '0 10px 28px rgba(17, 17, 19, 0.08), 0 2px 6px rgba(17, 17, 19, 0.04)',
+    sheet: '0 -8px 32px rgba(17, 17, 19, 0.12)',
+    fab: '0 6px 20px rgba(224, 91, 53, 0.32)',
   },
   font: {
     family: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif',

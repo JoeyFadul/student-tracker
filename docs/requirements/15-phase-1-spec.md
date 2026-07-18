@@ -9,9 +9,12 @@ tests ship with features, every chunk leaves the app shippable.
 
 One commit that makes every screen Warm Craft without changing layout:
 
-1. Token values → doc-14 "paper" palette in `index.css` (bg `#FAF7F2`,
-   ink `#2A2521`, accent `#E05B35`, sage success, honey highlight, brick
-   danger). New tokens: `honey`, `honeySoft`, `surfaceTranslucent`.
+1. Token values → doc-14 palette in `index.css` (shipped as "paper"
+   `#FAF7F2`/`#2A2521`; revised 2026-07-18 to the Clean Craft neutrals —
+   bg `#FAFAFA`, ink `#18181B`, accent `#E05B35` unchanged, sage success,
+   honey highlight, brick danger). New tokens: `honey`, `honeySoft`,
+   `surfaceTranslucent`. Cards/rows gain a 1px `border` hairline with
+   `shadow.sm`.
 2. **Navy retired**: `headerDark*` tokens deleted; `AppHeader` becomes a
    single light treatment (paper bg, 30px rounded-display ink title);
    header icon buttons flip to surface tone with ink glyphs; status bar
@@ -32,7 +35,7 @@ Student Profile (centered hero per frame 2), award sheet polish (frame 3),
 Settings (frame 5, no icon tiles — emoji rule). Component-level work,
 one screen per commit, e2e untouched.
 
-## Chunk C — dark mode ("evening")
+## Chunk C — dark mode (neutral charcoal)
 
 `prefers-color-scheme` block in index.css with doc-14 dark values; audit
 remaining translucent/literal colors; verify kit components in both

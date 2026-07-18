@@ -47,7 +47,7 @@ const iconCircleStyle = {
   alignItems: 'center',
   justifyContent: 'center',
   flexShrink: 0,
-  boxShadow: '0 1px 4px rgba(228, 87, 46, 0.28)',
+  boxShadow: '0 1px 4px rgba(224, 91, 53, 0.28)',
 };
 
 const titleStyle = {

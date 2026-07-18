@@ -5,9 +5,10 @@ export function Card({ title, subtitle, children, padding = 20, style, ...rest }
     <div
       style={{
         background: theme.colors.surface,
+        border: `1px solid ${theme.colors.border}`,
         borderRadius: theme.radius.xl,
         padding,
-        boxShadow: theme.shadow.md,
+        boxShadow: theme.shadow.sm,
         marginBottom: 14,
         ...style,
       }}

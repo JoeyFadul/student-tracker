@@ -1,9 +1,13 @@
-# 14 · 2.0 Design Direction — "Warm Craft"
+# 14 · 2.0 Design Direction — "Clean Craft"
 
-Chosen 2026-07-04 (with system-follow dark mode). Evolution, not
-revolution: keep the warm terracotta identity teachers already know,
-replace the dated parts (dark navy headers, three-mood inconsistency,
-flat gray background) with a coherent warm-paper system.
+Chosen 2026-07-04 as "Warm Craft" (with system-follow dark mode);
+**revised 2026-07-18 to "Clean Craft"**: the warm-paper canvas read as
+peach in practice, so the base becomes neutral white — modern, simple,
+clean — while the terracotta identity survives as accents. Principle:
+**the canvas is neutral; color appears only where it means something**
+(terracotta actions/points, honey streaks/avatars, sage success).
+Everything else from the original direction stands: dark navy stays
+retired, rounded display type, large-title headers, squircle shapes.
 
 **Wireframes:** [`docs/design/wireframes-2.0.html`](../design/wireframes-2.0.html)
 — open in any browser. Six frames: Dashboard, Student Profile, Award
@@ -11,31 +15,34 @@ sheet, Stats, Settings, Dashboard (dark).
 
 ## Palette
 
-### Light ("paper")
+### Light ("clean")
 
 | Token | Value | Use |
 |---|---|---|
-| `bg` | `#FAF7F2` | App background — warm paper, replaces cool gray `#F4F5F7` |
-| `surface` | `#FFFFFF` | Cards |
-| `surfaceAlt` | `#F1ECE3` | Inputs, chips, secondary fills |
-| `ink` | `#2A2521` | Primary text (warm near-black) |
-| `inkMuted` / `inkFaint` | `#6E655C` / `#9C938A` | Secondary / tertiary text |
-| `border` | `#EAE3D8` | Hairlines |
+| `bg` | `#FAFAFA` | App background — neutral near-white (reads white; pure `#FFF` would erase card edges) |
+| `surface` | `#FFFFFF` | Cards — hairline `border` + `shadow.sm`, not shadow-only |
+| `surfaceAlt` | `#F3F4F6` | Inputs, chips, secondary fills |
+| `ink` | `#18181B` | Primary text (neutral near-black) |
+| `inkMuted` / `inkFaint` | `#6B7280` / `#9CA3AF` | Secondary / tertiary text |
+| `border` | `#ECECEE` | Hairlines, card outlines |
 | `accent` | `#E05B35` (soft `#FBEAE2`, deep `#B94A2C`) | Terracotta — actions, points, FAB |
 | `sage` | `#7A9E7E` (soft `#E7F0E7`) | Success, positive deltas |
-| `honey` | `#F4C95D` (soft `#FBF3DE`) | Streaks, celebrations, stat highlights |
+| `honey` | `#F4C95D` (soft `#FBF3DE`) | Streaks, celebrations, avatar tiles |
 | `danger` | `#B3372B` (soft `#F7E3DF`) | Destructive — deeper than accent so they never read as the same red |
 
-### Dark ("evening") — warm charcoal, not blue-black
+Superseded "paper" values (2026-07-04 → 2026-07-18): bg `#FAF7F2`,
+surfaceAlt `#F1ECE3`, ink `#2A2521`/`#6E655C`/`#9C938A`, border `#EAE3D8`.
+
+### Dark — neutral charcoal, not blue-black or brown
 
 | Token | Value |
 |---|---|
-| `bg` | `#1E1B17` |
-| `surface` / `surfaceAlt` | `#2A2620` / `#353028` |
-| `ink` / `inkMuted` | `#F5EFE7` / `#A89E92` |
+| `bg` | `#131316` |
+| `surface` / `surfaceAlt` | `#1D1D21` / `#2A2A2F` |
+| `ink` / `inkMuted` | `#F4F4F5` / `#A1A1AA` |
 | `accent` | `#F0714A` (brightened for contrast) |
 | `sage` / `honey` | `#8FB694` / `#F6D174` |
-| `border` | `rgba(245,239,231,0.08)` |
+| `border` | `rgba(255,255,255,0.09)` |
 
 Implementation: `theme.js` becomes token pairs resolved by
 `prefers-color-scheme` (CSS variables at `:root`, since styling is
@@ -52,9 +59,10 @@ the system entirely** — headers become light paper with large ink type.
 - **Large-title headers**, iOS-style: title lives in the scroll content
   (big, ink-on-paper), collapsing to a compact bar on scroll. Replaces
   the fixed dark-navy header band.
-- **Squircle everything**: avatars at ~38% radius, cards 20–24, primary
-  buttons pill. Shadows get softer and singular (one shadow level per
-  elevation, warm-tinted: `rgba(42,37,33,…)`).
+- **Squircle everything**: avatars at ~38% radius, cards ~20, primary
+  buttons pill. Cards read as bordered surfaces (1px `border` hairline +
+  minimal neutral shadow `rgba(17,17,19,…)`) rather than floating
+  shadow-heavy tiles.
 
 ## Signature patterns
 

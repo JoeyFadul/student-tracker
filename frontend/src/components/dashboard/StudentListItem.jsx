@@ -13,7 +13,7 @@ export function StudentListItem({ student, onClick, selectable, selected }) {
       style={{
         ...itemStyle,
         ...pressedStyle,
-        boxShadow: selected ? `0 0 0 2px ${theme.colors.accent}, ${theme.shadow.md}` : theme.shadow.md,
+        boxShadow: selected ? `0 0 0 2px ${theme.colors.accent}, ${theme.shadow.sm}` : theme.shadow.sm,
       }}
     >
       {selectable && (
@@ -48,7 +48,7 @@ const itemStyle = {
   gap: 12,
   padding: '14px 14px 14px 16px',
   background: theme.colors.surface,
-  border: 'none',
+  border: `1px solid ${theme.colors.border}`,
   borderRadius: theme.radius.xl,
   cursor: 'pointer',
   width: '100%',

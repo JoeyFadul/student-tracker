@@ -2,18 +2,20 @@
    values here (and adds a prefers-color-scheme dark block) without
    touching component code. */
 :root {
-  /* "Warm Craft" light palette — docs/requirements/14. */
-  --wd-bg: #FAF7F2;
+  /* "Clean Craft" light palette — docs/requirements/14 (revised 2026-07-18).
+     Neutral white canvas; warmth is reserved for meaning (accent actions,
+     honey streaks/avatars, sage success). */
+  --wd-bg: #FAFAFA;
   --wd-surface: #FFFFFF;
-  --wd-surface-alt: #F1ECE3;
+  --wd-surface-alt: #F3F4F6;
   --wd-surface-translucent: rgba(255, 255, 255, 0.92);
   --wd-accent: #E05B35;
   --wd-accent-soft: #FBEAE2;
   --wd-accent-dark: #B94A2C;
-  --wd-text: #2A2521;
-  --wd-text-muted: #6E655C;
-  --wd-text-faint: #9C938A;
-  --wd-border: #EAE3D8;
+  --wd-text: #18181B;
+  --wd-text-muted: #6B7280;
+  --wd-text-faint: #9CA3AF;
+  --wd-border: #ECECEE;
   --wd-success: #7A9E7E;
   --wd-success-soft: #E7F0E7;
   --wd-danger: #B3372B;
@@ -23,7 +25,7 @@
   --wd-honey-soft: #FBF3DE;
   --wd-honey-ink: #8A6D1F;
   --wd-avatar-bg: #FBF3DE;
-  --wd-shimmer-mid: #EFE7D8;
+  --wd-shimmer-mid: #EEEEF0;
 }
 
 * { box-sizing: border-box; }

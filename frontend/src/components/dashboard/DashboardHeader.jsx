@@ -1,4 +1,5 @@
 import { LogOut } from 'lucide-react';
+import { theme } from '../../theme';
 
 export function DashboardHeader({ onSignOut }) {
   return (
@@ -16,7 +17,7 @@ export function DashboardHeader({ onSignOut }) {
 
 const eyebrowStyle = {
   fontSize: 12,
-  color: '#a8a29e',
+  color: theme.colors.textFaint,
   textTransform: 'uppercase',
   letterSpacing: 1,
   marginBottom: 4,
@@ -26,7 +27,7 @@ const eyebrowStyle = {
 const titleStyle = {
   fontSize: 28,
   fontWeight: 700,
-  color: '#1c1917',
+  color: theme.colors.text,
   margin: 0,
   lineHeight: 1.2,
 };
@@ -35,6 +36,6 @@ const iconButtonStyle = {
   background: 'none',
   border: 'none',
   cursor: 'pointer',
-  color: '#78716c',
+  color: theme.colors.textMuted,
   padding: 8,
 };

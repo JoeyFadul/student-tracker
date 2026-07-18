@@ -69,7 +69,7 @@ const backdropStyle = {
   // keyboardWillShow/Hide so the centered modal pops up between the top of
   // the screen and the top of the keyboard whenever one is open.
   bottom: 'var(--kb-height, 0px)',
-  background: 'rgba(28, 25, 23, 0.4)',
+  background: 'rgba(0, 0, 0, 0.4)',
   zIndex: 200,
   display: 'flex',
   alignItems: 'center',
