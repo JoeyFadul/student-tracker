@@ -27,12 +27,16 @@ One commit that makes every screen Warm Craft without changing layout:
 6. Hardcoded-color cleanup rides along: LoginScreen and ConfirmDialog
    literals → tokens (CLAUDE.md rule).
 
-## Chunk B — screen rebuilds (wireframes 1–3, 5)
+## Chunk B — screen alignment to the design-system kit ✅
 
-Dashboard (kicker + big title block, year chip, honey streak chips),
-Student Profile (centered hero per frame 2), award sheet polish (frame 3),
-Settings (frame 5, no icon tiles — emoji rule). Component-level work,
-one screen per commit, e2e untouched.
+The kit (`ui_kits/app/`) is a restyled recreation of the app, so most
+of frame-level "rebuild" landed with the token/chrome adoption. The
+remaining deltas shipped one screen per commit, e2e untouched:
+Dashboard (soft-coral bulk entry band; select footer collapses to a
+single "Award to N students" action, cancel via header X), Profile
+(Activity above Notes; "Only you can see these" notes subtitle),
+Settings (slate icon tiles incl. detail screens; accent kept only on
+the active-classroom marker). Dead `DangerZone` removed.
 
 ## Chunk C — dark mode ✅ (shipped with the Gunmetal & Coral adoption)
 
