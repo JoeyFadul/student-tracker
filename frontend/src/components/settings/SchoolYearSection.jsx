@@ -21,7 +21,7 @@ export function SchoolYearSection({ active, years, onStart, onEnd, onDelete, onO
       {active ? (
         <div style={cardStyle}>
           <div style={cardRowStyle}>
-            <div style={iconWrapStyle}><Calendar size={20} color={theme.colors.accentDark} /></div>
+            <div style={iconWrapStyle}><Calendar size={20} color={theme.colors.slate} /></div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={kickerStyle}>Current year</div>
               <div style={yearLabelStyle}>{active.label}</div>
@@ -210,7 +210,7 @@ const iconWrapStyle = {
   width: 44,
   height: 44,
   borderRadius: 22,
-  background: theme.colors.accentSoft,
+  background: theme.colors.slateSoft,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',

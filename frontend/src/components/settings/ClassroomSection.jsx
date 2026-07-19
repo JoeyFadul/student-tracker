@@ -139,7 +139,7 @@ function ClassroomCard({ name, role, onSwitch }) {
   const { handlers, pressedStyle } = usePressable();
   return (
     <button onClick={onSwitch} {...handlers} style={{ ...cardStyle, ...pressedStyle }}>
-      <div style={iconWrapStyle}><School size={20} color={theme.colors.accentDark} /></div>
+      <div style={iconWrapStyle}><School size={20} color={theme.colors.slate} /></div>
       <div style={{ flex: 1, textAlign: 'left' }}>
         <div style={kickerStyle}>Current</div>
         <div style={nameStyle}>{name}</div>
@@ -305,7 +305,7 @@ const iconWrapStyle = {
   width: 44,
   height: 44,
   borderRadius: 22,
-  background: theme.colors.accentSoft,
+  background: theme.colors.slateSoft,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',

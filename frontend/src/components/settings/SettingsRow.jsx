@@ -46,7 +46,7 @@ const iconWrapStyle = {
   width: 36,
   height: 36,
   borderRadius: 12,
-  background: theme.colors.accentSoft,
+  background: theme.colors.slateSoft,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
