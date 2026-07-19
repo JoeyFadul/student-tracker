@@ -2,6 +2,7 @@
 // Currently houses delete; could host other destructive actions in the future.
 
 import { Trash2 } from 'lucide-react';
+import { theme } from '../../theme';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 
@@ -24,7 +25,7 @@ export function DangerZone({ studentName, onDelete }) {
 const labelStyle = {
   fontSize: 13,
   fontWeight: 600,
-  color: '#dc2626',
+  color: theme.colors.danger,
   textTransform: 'uppercase',
   letterSpacing: 0.5,
   marginBottom: 4,
@@ -32,7 +33,7 @@ const labelStyle = {
 
 const descriptionStyle = {
   fontSize: 13,
-  color: '#78716c',
+  color: theme.colors.textMuted,
   marginBottom: 12,
   lineHeight: 1.5,
 };

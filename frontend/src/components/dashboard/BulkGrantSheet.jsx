@@ -4,8 +4,7 @@ import { theme } from '../../theme';
 import { Sheet } from '../ui/Sheet';
 import { CustomAmountSheet } from '../ui/CustomAmountSheet';
 import { ReasonPicker } from '../profile/ReasonPicker';
-import { DEFAULT_AVATAR } from '../../lib/avatars';
-import { getTier } from '../../lib/tiers';
+import { Avatar } from '../ui/Avatar';
 import { usePressable } from '../../hooks/usePressable';
 
 const PRESET_AMOUNTS = [1, 2, 5];
@@ -75,31 +74,25 @@ function StudentStrip({ selected }) {
     <div style={stripStyle}>
       <div style={avatarStackStyle}>
         {shown.map((s, i) => (
-          <Avatar key={s.id} student={s} index={i} />
+          <Avatar
+            key={s.id}
+            student={s}
+            size={32}
+            radius={16}
+            emojiSize={16}
+            style={{
+              marginLeft: i === 0 ? 0 : -10,
+              zIndex: 10 - i,
+              border: `2px solid ${theme.colors.surfaceAlt}`,
+              boxSizing: 'border-box',
+            }}
+          />
         ))}
       </div>
       <span style={stripCountStyle}>
         {selected.length} {selected.length === 1 ? 'student' : 'students'}
         {overflow > 0 && ` · +${overflow}`}
       </span>
-    </div>
-  );
-}
-
-function Avatar({ student, index }) {
-  const tier = getTier(student.points);
-  const isPhotoUrl = student.photo?.startsWith('http');
-  return (
-    <div style={{
-      ...avatarStyle,
-      background: tier.bg,
-      marginLeft: index === 0 ? 0 : -10,
-      zIndex: 10 - index,
-    }}>
-      {isPhotoUrl
-        ? <img src={student.photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        : <span style={{ fontSize: 16 }}>{student.photo || DEFAULT_AVATAR}</span>
-      }
     </div>
   );
 }
@@ -170,18 +163,6 @@ const avatarStackStyle = {
   display: 'flex',
   alignItems: 'center',
   flexShrink: 0,
-};
-
-const avatarStyle = {
-  width: 32,
-  height: 32,
-  borderRadius: 16,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  overflow: 'hidden',
-  border: `2px solid ${theme.colors.surfaceAlt}`,
-  boxSizing: 'border-box',
 };
 
 const stripCountStyle = {

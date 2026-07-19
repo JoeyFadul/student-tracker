@@ -3,6 +3,8 @@ import { theme } from '../../theme';
 import { useEffect, useState } from 'react';
 import { AppHeader } from '../ui/AppHeader';
 
+// Bento layout per the design-system UI kit: gunmetal hero with the class
+// total in coral, white avg tile, slate on-streak tile, top-reasons bars.
 export function StatsScreen({ students, api, classroomId, activeYear }) {
   const totalStudents = students.length;
   const totalPoints = students.reduce((sum, s) => sum + (s.points || 0), 0);
@@ -13,52 +15,36 @@ export function StatsScreen({ students, api, classroomId, activeYear }) {
     <div style={pageStyle}>
       <AppHeader title="Statistics" subtitle={activeYear?.label || 'No active school year'} />
       <div style={containerStyle}>
-        <div style={heroCardStyle}>
-          <div style={heroLabelStyle}>Total points</div>
-          <div style={heroNumberStyle}>{totalPoints.toLocaleString()}</div>
-          <div style={heroSubStyle}>
-            across {totalStudents} {totalStudents === 1 ? 'student' : 'students'}
+        <div style={gridStyle}>
+          <div style={heroCardStyle}>
+            <div style={heroLabelStyle}>Total points</div>
+            <div style={heroNumberStyle}>{totalPoints.toLocaleString()}</div>
+            <div style={heroSubStyle}>
+              across {totalStudents} {totalStudents === 1 ? 'student' : 'students'}
+            </div>
           </div>
 
-          <div style={dividerStyle} />
-
-          <div style={breakdownRowStyle}>
-            <BreakdownItem
-              dotColor="#FF6B3D"
-              label="Avg per student"
-              value={avg}
-            />
-            <BreakdownItem
-              dotColor="#5B8DEF"
-              label="On streak"
-              value={onFire}
-              icon={<Flame size={12} color="#FF6B3D" />}
-            />
+          <div style={tileStyle}>
+            <div style={tileLabelStyle}>Avg / student</div>
+            <div style={tileValueStyle}>{avg}</div>
           </div>
+
+          <div style={{ ...tileStyle, background: theme.colors.slateSoft }}>
+            <div style={{ ...tileLabelStyle, color: theme.colors.slate }}>On streak</div>
+            <div style={{ ...tileValueStyle, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Flame size={22} color={theme.colors.accent} />
+              <span>{onFire}</span>
+            </div>
+          </div>
+
+          <TopReasonsCard api={api} classroomId={classroomId} yearId={activeYear?.yearId} />
         </div>
-
-        <DarkTopReasonsCard api={api} classroomId={classroomId} yearId={activeYear?.yearId} />
       </div>
     </div>
   );
 }
 
-function BreakdownItem({ dotColor, label, value, icon }) {
-  return (
-    <div style={breakdownItemStyle}>
-      <div style={breakdownLabelRow}>
-        <span style={{ ...dotStyle, background: dotColor }} />
-        <span style={breakdownLabelStyle}>{label}</span>
-      </div>
-      <div style={breakdownValueStyle}>
-        {icon}
-        <span>{value}</span>
-      </div>
-    </div>
-  );
-}
-
-function DarkTopReasonsCard({ api, classroomId, yearId }) {
+function TopReasonsCard({ api, classroomId, yearId }) {
   const [reasons, setReasons] = useState(null);
 
   useEffect(() => {
@@ -76,7 +62,7 @@ function DarkTopReasonsCard({ api, classroomId, yearId }) {
   return (
     <div style={reasonsCardStyle}>
       <div style={reasonsHeaderStyle}>
-        <TrendingUp size={14} color={theme.dark.textMuted} />
+        <TrendingUp size={14} color={theme.colors.textMuted} />
         <span>Top reasons · last 30 days</span>
       </div>
       <div style={reasonsListStyle}>
@@ -94,9 +80,8 @@ function DarkTopReasonsCard({ api, classroomId, yearId }) {
 
 const pageStyle = {
   minHeight: '100vh',
-  background: theme.dark.bg,
+  background: 'transparent',
   fontFamily: theme.font.family,
-  color: theme.dark.text,
 };
 
 const containerStyle = {
@@ -105,27 +90,33 @@ const containerStyle = {
   padding: `8px 16px calc(${theme.tabBarHeight}px + 24px + ${theme.safeBottom})`,
 };
 
+const gridStyle = {
+  display: 'grid',
+  gridTemplateColumns: '1fr 1fr',
+  gap: 10,
+};
+
 const heroCardStyle = {
-  background: theme.dark.surface,
-  borderRadius: 24,
-  padding: '28px 24px 24px',
-  marginBottom: 16,
-  boxShadow: '0 12px 32px rgba(0, 0, 0, 0.25)',
+  gridColumn: '1 / 3',
+  background: theme.colors.gunmetal,
+  borderRadius: theme.radius.sheet,
+  padding: '24px 22px 22px',
+  boxShadow: theme.shadow.md,
 };
 
 const heroLabelStyle = {
   fontSize: theme.font.sizes.footnote,
-  color: theme.dark.textMuted,
-  fontWeight: 500,
+  color: theme.colors.silver,
+  fontWeight: 600,
   textTransform: 'uppercase',
   letterSpacing: 0.8,
   marginBottom: 6,
 };
 
 const heroNumberStyle = {
-  fontSize: 64,
+  fontSize: 60,
   fontWeight: 800,
-  color: theme.dark.text,
+  color: theme.colors.accent,
   letterSpacing: '-0.04em',
   lineHeight: 1,
   fontFamily: theme.font.display,
@@ -133,63 +124,41 @@ const heroNumberStyle = {
 
 const heroSubStyle = {
   fontSize: theme.font.sizes.footnote,
-  color: theme.dark.textMuted,
+  color: theme.colors.silver,
   marginTop: 8,
 };
 
-const dividerStyle = {
-  height: 1,
-  background: theme.dark.border,
-  margin: '20px -24px',
+const tileStyle = {
+  background: theme.colors.surface,
+  borderRadius: 20,
+  padding: '16px 18px',
+  boxShadow: theme.shadow.md,
 };
 
-const breakdownRowStyle = {
-  display: 'grid',
-  gridTemplateColumns: '1fr 1fr',
-  gap: 16,
-};
-
-const breakdownItemStyle = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 6,
-};
-
-const breakdownLabelRow = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 6,
-};
-
-const dotStyle = {
-  width: 8,
-  height: 8,
-  borderRadius: 4,
-  flexShrink: 0,
-};
-
-const breakdownLabelStyle = {
+const tileLabelStyle = {
   fontSize: theme.font.sizes.footnote,
-  color: theme.dark.textMuted,
-  fontWeight: 500,
+  color: theme.colors.textMuted,
+  fontWeight: 600,
+  textTransform: 'uppercase',
+  letterSpacing: 0.6,
+  marginBottom: 8,
 };
 
-const breakdownValueStyle = {
-  fontSize: theme.font.sizes.title2,
-  fontWeight: 700,
-  color: theme.dark.text,
+const tileValueStyle = {
+  fontSize: 34,
+  fontWeight: 800,
+  color: theme.colors.text,
   letterSpacing: '-0.02em',
-  display: 'flex',
-  alignItems: 'center',
-  gap: 6,
+  lineHeight: 1,
   fontFamily: theme.font.display,
 };
 
 const reasonsCardStyle = {
-  background: theme.dark.surface,
+  gridColumn: '1 / 3',
+  background: theme.colors.surface,
   borderRadius: 20,
   padding: 20,
-  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
+  boxShadow: theme.shadow.md,
 };
 
 const reasonsHeaderStyle = {
@@ -197,8 +166,8 @@ const reasonsHeaderStyle = {
   alignItems: 'center',
   gap: 6,
   fontSize: theme.font.sizes.footnote,
-  color: theme.dark.textMuted,
-  fontWeight: 500,
+  color: theme.colors.textMuted,
+  fontWeight: 600,
   marginBottom: 14,
   textTransform: 'uppercase',
   letterSpacing: 0.6,
@@ -216,9 +185,9 @@ const reasonRowStyle = {
   alignItems: 'center',
   justifyContent: 'space-between',
   padding: '10px 14px',
-  borderRadius: 10,
+  borderRadius: 12,
   overflow: 'hidden',
-  background: theme.dark.surfaceAlt,
+  background: theme.colors.surfaceAlt,
   minHeight: 40,
 };
 
@@ -227,7 +196,7 @@ const reasonBarStyle = {
   left: 0,
   top: 0,
   bottom: 0,
-  background: theme.dark.accentSoft,
+  background: theme.colors.accentSoft,
   zIndex: 0,
 };
 
@@ -235,7 +204,7 @@ const reasonNameStyle = {
   position: 'relative',
   zIndex: 1,
   fontSize: theme.font.sizes.body,
-  color: theme.dark.text,
+  color: theme.colors.text,
   fontWeight: 600,
 };
 
@@ -243,6 +212,6 @@ const reasonCountStyle = {
   position: 'relative',
   zIndex: 1,
   fontSize: theme.font.sizes.footnote,
-  color: theme.dark.accent,
+  color: theme.colors.accentDark,
   fontWeight: 700,
 };

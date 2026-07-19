@@ -1,32 +1,26 @@
 import { useRef, useState } from 'react';
 import { Camera, Flame, Loader2 } from 'lucide-react';
 import { theme } from '../../theme';
-import { getTier } from '../../lib/tiers';
-import { DEFAULT_AVATAR } from '../../lib/avatars';
+import { Avatar } from '../ui/Avatar';
+import { Chip } from '../ui/Chip';
 
 export function ProfileHero({ student, onPhotoUpload, uploading }) {
-  const tier = getTier(student.points);
   const fileInputRef = useRef(null);
   const [hovered, setHovered] = useState(false);
-  const isPhotoUrl = student.photo?.startsWith('http');
   // Backend filters to active-year-only positive events so a streak can't
   // survive a year boundary.
   const streak = student.streak || 0;
-  const TierIcon = tier.icon;
 
   return (
     <div style={wrapStyle}>
       <div
-        style={{ ...avatarStyle, background: tier.bg }}
+        style={avatarWrapStyle}
         onClick={() => !uploading && fileInputRef.current?.click()}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         title="Tap to change photo"
       >
-        {isPhotoUrl
-          ? <img src={student.photo} alt={student.name} style={imgStyle} />
-          : <span style={{ fontSize: 56 }}>{student.photo || DEFAULT_AVATAR}</span>
-        }
+        <Avatar student={student} size={120} radius={32} emojiSize={56} />
         <div style={{ ...overlayStyle, opacity: (uploading || hovered) ? 1 : 0 }}>
           {uploading
             ? <Loader2 size={28} color="#fff" strokeWidth={2.5} className="spin" />
@@ -42,17 +36,10 @@ export function ProfileHero({ student, onPhotoUpload, uploading }) {
       </div>
 
       <div style={chipRowStyle}>
-        {tier.name && (
-          <div style={{ ...chipStyle, background: tier.bg, color: tier.color }}>
-            <TierIcon size={14} color={tier.color} />
-            <span>{tier.name}</span>
-          </div>
-        )}
         {streak > 1 && (
-          <div style={{ ...chipStyle, background: theme.colors.dangerSoft, color: theme.colors.danger }}>
-            <Flame size={14} color={theme.colors.danger} />
-            <span>{streak} day streak</span>
-          </div>
+          <Chip tone="accent" icon={<Flame size={14} color={theme.colors.accent} />}>
+            {streak} day streak
+          </Chip>
         )}
       </div>
 
@@ -72,24 +59,13 @@ const wrapStyle = {
   marginBottom: 4,
 };
 
-const avatarStyle = {
-  width: 120,
-  height: 120,
+const avatarWrapStyle = {
   borderRadius: 32,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
   cursor: 'pointer',
   position: 'relative',
   overflow: 'hidden',
   marginBottom: 16,
   boxShadow: theme.shadow.md,
-};
-
-const imgStyle = {
-  width: '100%',
-  height: '100%',
-  objectFit: 'cover',
 };
 
 const overlayStyle = {
@@ -108,16 +84,6 @@ const chipRowStyle = {
   marginTop: 12,
   flexWrap: 'wrap',
   justifyContent: 'center',
-};
-
-const chipStyle = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 5,
-  padding: '6px 12px',
-  borderRadius: theme.radius.pill,
-  fontSize: theme.font.sizes.footnote,
-  fontWeight: 600,
 };
 
 const pointsBlockStyle = {

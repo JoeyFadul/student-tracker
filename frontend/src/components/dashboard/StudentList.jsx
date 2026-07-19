@@ -1,4 +1,5 @@
 import { StudentListItem } from './StudentListItem';
+import { theme } from '../../theme';
 
 export function StudentList({ students, loading, onSelectStudent, searchTerm, selectable, selectedIds }) {
   if (loading && students.length === 0) {
@@ -31,6 +32,6 @@ export function StudentList({ students, loading, onSelectStudent, searchTerm, se
 const messageStyle = {
   padding: 40,
   textAlign: 'center',
-  color: '#a8a29e',
+  color: theme.colors.textFaint,
   fontSize: 14,
 };

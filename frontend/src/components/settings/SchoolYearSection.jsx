@@ -2,20 +2,15 @@ import { useState } from 'react';
 import { Calendar, CalendarPlus, CalendarOff, ChevronRight, Archive, Trash2 } from 'lucide-react';
 import { theme } from '../../theme';
 import { Button } from '../ui/Button';
+import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { StartYearSheet } from './StartYearSheet';
 import { DeleteYearModal } from './DeleteYearModal';
 import { usePressable } from '../../hooks/usePressable';
 
 export function SchoolYearSection({ active, years, onStart, onEnd, onDelete, onOpenArchive }) {
   const [showStart, setShowStart] = useState(false);
-  const [endBusy, setEndBusy] = useState(false);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [yearToDelete, setYearToDelete] = useState(null);
-
-  const handleEnd = async () => {
-    if (!confirm(`End ${active.label}? You can start a new year later.`)) return;
-    setEndBusy(true);
-    try { await onEnd(); } finally { setEndBusy(false); }
-  };
 
   const pastYears = years.filter(y => y.yearId !== active?.yearId);
 
@@ -34,7 +29,7 @@ export function SchoolYearSection({ active, years, onStart, onEnd, onDelete, onO
             </div>
           </div>
           <div style={cardActionsStyle}>
-            <Button variant="dangerSoft" size="sm" onClick={handleEnd} disabled={endBusy} icon={<CalendarOff size={14} />}>
+            <Button variant="dangerSoft" size="sm" onClick={() => setShowEndConfirm(true)} icon={<CalendarOff size={14} />}>
               End year
             </Button>
             {onDelete && (
@@ -95,6 +90,19 @@ export function SchoolYearSection({ active, years, onStart, onEnd, onDelete, onO
         onClose={() => setYearToDelete(null)}
         onConfirm={() => onDelete(yearToDelete.yearId)}
       />
+
+      {showEndConfirm && active && (
+        <ConfirmDialog
+          title={`End ${active.label}?`}
+          confirmLabel="End year"
+          busyLabel="Ending…"
+          onConfirm={onEnd}
+          onClose={() => setShowEndConfirm(false)}
+        >
+          Point tracking pauses until you start a new year. Everything from
+          this year stays viewable as an archive.
+        </ConfirmDialog>
+      )}
     </div>
   );
 }

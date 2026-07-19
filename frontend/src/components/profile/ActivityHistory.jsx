@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { Loader2 } from 'lucide-react';
 import { theme } from '../../theme';
 import { Card } from '../ui/Card';
+import { SkeletonBlock } from '../ui/Skeleton';
 
 // Activity list with cursor-based infinite scroll. Renders the initial page
 // (passed in as initialItems + initialCursor by the parent — the profile fetch
@@ -9,7 +10,7 @@ import { Card } from '../ui/Card';
 // bottom that triggers onLoadMore the moment it scrolls into view. Server
 // uses a FilterExpression so a page can come back smaller than 30 even when
 // more events exist; we just keep walking the cursor.
-export function ActivityHistory({ initialItems, initialCursor, onLoadMore }) {
+export function ActivityHistory({ initialItems, initialCursor, onLoadMore, loading: parentLoading = false }) {
   const [items, setItems] = useState(initialItems || []);
   const [cursor, setCursor] = useState(initialCursor || null);
   const [loading, setLoading] = useState(false);
@@ -54,7 +55,17 @@ export function ActivityHistory({ initialItems, initialCursor, onLoadMore }) {
   return (
     <Card title="Activity">
       {items.length === 0 && !cursor ? (
-        <div style={emptyStyle}>No activity yet</div>
+        // While the parent is still fetching the first history page, show
+        // placeholder lines rather than flashing "No activity yet".
+        parentLoading ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 0' }}>
+            <SkeletonBlock width="70%" />
+            <SkeletonBlock width="55%" />
+            <SkeletonBlock width="62%" />
+          </div>
+        ) : (
+          <div style={emptyStyle}>No activity yet</div>
+        )
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           {items.map((entry, i) => (

@@ -14,6 +14,7 @@
 //                   auto-onSignIn() with the new password.
 
 import { useState } from 'react';
+import { theme } from '../../theme';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { ErrorBanner } from '../ui/ErrorBanner';
@@ -347,7 +348,7 @@ export function LoginScreen({
 
 const containerStyle = {
   minHeight: '100vh',
-  background: '#F4F5F7',
+  background: theme.colors.bg,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -358,35 +359,35 @@ const containerStyle = {
 const cardStyle = {
   width: '100%',
   maxWidth: 380,
-  background: '#FFFFFF',
+  background: theme.colors.surface,
   padding: 32,
   borderRadius: 24,
-  boxShadow: '0 2px 8px rgba(28, 25, 23, 0.06), 0 1px 2px rgba(28, 25, 23, 0.04)',
+  boxShadow: theme.shadow.md,
 };
 
 const titleStyle = {
   fontSize: 32,
   fontWeight: 700,
-  color: '#1c1917',
+  color: theme.colors.text,
   margin: '0 0 4px',
   letterSpacing: '-0.02em',
 };
 
 const subtitleStyle = {
   fontSize: 15,
-  color: '#78716C',
+  color: theme.colors.textMuted,
   margin: '0 0 24px',
 };
 
 const hintStyle = {
   fontSize: 14,
-  color: '#78716C',
+  color: theme.colors.textMuted,
   marginBottom: 14,
 };
 
 const footerStyle = {
   fontSize: 14,
-  color: '#78716C',
+  color: theme.colors.textMuted,
   marginTop: 14,
   textAlign: 'center',
 };
@@ -395,7 +396,7 @@ const linkStyle = {
   background: 'transparent',
   border: 'none',
   padding: 0,
-  color: '#E4572E',
+  color: theme.colors.accent,
   fontWeight: 600,
   fontSize: 14,
   cursor: 'pointer',
@@ -406,8 +407,8 @@ const linkStyle = {
 const infoStyle = {
   marginTop: 12,
   padding: '10px 14px',
-  background: '#ECEEF2',
-  color: '#1C1917',
+  background: theme.colors.surfaceAlt,
+  color: theme.colors.text,
   borderRadius: 12,
   fontSize: 13,
 };

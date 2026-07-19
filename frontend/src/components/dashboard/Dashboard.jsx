@@ -10,11 +10,11 @@ import { BulkGrantEntry } from './BulkGrantEntry';
 import { BulkSelectFooter } from './BulkSelectFooter';
 import { BulkGrantSheet } from './BulkGrantSheet';
 import { NoYearEmptyState } from './NoYearEmptyState';
-import { DashboardSkeleton } from './DashboardSkeleton';
+import { SkeletonList } from '../ui/Skeleton';
 import { ErrorBanner } from '../ui/ErrorBanner';
 import { AddStudentModal } from '../modals/AddStudentModal';
 import { PullIndicator } from '../ui/PullIndicator';
-import { usePressable } from '../../hooks/usePressable';
+import { IconButton } from '../ui/IconButton';
 import { usePullToRefresh } from '../../hooks/usePullToRefresh';
 
 export function Dashboard({
@@ -86,7 +86,7 @@ export function Dashboard({
       <div style={pageStyle}>
         <AppHeader title={classroomName || 'Students'} />
         <div style={containerStyle}>
-          <DashboardSkeleton />
+          <SkeletonList count={5} style={{ marginTop: 14 }} />
         </div>
       </div>
     );
@@ -167,16 +167,12 @@ export function Dashboard({
 }
 
 function CancelButton({ onClick }) {
-  const { handlers, pressedStyle } = usePressable();
   return (
-    <button
+    <IconButton
       onClick={onClick}
-      {...handlers}
-      style={{ ...cancelStyle, ...pressedStyle }}
-      aria-label="Cancel selection"
-    >
-      <X size={18} color={theme.colors.text} />
-    </button>
+      ariaLabel="Cancel selection"
+      icon={<X size={18} color={theme.colors.text} />}
+    />
   );
 }
 
@@ -207,19 +203,4 @@ const controlsRowStyle = {
   gap: 8,
   marginBottom: 14,
   alignItems: 'center',
-};
-
-const cancelStyle = {
-  width: 36,
-  height: 36,
-  borderRadius: 18,
-  background: theme.colors.surface,
-  border: 'none',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  cursor: 'pointer',
-  boxShadow: theme.shadow.sm,
-  WebkitTapHighlightColor: 'transparent',
-  transition: 'transform 0.1s ease',
 };

@@ -3,6 +3,7 @@ import { School, Users, ChevronDown, Plus, X, UserPlus } from 'lucide-react';
 import { theme } from '../../theme';
 import { Sheet } from '../ui/Sheet';
 import { Button } from '../ui/Button';
+import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { DeleteClassroomModal } from './DeleteClassroomModal';
 import { usePressable } from '../../hooks/usePressable';
 
@@ -20,6 +21,7 @@ export function ClassroomSection({
   const [showSwitcher, setShowSwitcher] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [memberToRemove, setMemberToRemove] = useState(null);
 
   useEffect(() => {
     if (!api || !active) { setMembers(null); return; }
@@ -29,12 +31,6 @@ export function ClassroomSection({
       .catch(() => { if (!cancelled) setMembers([]); });
     return () => { cancelled = true; };
   }, [api, active, refreshKey]);
-
-  const handleRemove = async (email) => {
-    if (!confirm(`Remove ${email} from this classroom?`)) return;
-    await api.removeMember(active.classroomId, email);
-    setRefreshKey(k => k + 1);
-  };
 
   const handleDeleteConfirmed = async () => {
     await onDelete(active.classroomId);
@@ -64,7 +60,7 @@ export function ClassroomSection({
             member={m}
             isLast={i === (members?.length ?? 0) - 1}
             canRemove={isOwner && m.role !== 'owner'}
-            onRemove={() => handleRemove(m.email)}
+            onRemove={() => setMemberToRemove(m.email)}
           />
         ))}
       </div>
@@ -118,6 +114,22 @@ export function ClassroomSection({
           onClose={() => setShowDeleteModal(false)}
           onConfirm={handleDeleteConfirmed}
         />
+      )}
+
+      {memberToRemove && (
+        <ConfirmDialog
+          title="Remove teacher?"
+          confirmLabel="Remove"
+          busyLabel="Removing…"
+          onConfirm={async () => {
+            await api.removeMember(active.classroomId, memberToRemove);
+            setRefreshKey(k => k + 1);
+          }}
+          onClose={() => setMemberToRemove(null)}
+        >
+          <strong>{memberToRemove}</strong> will immediately lose access to
+          this classroom. You can invite them again later.
+        </ConfirmDialog>
       )}
     </>
   );

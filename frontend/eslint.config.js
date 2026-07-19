@@ -5,7 +5,12 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist', 'ios']),
+  globalIgnores(['dist', 'ios', 'test-results', 'playwright-report']),
+  {
+    // Playwright specs and tool configs run under Node, not the browser.
+    files: ['e2e/**/*.js', 'playwright.config.js', 'vitest.config.js'],
+    languageOptions: { globals: globals.node },
+  },
   {
     files: ['**/*.{js,jsx}'],
     extends: [

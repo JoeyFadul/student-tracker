@@ -187,7 +187,7 @@ const removeBadgeStyle = {
   width: 26,
   height: 26,
   borderRadius: 13,
-  background: 'rgba(28, 25, 23, 0.7)',
+  background: 'rgba(0, 0, 0, 0.7)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',

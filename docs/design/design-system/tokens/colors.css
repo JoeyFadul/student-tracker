@@ -1,0 +1,80 @@
+/* Well Done — "Gunmetal & Coral" system (coolors.co/palette/2d3142-bfc0c0-ffffff-ef8354-4f5d75).
+   The five palette colors do structural work:
+   #FFFFFF canvas · #BFC0C0 silver neutrals · #2D3142 gunmetal chrome (headers,
+   tab bar, stats hero) · #4F5D75 slate secondary · #EF8354 coral actions/points. */
+:root{
+  --wd-bg:#FFFFFF;
+  --wd-surface:#FFFFFF;
+  --wd-surface-alt:#ECEDEE;
+  --wd-surface-translucent:rgba(45,49,66,0.94);
+  --wd-accent:#EF8354;
+  --wd-accent-soft:#FDEDE4;
+  --wd-accent-dark:#D9663A;
+  --wd-text:#2D3142;
+  --wd-text-muted:#4F5D75;
+  --wd-text-faint:#A9AEB9;
+  --wd-border:#DDDEE0;
+  --wd-gunmetal:#2D3142;
+  --wd-gunmetal-raised:#3A4054;
+  --wd-slate:#4F5D75;
+  --wd-slate-soft:#E7EAEF;
+  --wd-silver:#BFC0C0;
+  --wd-on-dark:#FFFFFF;
+  --wd-on-dark-muted:#BFC0C0;
+  /* semantics from the palette: positive = coral, secondary/negative = slate,
+     destructive = deep coral-red derivative */
+  --wd-success:#EF8354;
+  --wd-success-soft:#FDEDE4;
+  --wd-danger:#B8432D;
+  --wd-danger-soft:#F6E3DE;
+  --wd-warning:#D9663A;
+  /* honey retired — aliases kept for compatibility, mapped to silver/slate */
+  --wd-honey:#BFC0C0;
+  --wd-honey-soft:#ECEDEE;
+  --wd-honey-ink:#4F5D75;
+  --wd-avatar-bg:#ECEDEE;
+  --wd-shimmer-mid:#E2E3E5;
+  /* semantic aliases */
+  --surface-page:var(--wd-bg);
+  --surface-card:var(--wd-surface);
+  --surface-input:var(--wd-surface-alt);
+  --text-body:var(--wd-text);
+  --text-secondary:var(--wd-text-muted);
+  --text-tertiary:var(--wd-text-faint);
+  --action-primary:var(--wd-accent);
+  --action-primary-pressed:var(--wd-accent-dark);
+  --border-hairline:var(--wd-border);
+}
+/* Dark — the gunmetal chrome becomes the whole canvas. */
+@media (prefers-color-scheme: dark){
+  :root{
+    --wd-bg:#232734;
+    --wd-surface:#2D3142;
+    --wd-surface-alt:#3A4054;
+    --wd-surface-translucent:rgba(35,39,52,0.94);
+    --wd-accent:#EF8354;
+    --wd-accent-soft:rgba(239,131,84,0.18);
+    --wd-accent-dark:#F49A73;
+    --wd-text:#FFFFFF;
+    --wd-text-muted:#BFC0C0;
+    --wd-text-faint:#8B92A3;
+    --wd-border:rgba(255,255,255,0.10);
+    --wd-gunmetal:#232734;
+    --wd-gunmetal-raised:#3A4054;
+    --wd-slate:#8FA0BE;
+    --wd-slate-soft:rgba(143,160,190,0.18);
+    --wd-silver:#BFC0C0;
+    --wd-on-dark:#FFFFFF;
+    --wd-on-dark-muted:#BFC0C0;
+    --wd-success:#EF8354;
+    --wd-success-soft:rgba(239,131,84,0.18);
+    --wd-danger:#E0765C;
+    --wd-danger-soft:rgba(224,118,92,0.20);
+    --wd-warning:#F49A73;
+    --wd-honey:#BFC0C0;
+    --wd-honey-soft:rgba(191,192,192,0.14);
+    --wd-honey-ink:#BFC0C0;
+    --wd-avatar-bg:#3A4054;
+    --wd-shimmer-mid:#454B60;
+  }
+}

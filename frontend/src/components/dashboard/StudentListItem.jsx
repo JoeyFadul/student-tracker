@@ -1,12 +1,9 @@
 import { Check, Flame, ChevronRight } from 'lucide-react';
 import { theme } from '../../theme';
-import { getTier } from '../../lib/tiers';
-import { DEFAULT_AVATAR } from '../../lib/avatars';
+import { Avatar } from '../ui/Avatar';
 import { usePressable } from '../../hooks/usePressable';
 
 export function StudentListItem({ student, onClick, selectable, selected }) {
-  const tier = getTier(student.points);
-  const TierIcon = tier.icon;
   const { handlers, pressedStyle } = usePressable();
 
   return (
@@ -16,7 +13,7 @@ export function StudentListItem({ student, onClick, selectable, selected }) {
       style={{
         ...itemStyle,
         ...pressedStyle,
-        boxShadow: selected ? `0 0 0 2px ${theme.colors.accent}, ${theme.shadow.md}` : theme.shadow.md,
+        boxShadow: selected ? `0 0 0 2px ${theme.colors.accent}, ${theme.shadow.sm}` : theme.shadow.sm,
       }}
     >
       {selectable && (
@@ -24,25 +21,14 @@ export function StudentListItem({ student, onClick, selectable, selected }) {
           {selected && <Check size={14} color="#fff" strokeWidth={3} />}
         </div>
       )}
-      <div style={{ ...avatarStyle, background: tier.bg }}>
-        {student.photo?.startsWith('http')
-          ? <img src={student.photo} alt={student.name} style={imgStyle} />
-          : <span style={{ fontSize: 30 }}>{student.photo || DEFAULT_AVATAR}</span>
-        }
-      </div>
+      <Avatar student={student} size={56} emojiSize={30} />
       <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
         <div style={nameStyle}>{student.name}</div>
         <div style={subRowStyle}>
-          {tier.name && (
-            <span style={tierChipStyle}>
-              <TierIcon size={12} color={tier.color} />
-              <span style={{ fontSize: theme.font.sizes.caption, color: tier.color, fontWeight: 600 }}>{tier.name}</span>
-            </span>
-          )}
           {student.streak > 1 && (
             <span style={streakChipStyle}>
-              <Flame size={12} color={theme.colors.danger} />
-              <span style={{ fontSize: theme.font.sizes.caption, color: theme.colors.danger, fontWeight: 700 }}>{student.streak}</span>
+              <Flame size={12} color={theme.colors.accent} />
+              <span style={{ fontSize: theme.font.sizes.caption, color: theme.colors.accentDark, fontWeight: 700 }}>{student.streak}</span>
             </span>
           )}
         </div>
@@ -62,30 +48,13 @@ const itemStyle = {
   gap: 12,
   padding: '14px 14px 14px 16px',
   background: theme.colors.surface,
-  border: 'none',
+  border: `1px solid ${theme.colors.border}`,
   borderRadius: theme.radius.xl,
   cursor: 'pointer',
   width: '100%',
   fontFamily: theme.font.family,
   transition: 'transform 0.1s ease, box-shadow 0.15s ease',
   WebkitTapHighlightColor: 'transparent',
-};
-
-const avatarStyle = {
-  width: 56,
-  height: 56,
-  borderRadius: theme.radius.lg,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  flexShrink: 0,
-  overflow: 'hidden',
-};
-
-const imgStyle = {
-  width: '100%',
-  height: '100%',
-  objectFit: 'cover',
 };
 
 const nameStyle = {
@@ -100,12 +69,6 @@ const subRowStyle = {
   display: 'flex',
   alignItems: 'center',
   gap: 8,
-};
-
-const tierChipStyle = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 4,
 };
 
 const streakChipStyle = {

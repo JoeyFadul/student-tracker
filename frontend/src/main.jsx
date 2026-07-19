@@ -53,11 +53,11 @@ boot().catch(async (err) => {
   const root = document.getElementById('root');
   if (root) {
     root.innerHTML = `
-      <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#F4F5F7;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Inter',system-ui,sans-serif;text-align:center;">
+      <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#FFFFFF;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Inter',system-ui,sans-serif;text-align:center;">
         <div>
-          <div style="font-size:20px;font-weight:700;color:#1C1917;margin-bottom:8px;">Something went wrong</div>
-          <div style="font-size:15px;color:#6B7280;margin-bottom:20px;">The app couldn't start. Please try again.</div>
-          <button id="boot-retry" style="background:#E4572E;color:#fff;border:none;border-radius:12px;padding:12px 28px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;">Reload</button>
+          <div style="font-size:20px;font-weight:700;color:#2D3142;margin-bottom:8px;">Something went wrong</div>
+          <div style="font-size:15px;color:#4F5D75;margin-bottom:20px;">The app couldn't start. Please try again.</div>
+          <button id="boot-retry" style="background:#EF8354;color:#fff;border:none;border-radius:12px;padding:12px 28px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;">Reload</button>
         </div>
       </div>`;
     document.getElementById('boot-retry')?.addEventListener('click', () => window.location.reload());

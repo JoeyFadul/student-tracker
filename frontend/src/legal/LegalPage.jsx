@@ -26,12 +26,13 @@ const pageStyle = {
 };
 
 const headerStyle = {
-  background: theme.colors.headerDark,
+  background: theme.colors.surface,
+  borderBottom: `1px solid ${theme.colors.border}`,
   padding: `calc(env(safe-area-inset-top) + 14px) 20px 14px`,
 };
 
 const brandStyle = {
-  color: theme.colors.headerDarkText,
+  color: theme.colors.text,
   textDecoration: 'none',
   fontWeight: 600,
   fontSize: 15,

@@ -1,0 +1,40 @@
+<!-- @dsCard group="Components" viewport="700x400" name="Display" subtitle="Card, Chip, Avatar, EmptyState, ErrorBanner, Skeleton" -->
+<!DOCTYPE html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script></head>
+<body style="margin:0;padding:16px 20px"><div id="root"></div>
+<script type="text/babel">
+const { Card, Chip, Avatar, EmptyState, ErrorBanner, SkeletonRow, Icon } = window.WellDoneDesignSystem_96828f;
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0 20px'}}>
+    <div>
+      <Card title="Notes" subtitle="Only you can see these">
+        <div style={{fontSize:15,color:'var(--wd-text)'}}>Great progress with reading group this week.</div>
+      </Card>
+      <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:14}}>
+        <Chip tone="accent" icon={<Icon name="flame" size={14} color="var(--wd-accent-dark)" />}>6 day streak</Chip>
+        <Chip tone="accent">+5</Chip>
+        <Chip tone="slate">−2</Chip>
+        <Chip tone="gunmetal">Owner</Chip>
+        <Chip>Read-only</Chip>
+        <Chip tone="slate">Top reason</Chip>
+      </div>
+      <div style={{display:'flex',gap:10,alignItems:'flex-end',marginBottom:14}}>
+        <Avatar student={{name:'Maya'}} size={40} radius={12} />
+        <Avatar student={{name:'Leo',photo:'🦊'}} size={56} emojiSize={30} />
+        <Avatar student={{name:'Ana',photo:'🌟'}} size={80} radius={24} />
+      </div>
+      <ErrorBanner message="Couldn't load students. Pull to retry." onDismiss={()=>{}} />
+    </div>
+    <div>
+      <EmptyState style={{padding:'24px 20px',marginBottom:14}}
+        icon={<Icon name="users" size={30} color="var(--wd-accent)" />}
+        title="No students yet"
+        hint="Add your first student to start awarding points." />
+      <SkeletonRow />
+    </div>
+  </div>
+);
+</script></body></html>
