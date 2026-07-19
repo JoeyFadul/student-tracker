@@ -144,7 +144,6 @@ export function Dashboard({
       {selectMode && (
         <BulkSelectFooter
           count={selectedIds.size}
-          onCancel={exitSelectMode}
           onContinue={() => setShowGrantSheet(true)}
         />
       )}
