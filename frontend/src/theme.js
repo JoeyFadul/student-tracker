@@ -62,6 +62,6 @@ export const theme = {
       hero: 56,
     },
   },
-  tabBarHeight: 64,
+  tabBarHeight: 56,
   safeBottom: 'env(safe-area-inset-bottom)',
 };

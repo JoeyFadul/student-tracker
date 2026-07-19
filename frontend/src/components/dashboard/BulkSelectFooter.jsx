@@ -32,8 +32,6 @@ const wrapStyle = {
   backdropFilter: 'saturate(180%) blur(20px)',
   WebkitBackdropFilter: 'saturate(180%) blur(20px)',
   borderTop: `1px solid ${theme.colors.onDarkBorder}`,
-  borderTopLeftRadius: theme.radius.sheet,
-  borderTopRightRadius: theme.radius.sheet,
   zIndex: 60,
   paddingBottom: theme.safeBottom,
 };

@@ -1,8 +1,9 @@
 import { theme } from '../../theme';
 
-// Gunmetal chrome header — dark band with rounded bottom corners, white
-// large-title in the rounded display face, silver subtitle. The signature
-// of the Gunmetal & Coral system (docs/design/design-system).
+// Gunmetal chrome header — compact dark band, white title in the rounded
+// display face, silver subtitle (Gunmetal & Coral; slimmed per Joey's
+// 2026-07-18 call: square corners, tight padding — the band must not eat
+// the screen).
 export function AppHeader({ title, subtitle, action, left }) {
   return (
     <header style={wrapStyle}>
@@ -29,21 +30,19 @@ const wrapStyle = {
   top: 0,
   zIndex: 100,
   background: theme.colors.gunmetal,
-  borderBottomLeftRadius: theme.radius.sheet,
-  borderBottomRightRadius: theme.radius.sheet,
 };
 
 const innerStyle = {
   maxWidth: 720,
   margin: '0 auto',
-  padding: '22px 20px 20px',
+  padding: '12px 20px 12px',
   display: 'flex',
   alignItems: 'center',
   gap: 12,
 };
 
 const titleStyle = {
-  fontSize: 30,
+  fontSize: theme.font.sizes.title2,
   fontWeight: 800,
   color: theme.colors.onDark,
   margin: 0,
@@ -55,7 +54,7 @@ const titleStyle = {
 const subtitleStyle = {
   fontSize: theme.font.sizes.footnote,
   color: theme.colors.onDarkMuted,
-  marginTop: 4,
+  marginTop: 2,
   overflow: 'hidden',
   textOverflow: 'ellipsis',
   whiteSpace: 'nowrap',

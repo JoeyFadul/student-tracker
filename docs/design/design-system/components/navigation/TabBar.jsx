@@ -2,8 +2,9 @@ import React from 'react';
 import { usePressable } from '../actions/Button.jsx';
 import { Icon } from '../icons/Icon.jsx';
 
-// Gunmetal frosted tab bar: coral active tab, silver inactive — dark chrome
-// bookending the white canvas (pairs with the gunmetal AppHeader).
+// Gunmetal frosted tab bar: a thin flat strip (square corners, 56px —
+// revised 2026-07-18), coral active tab, silver inactive; pairs with the
+// compact gunmetal AppHeader.
 export function TabBar({ active = 'students', onChange, tabs, fixed = true }) {
   const items = tabs || [
     { key: 'students', label: 'Students', icon: 'users' },
@@ -16,9 +17,8 @@ export function TabBar({ active = 'students', onChange, tabs, fixed = true }) {
       background: 'var(--wd-surface-translucent)',
       backdropFilter: 'saturate(180%) blur(20px)', WebkitBackdropFilter: 'saturate(180%) blur(20px)',
       borderTop: '1px solid rgba(255,255,255,0.08)', zIndex: 50, paddingBottom: 'env(safe-area-inset-bottom)',
-      borderTopLeftRadius: fixed ? 24 : 24, borderTopRightRadius: fixed ? 24 : 24,
     }}>
-      <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'stretch', maxWidth: 720, margin: '0 auto', height: 64 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'stretch', maxWidth: 720, margin: '0 auto', height: 56 }}>
         {items.map(tab => <TabButton key={tab.key} tab={tab} active={tab.key === active} onClick={() => onChange && onChange(tab.key)} />)}
       </div>
     </nav>
