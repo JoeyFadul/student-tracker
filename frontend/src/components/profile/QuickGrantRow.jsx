@@ -99,7 +99,7 @@ const buttonStyle = {
   minHeight: 56,
   WebkitTapHighlightColor: 'transparent',
   transition: 'transform 0.1s ease, background 0.15s ease',
-  boxShadow: '0 2px 6px rgba(224, 91, 53, 0.24)',
+  boxShadow: '0 2px 6px rgba(239, 131, 84, 0.24)',
 };
 
 const moreButtonStyle = {

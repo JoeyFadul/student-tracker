@@ -2,30 +2,79 @@
    values here (and adds a prefers-color-scheme dark block) without
    touching component code. */
 :root {
-  /* "Clean Craft" light palette — docs/requirements/14 (revised 2026-07-18).
-     Neutral white canvas; warmth is reserved for meaning (accent actions,
-     honey streaks/avatars, sage success). */
-  --wd-bg: #FAFAFA;
+  /* "Gunmetal & Coral" light palette — docs/design/design-system/tokens/
+     colors.css (chosen 2026-07-18, supersedes Clean Craft). All five palette
+     colors do structural work: white canvas, silver-derived neutrals,
+     gunmetal chrome (headers/tab bar/stats hero), slate secondary, coral
+     strictly for actions/points/streaks. Honey and sage are retired; their
+     tokens remain as aliases so call sites need no migration. */
+  --wd-bg: #FFFFFF;
   --wd-surface: #FFFFFF;
-  --wd-surface-alt: #F3F4F6;
-  --wd-surface-translucent: rgba(255, 255, 255, 0.92);
-  --wd-accent: #E05B35;
-  --wd-accent-soft: #FBEAE2;
-  --wd-accent-dark: #B94A2C;
-  --wd-text: #18181B;
-  --wd-text-muted: #6B7280;
-  --wd-text-faint: #9CA3AF;
-  --wd-border: #ECECEE;
-  --wd-success: #7A9E7E;
-  --wd-success-soft: #E7F0E7;
-  --wd-danger: #B3372B;
-  --wd-danger-soft: #F7E3DF;
-  --wd-warning: #F59E0B;
-  --wd-honey: #F4C95D;
-  --wd-honey-soft: #FBF3DE;
-  --wd-honey-ink: #8A6D1F;
-  --wd-avatar-bg: #FBF3DE;
-  --wd-shimmer-mid: #EEEEF0;
+  --wd-surface-alt: #ECEDEE;
+  --wd-surface-translucent: rgba(45, 49, 66, 0.94);
+  --wd-accent: #EF8354;
+  --wd-accent-soft: #FDEDE4;
+  --wd-accent-dark: #D9663A;
+  --wd-text: #2D3142;
+  --wd-text-muted: #4F5D75;
+  --wd-text-faint: #A9AEB9;
+  --wd-border: #DDDEE0;
+  --wd-gunmetal: #2D3142;
+  --wd-gunmetal-raised: #3A4054;
+  --wd-slate: #4F5D75;
+  --wd-slate-soft: #E7EAEF;
+  --wd-silver: #BFC0C0;
+  --wd-on-dark: #FFFFFF;
+  --wd-on-dark-muted: #BFC0C0;
+  --wd-on-dark-border: rgba(255, 255, 255, 0.08);
+  /* semantics: positive = coral, secondary/negative = slate, destructive =
+     derived coral-red */
+  --wd-success: #EF8354;
+  --wd-success-soft: #FDEDE4;
+  --wd-danger: #B8432D;
+  --wd-danger-soft: #F6E3DE;
+  --wd-warning: #D9663A;
+  /* honey retired — aliases mapped to silver/slate */
+  --wd-honey: #BFC0C0;
+  --wd-honey-soft: #ECEDEE;
+  --wd-honey-ink: #4F5D75;
+  --wd-avatar-bg: #ECEDEE;
+  --wd-shimmer-mid: #E2E3E5;
+}
+
+/* Dark — the gunmetal chrome becomes the whole canvas (system-follow). */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --wd-bg: #232734;
+    --wd-surface: #2D3142;
+    --wd-surface-alt: #3A4054;
+    --wd-surface-translucent: rgba(35, 39, 52, 0.94);
+    --wd-accent: #EF8354;
+    --wd-accent-soft: rgba(239, 131, 84, 0.18);
+    --wd-accent-dark: #F49A73;
+    --wd-text: #FFFFFF;
+    --wd-text-muted: #BFC0C0;
+    --wd-text-faint: #8B92A3;
+    --wd-border: rgba(255, 255, 255, 0.10);
+    --wd-gunmetal: #232734;
+    --wd-gunmetal-raised: #3A4054;
+    --wd-slate: #8FA0BE;
+    --wd-slate-soft: rgba(143, 160, 190, 0.18);
+    --wd-silver: #BFC0C0;
+    --wd-on-dark: #FFFFFF;
+    --wd-on-dark-muted: #BFC0C0;
+    --wd-on-dark-border: rgba(255, 255, 255, 0.08);
+    --wd-success: #EF8354;
+    --wd-success-soft: rgba(239, 131, 84, 0.18);
+    --wd-danger: #E0765C;
+    --wd-danger-soft: rgba(224, 118, 92, 0.20);
+    --wd-warning: #F49A73;
+    --wd-honey: #BFC0C0;
+    --wd-honey-soft: rgba(191, 192, 192, 0.14);
+    --wd-honey-ink: #BFC0C0;
+    --wd-avatar-bg: #3A4054;
+    --wd-shimmer-mid: #454B60;
+  }
 }
 
 * { box-sizing: border-box; }
