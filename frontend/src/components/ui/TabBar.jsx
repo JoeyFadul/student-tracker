@@ -62,6 +62,10 @@ const innerStyle = {
   maxWidth: 720,
   margin: '0 auto',
   height: theme.tabBarHeight,
+  // Device-only downward nudge (0 on web): with a home-indicator inset the
+  // visible strip extends below the row, so the icon block must sit low in
+  // the row to read as centered in the strip.
+  paddingTop: 'min(env(safe-area-inset-bottom), 8px)',
 };
 
 const buttonStyle = {

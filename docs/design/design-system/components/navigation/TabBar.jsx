@@ -4,9 +4,10 @@ import { Icon } from '../icons/Icon.jsx';
 
 // Gunmetal frosted tab bar: a thin flat strip (square corners, 48px, 22px
 // icons — revised 2026-07-18), coral active tab, silver inactive; pairs
-// with the compact gunmetal AppHeader. On device the bar sinks 8px into
-// the bottom safe area (max(calc(env(safe-area-inset-bottom) - 8px), 0px))
-// so content sits optically centered in the visible strip.
+// with the compact gunmetal AppHeader. Optical centering on device: the
+// bar keeps only max(calc(env(safe-area-inset-bottom) - 20px), 0px) below
+// the row, and the row nudges its content down by
+// min(env(safe-area-inset-bottom), 8px) — both resolve to 0 on web.
 export function TabBar({ active = 'students', onChange, tabs, fixed = true }) {
   const items = tabs || [
     { key: 'students', label: 'Students', icon: 'users' },
@@ -18,9 +19,9 @@ export function TabBar({ active = 'students', onChange, tabs, fixed = true }) {
       position: fixed ? 'fixed' : 'relative', left: 0, right: 0, bottom: fixed ? 0 : undefined,
       background: 'var(--wd-surface-translucent)',
       backdropFilter: 'saturate(180%) blur(20px)', WebkitBackdropFilter: 'saturate(180%) blur(20px)',
-      borderTop: '1px solid rgba(255,255,255,0.08)', zIndex: 50, paddingBottom: 'max(calc(env(safe-area-inset-bottom) - 8px), 0px)',
+      borderTop: '1px solid rgba(255,255,255,0.08)', zIndex: 50, paddingBottom: 'max(calc(env(safe-area-inset-bottom) - 20px), 0px)',
     }}>
-      <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'stretch', maxWidth: 720, margin: '0 auto', height: 48 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'stretch', maxWidth: 720, margin: '0 auto', height: 48, paddingTop: 'min(env(safe-area-inset-bottom), 8px)' }}>
         {items.map(tab => <TabButton key={tab.key} tab={tab} active={tab.key === active} onClick={() => onChange && onChange(tab.key)} />)}
       </div>
     </nav>
