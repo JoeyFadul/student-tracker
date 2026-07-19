@@ -32,7 +32,7 @@ function TabButton({ tab, active, onClick }) {
         color,
       }}
     >
-      <Icon size={24} strokeWidth={active ? 2.4 : 2} />
+      <Icon size={22} strokeWidth={active ? 2.4 : 2} />
       <span style={{ fontSize: 11, fontWeight: active ? 600 : 500, marginTop: 2 }}>
         {tab.label}
       </span>
@@ -40,8 +40,8 @@ function TabButton({ tab, active, onClick }) {
   );
 }
 
-// Gunmetal frosted bar with rounded top corners — dark chrome bookending
-// the canvas, pairing with the gunmetal AppHeader.
+// Gunmetal frosted bar — a thin flat strip (square corners, 52px) pairing
+// with the compact gunmetal AppHeader.
 const wrapStyle = {
   position: 'fixed',
   left: 0,
@@ -51,10 +51,8 @@ const wrapStyle = {
   backdropFilter: 'saturate(180%) blur(20px)',
   WebkitBackdropFilter: 'saturate(180%) blur(20px)',
   borderTop: `1px solid ${theme.colors.onDarkBorder}`,
-  borderTopLeftRadius: theme.radius.sheet,
-  borderTopRightRadius: theme.radius.sheet,
   zIndex: 50,
-  paddingBottom: theme.safeBottom,
+  paddingBottom: theme.safeBottomBar,
 };
 
 const innerStyle = {
@@ -64,6 +62,10 @@ const innerStyle = {
   maxWidth: 720,
   margin: '0 auto',
   height: theme.tabBarHeight,
+  // Device-only downward nudge (0 on web): with a home-indicator inset the
+  // visible strip extends below the row, so the icon block must sit low in
+  // the row to read as centered in the strip.
+  paddingTop: 'min(env(safe-area-inset-bottom), 8px)',
 };
 
 const buttonStyle = {

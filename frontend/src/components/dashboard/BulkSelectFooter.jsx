@@ -2,13 +2,12 @@ import { ArrowRight } from 'lucide-react';
 import { theme } from '../../theme';
 import { Button } from '../ui/Button';
 
-export function BulkSelectFooter({ count, onCancel, onContinue }) {
+// Select-mode action bar (design-system kit): one full-width award button
+// on a gunmetal frosted band; leaving select mode is the header's X.
+export function BulkSelectFooter({ count, onContinue }) {
   return (
     <div style={wrapStyle}>
       <div style={innerStyle}>
-        <Button variant="outline" size="lg" onClick={onCancel}>
-          Cancel
-        </Button>
         <Button
           variant="primary"
           size="lg"
@@ -17,7 +16,7 @@ export function BulkSelectFooter({ count, onCancel, onContinue }) {
           onClick={onContinue}
           iconRight={<ArrowRight size={18} strokeWidth={2.5} />}
         >
-          Continue · {count}
+          Award to {count || '…'} {count === 1 ? 'student' : 'students'}
         </Button>
       </div>
     </div>
@@ -33,17 +32,12 @@ const wrapStyle = {
   backdropFilter: 'saturate(180%) blur(20px)',
   WebkitBackdropFilter: 'saturate(180%) blur(20px)',
   borderTop: `1px solid ${theme.colors.onDarkBorder}`,
-  borderTopLeftRadius: theme.radius.sheet,
-  borderTopRightRadius: theme.radius.sheet,
   zIndex: 60,
-  paddingBottom: theme.safeBottom,
+  paddingBottom: theme.safeBottomBar,
 };
 
 const innerStyle = {
   maxWidth: 720,
   margin: '0 auto',
   padding: 14,
-  display: 'flex',
-  gap: 10,
-  alignItems: 'center',
 };

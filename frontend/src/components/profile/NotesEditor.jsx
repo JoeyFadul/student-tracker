@@ -61,7 +61,7 @@ export function NotesEditor({ initialValue = '', onSave }) {
 
   if (editing) {
     return (
-      <Card title={titleNode}>
+      <Card title={titleNode} subtitle="Only you can see these">
         <textarea
           ref={textareaRef}
           value={draft}
@@ -88,7 +88,7 @@ export function NotesEditor({ initialValue = '', onSave }) {
   }
 
   return (
-    <Card title={titleNode}>
+    <Card title={titleNode} subtitle="Only you can see these">
       {initialValue ? (
         <button type="button" onClick={() => setEditing(true)} style={readButtonStyle}>
           <div style={proseStyle}>{initialValue}</div>

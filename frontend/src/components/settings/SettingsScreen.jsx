@@ -24,7 +24,7 @@ export function SettingsScreen({
       <div style={containerStyle}>
         <div style={groupStyle}>
           <SettingsRow
-            icon={<School size={18} color={theme.colors.accentDark} />}
+            icon={<School size={18} color={theme.colors.slate} />}
             label="Classroom"
             value={activeClassroom?.classroomName || '—'}
             onClick={onOpenClassroom}
@@ -33,7 +33,7 @@ export function SettingsScreen({
           />
           {activeClassroom && (
             <SettingsRow
-              icon={<Calendar size={18} color={theme.colors.accentDark} />}
+              icon={<Calendar size={18} color={theme.colors.slate} />}
               label="School year"
               value={activeYearLabel || 'No active year'}
               onClick={onOpenSchoolYear}

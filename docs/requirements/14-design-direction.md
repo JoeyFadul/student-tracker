@@ -24,7 +24,10 @@ All five colors do work — nothing is decorative:
 - **Silver `#BFC0C0`** — derives every neutral: fills `#ECEDEE`,
   hairlines `#DDDEE0`, inactive tabs, avatar tiles.
 - **Gunmetal `#2D3142`** — primary text, and **chrome**: header band,
-  tab bar, stats hero, all with 24px rounded corners meeting the canvas.
+  tab bar, stats hero. Bars are thin and flat — square corners, compact
+  padding, 24px title, 52px tab bar (Joey, 2026-07-18: the original 24px
+  rounded corners and large-title band read as bulky and intrusive);
+  only the stats hero card keeps rounded corners.
 - **Slate `#4F5D75`** — secondary text, secondary fills, on-streak tile.
 - **Coral `#EF8354`** — strictly meaningful: actions, points, streaks,
   FAB. Positive = coral. Destructive = derived red `#B8432D`.
