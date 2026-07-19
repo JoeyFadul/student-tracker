@@ -2,7 +2,7 @@ import React from 'react';
 import { usePressable } from '../actions/Button.jsx';
 import { Icon } from '../icons/Icon.jsx';
 
-// Gunmetal frosted tab bar: a thin flat strip (square corners, 48px, 22px
+// Gunmetal frosted tab bar: a thin flat strip (square corners, 52px, 22px
 // icons — revised 2026-07-18), coral active tab, silver inactive; pairs
 // with the compact gunmetal AppHeader. Optical centering on device: the
 // bar keeps only max(calc(env(safe-area-inset-bottom) - 20px), 0px) below
@@ -21,7 +21,7 @@ export function TabBar({ active = 'students', onChange, tabs, fixed = true }) {
       backdropFilter: 'saturate(180%) blur(20px)', WebkitBackdropFilter: 'saturate(180%) blur(20px)',
       borderTop: '1px solid rgba(255,255,255,0.08)', zIndex: 50, paddingBottom: 'max(calc(env(safe-area-inset-bottom) - 20px), 0px)',
     }}>
-      <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'stretch', maxWidth: 720, margin: '0 auto', height: 48, paddingTop: 'min(env(safe-area-inset-bottom), 8px)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'stretch', maxWidth: 720, margin: '0 auto', height: 52, paddingTop: 'min(env(safe-area-inset-bottom), 8px)' }}>
         {items.map(tab => <TabButton key={tab.key} tab={tab} active={tab.key === active} onClick={() => onChange && onChange(tab.key)} />)}
       </div>
     </nav>

@@ -62,7 +62,7 @@ export const theme = {
       hero: 56,
     },
   },
-  tabBarHeight: 48,
+  tabBarHeight: 52,
   safeBottom: 'env(safe-area-inset-bottom)',
   // Bottom bars keep only a sliver of the safe area below their content so
   // it sits optically centered in the visible strip instead of riding high

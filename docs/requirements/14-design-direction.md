@@ -25,7 +25,7 @@ All five colors do work — nothing is decorative:
   hairlines `#DDDEE0`, inactive tabs, avatar tiles.
 - **Gunmetal `#2D3142`** — primary text, and **chrome**: header band,
   tab bar, stats hero. Bars are thin and flat — square corners, compact
-  padding, 24px title, 48px tab bar (Joey, 2026-07-18: the original 24px
+  padding, 24px title, 52px tab bar (Joey, 2026-07-18: the original 24px
   rounded corners and large-title band read as bulky and intrusive);
   only the stats hero card keeps rounded corners.
 - **Slate `#4F5D75`** — secondary text, secondary fills, on-streak tile.

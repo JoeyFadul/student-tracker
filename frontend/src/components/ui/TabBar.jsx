@@ -40,7 +40,7 @@ function TabButton({ tab, active, onClick }) {
   );
 }
 
-// Gunmetal frosted bar — a thin flat strip (square corners, 48px) pairing
+// Gunmetal frosted bar — a thin flat strip (square corners, 52px) pairing
 // with the compact gunmetal AppHeader.
 const wrapStyle = {
   position: 'fixed',
