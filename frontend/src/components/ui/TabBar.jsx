@@ -32,7 +32,7 @@ function TabButton({ tab, active, onClick }) {
         color,
       }}
     >
-      <Icon size={24} strokeWidth={active ? 2.4 : 2} />
+      <Icon size={22} strokeWidth={active ? 2.4 : 2} />
       <span style={{ fontSize: 11, fontWeight: active ? 600 : 500, marginTop: 2 }}>
         {tab.label}
       </span>
@@ -40,7 +40,7 @@ function TabButton({ tab, active, onClick }) {
   );
 }
 
-// Gunmetal frosted bar — a thin flat strip (square corners, 56px) pairing
+// Gunmetal frosted bar — a thin flat strip (square corners, 48px) pairing
 // with the compact gunmetal AppHeader.
 const wrapStyle = {
   position: 'fixed',
@@ -52,7 +52,7 @@ const wrapStyle = {
   WebkitBackdropFilter: 'saturate(180%) blur(20px)',
   borderTop: `1px solid ${theme.colors.onDarkBorder}`,
   zIndex: 50,
-  paddingBottom: theme.safeBottom,
+  paddingBottom: theme.safeBottomBar,
 };
 
 const innerStyle = {

@@ -62,6 +62,10 @@ export const theme = {
       hero: 56,
     },
   },
-  tabBarHeight: 56,
+  tabBarHeight: 48,
   safeBottom: 'env(safe-area-inset-bottom)',
+  // Bottom bars sink 8px into the safe area so their content sits optically
+  // centered in the visible strip instead of riding high above the home
+  // indicator; max() keeps it at 0 where there is no inset (web).
+  safeBottomBar: 'max(calc(env(safe-area-inset-bottom) - 8px), 0px)',
 };

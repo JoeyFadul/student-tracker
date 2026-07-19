@@ -33,7 +33,7 @@ const wrapStyle = {
   WebkitBackdropFilter: 'saturate(180%) blur(20px)',
   borderTop: `1px solid ${theme.colors.onDarkBorder}`,
   zIndex: 60,
-  paddingBottom: theme.safeBottom,
+  paddingBottom: theme.safeBottomBar,
 };
 
 const innerStyle = {
