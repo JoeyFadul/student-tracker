@@ -9,12 +9,11 @@ tests ship with features, every chunk leaves the app shippable.
 
 One commit that makes every screen Warm Craft without changing layout:
 
-1. Token values → doc-14 palette in `index.css` (shipped as "paper"
-   `#FAF7F2`/`#2A2521`; revised 2026-07-18 to the Clean Craft neutrals —
-   bg `#FAFAFA`, ink `#18181B`, accent `#E05B35` unchanged, sage success,
-   honey highlight, brick danger). New tokens: `honey`, `honeySoft`,
-   `surfaceTranslucent`. Cards/rows gain a 1px `border` hairline with
-   `shadow.sm`.
+1. Token values → doc-14 palette in `index.css` (shipped as "paper",
+   revised twice on 2026-07-18: Clean Craft neutrals, then the
+   **Gunmetal & Coral** design-system values — see doc 14 history
+   table). Cards/rows gain a 1px `border` hairline with `shadow.sm`;
+   headers/tab bar/stats hero are gunmetal chrome.
 2. **Navy retired**: `headerDark*` tokens deleted; `AppHeader` becomes a
    single light treatment (paper bg, 30px rounded-display ink title);
    header icon buttons flip to surface tone with ink glyphs; status bar
@@ -35,11 +34,11 @@ Student Profile (centered hero per frame 2), award sheet polish (frame 3),
 Settings (frame 5, no icon tiles — emoji rule). Component-level work,
 one screen per commit, e2e untouched.
 
-## Chunk C — dark mode (neutral charcoal)
+## Chunk C — dark mode ✅ (shipped with the Gunmetal & Coral adoption)
 
-`prefers-color-scheme` block in index.css with doc-14 dark values; audit
-remaining translucent/literal colors; verify kit components in both
-schemes (doc-14 addition to exit checklist).
+`prefers-color-scheme` block landed in index.css with the design-system
+dark values (gunmetal canvas). Remaining: device verification pass of
+kit components in both schemes.
 
 ## Chunk D — features, in order
 
@@ -56,6 +55,7 @@ schemes (doc-14 addition to exit checklist).
 
 ## Exit criteria
 
-Every screen matches wireframe intent in light and dark; features 1.1–1.8
+Every screen matches the design-system UI kit (`docs/design/
+design-system/ui_kits/app/`) in light and dark; features 1.1–1.8
 shipped with tests; no hex literals outside index.css; doc 02/06/07
 updated for new flows; full parity pass of unchanged behaviors on device.
