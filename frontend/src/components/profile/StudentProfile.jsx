@@ -49,16 +49,16 @@ export function StudentProfile({
           onQuickGrant={(delta, reason) => onGrantPoints(student.id, delta, reason)}
         />
 
-        <NotesEditor
-          initialValue={student.notes || ''}
-          onSave={(notes) => onSaveNotes(student.id, notes)}
-        />
-
         <ActivityHistory
           initialItems={student.history || []}
           initialCursor={student.historyCursor || null}
           onLoadMore={onLoadMoreActivity}
           loading={historyLoading}
+        />
+
+        <NotesEditor
+          initialValue={student.notes || ''}
+          onSave={(notes) => onSaveNotes(student.id, notes)}
         />
       </div>
 
