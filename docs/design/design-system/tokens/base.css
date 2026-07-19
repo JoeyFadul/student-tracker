@@ -1,0 +1,11 @@
+/* Minimal global base, mirrors the app's index.css. */
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--wd-bg);color:var(--wd-text);font-family:var(--wd-font-body);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+input,textarea,select,button{font-family:inherit}
+input:focus,textarea:focus,select:focus{outline:none}
+button{-webkit-tap-highlight-color:transparent}
+a{color:var(--wd-accent);text-decoration:none}
+a:hover{color:var(--wd-accent-dark)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{animation:spin 0.9s linear infinite;transform-origin:50% 50%}
+@keyframes wd-shimmer{0%{background-position:-200px 0}100%{background-position:200px 0}}

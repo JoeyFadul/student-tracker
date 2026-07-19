@@ -1,0 +1,23 @@
+/* Well Done type. Default system sans — no webfonts to upload.
+   Body: the platform's native sans (SF Pro on Apple devices, Segoe/Roboto elsewhere).
+   Display: ui-rounded where available (SF Pro Rounded on iOS) for big numerals,
+   screen titles, and buttons; degrades to the same sans elsewhere. */
+:root{
+  --wd-font-body:-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  --wd-font-display:ui-rounded,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  /* size scale (px): caption→hero */
+  --wd-size-caption:11px;
+  --wd-size-footnote:13px;
+  --wd-size-body:15px;
+  --wd-size-heading:17px;
+  --wd-size-title3:20px;
+  --wd-size-title2:24px;
+  --wd-size-title1:28px;
+  --wd-size-large-title:34px;
+  --wd-size-hero:56px;
+  /* signature treatments */
+  --wd-tracking-tight:-0.01em;
+  --wd-tracking-display:-0.02em;
+  --wd-tracking-hero:-0.04em;
+  --wd-weight-hero:800;
+}

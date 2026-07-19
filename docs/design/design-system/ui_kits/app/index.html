@@ -1,0 +1,67 @@
+<!-- @dsCard group="Well Done App" viewport="420x820" name="Well Done app" subtitle="Interactive: sign in, roster, award flow, stats, settings" -->
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Well Done — app UI kit</title>
+<link rel="icon" href="../../assets/favicon.svg">
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script src="data.js"></script>
+<style>body{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:16px}</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="Screens1.jsx"></script>
+<script type="text/babel" src="Screens2.jsx"></script>
+<script type="text/babel">
+const DS = window.WellDoneDesignSystem_96828f;
+function App() {
+  const { TabBar, Toast } = DS;
+  const [signedIn, setSignedIn] = React.useState(true);
+  const [tab, setTab] = React.useState('students');
+  const [students, setStudents] = React.useState(window.WD_STUDENTS);
+  const [profileId, setProfileId] = React.useState(null);
+  const [activity, setActivity] = React.useState(window.WD_ACTIVITY);
+  const [toast, setToast] = React.useState(null);
+  const grant = (id, delta, reason) => {
+    setStudents(prev => prev.map(s => s.id === id ? { ...s, points: s.points + delta } : s));
+    setActivity(prev => ({ ...prev, [id]: [{ reason, delta, when: 'Today' }, ...(prev[id] || [])] }));
+    const name = students.find(s => s.id === id).name.split(' ')[0];
+    setToast({ delta, message: `${delta > 0 ? 'Awarded to' : 'Revoked from'} ${name} for ${reason}`, id });
+    setTimeout(() => setToast(t => (t && t.id === id) ? null : t), 4500);
+  };
+  const undo = () => {
+    if (!toast) return;
+    setStudents(prev => prev.map(s => s.id === toast.id ? { ...s, points: s.points - toast.delta } : s));
+    setActivity(prev => ({ ...prev, [toast.id]: prev[toast.id].slice(1) }));
+    setToast(null);
+  };
+  const profile = students.find(s => s.id === profileId);
+  return (
+    <div style={{
+      width: 390, height: 780, background: 'var(--wd-bg)', borderRadius: 32,
+      border: '1px solid var(--wd-border)', boxShadow: 'var(--wd-shadow-lg)',
+      overflow: 'hidden', position: 'relative', transform: 'translateZ(0)',
+    }}>
+      <div style={{ position: 'absolute', inset: 0, overflowY: 'auto', paddingBottom: signedIn ? 64 : 0 }}>
+        {!signedIn ? (
+          <window.LoginScreen onSignIn={() => setSignedIn(true)} />
+        ) : profile ? (
+          <window.ProfileScreen student={profile} activity={activity[profile.id] || []} onBack={() => setProfileId(null)} onGrant={grant} />
+        ) : tab === 'students' ? (
+          <window.DashboardScreen students={students} onSelectStudent={setProfileId} classroomName="Ms. Rivera's Class" yearLabel="2025–2026" />
+        ) : tab === 'stats' ? (
+          <window.StatsScreen students={students} yearLabel="2025–2026" />
+        ) : (
+          <window.SettingsScreen onSignOut={() => { setSignedIn(false); setProfileId(null); setTab('students'); }} />
+        )}
+      </div>
+      {signedIn && <TabBar active={tab} onChange={k => { setTab(k); setProfileId(null); }} />}
+      {toast && <Toast delta={toast.delta} message={toast.message} actionLabel="Undo" onAction={undo} />}
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body></html>
