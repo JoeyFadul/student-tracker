@@ -37,7 +37,7 @@ export function ProfileHero({ student, onPhotoUpload, uploading }) {
 
       <div style={chipRowStyle}>
         {streak > 1 && (
-          <Chip tone="danger" icon={<Flame size={14} color={theme.colors.danger} />}>
+          <Chip tone="accent" icon={<Flame size={14} color={theme.colors.accent} />}>
             {streak} day streak
           </Chip>
         )}

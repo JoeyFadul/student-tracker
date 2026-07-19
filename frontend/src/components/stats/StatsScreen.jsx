@@ -3,9 +3,8 @@ import { theme } from '../../theme';
 import { useEffect, useState } from 'react';
 import { AppHeader } from '../ui/AppHeader';
 
-// Light bento layout (wireframe frame 4): honey hero with the class
-// total, avg + on-streak tiles, top-reasons bars. Replaced the v1
-// dark-navy analytics screen in the Warm Craft pass.
+// Bento layout per the design-system UI kit: gunmetal hero with the class
+// total in coral, white avg tile, slate on-streak tile, top-reasons bars.
 export function StatsScreen({ students, api, classroomId, activeYear }) {
   const totalStudents = students.length;
   const totalPoints = students.reduce((sum, s) => sum + (s.points || 0), 0);
@@ -30,8 +29,8 @@ export function StatsScreen({ students, api, classroomId, activeYear }) {
             <div style={tileValueStyle}>{avg}</div>
           </div>
 
-          <div style={{ ...tileStyle, background: theme.colors.successSoft }}>
-            <div style={{ ...tileLabelStyle, color: theme.colors.success }}>On streak</div>
+          <div style={{ ...tileStyle, background: theme.colors.slateSoft }}>
+            <div style={{ ...tileLabelStyle, color: theme.colors.slate }}>On streak</div>
             <div style={{ ...tileValueStyle, display: 'flex', alignItems: 'center', gap: 6 }}>
               <Flame size={22} color={theme.colors.accent} />
               <span>{onFire}</span>
@@ -99,15 +98,15 @@ const gridStyle = {
 
 const heroCardStyle = {
   gridColumn: '1 / 3',
-  background: theme.colors.honeySoft,
-  borderRadius: 24,
+  background: theme.colors.gunmetal,
+  borderRadius: theme.radius.sheet,
   padding: '24px 22px 22px',
   boxShadow: theme.shadow.md,
 };
 
 const heroLabelStyle = {
   fontSize: theme.font.sizes.footnote,
-  color: theme.colors.honeyInk,
+  color: theme.colors.silver,
   fontWeight: 600,
   textTransform: 'uppercase',
   letterSpacing: 0.8,
@@ -117,7 +116,7 @@ const heroLabelStyle = {
 const heroNumberStyle = {
   fontSize: 60,
   fontWeight: 800,
-  color: theme.colors.text,
+  color: theme.colors.accent,
   letterSpacing: '-0.04em',
   lineHeight: 1,
   fontFamily: theme.font.display,
@@ -125,7 +124,7 @@ const heroNumberStyle = {
 
 const heroSubStyle = {
   fontSize: theme.font.sizes.footnote,
-  color: theme.colors.honeyInk,
+  color: theme.colors.silver,
   marginTop: 8,
 };
 

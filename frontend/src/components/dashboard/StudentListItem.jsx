@@ -27,8 +27,8 @@ export function StudentListItem({ student, onClick, selectable, selected }) {
         <div style={subRowStyle}>
           {student.streak > 1 && (
             <span style={streakChipStyle}>
-              <Flame size={12} color={theme.colors.danger} />
-              <span style={{ fontSize: theme.font.sizes.caption, color: theme.colors.danger, fontWeight: 700 }}>{student.streak}</span>
+              <Flame size={12} color={theme.colors.accent} />
+              <span style={{ fontSize: theme.font.sizes.caption, color: theme.colors.accentDark, fontWeight: 700 }}>{student.streak}</span>
             </span>
           )}
         </div>
