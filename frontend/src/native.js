@@ -9,10 +9,10 @@ export async function setupNative() {
 
   try {
     const { StatusBar, Style } = await import('@capacitor/status-bar');
-    // Headers are light paper (Warm Craft), so the system clock, battery,
-    // and signal icons render in dark text. Style.Light = "light
-    // background" = dark text.
-    await StatusBar.setStyle({ style: Style.Light });
+    // Headers are a gunmetal band (Gunmetal & Coral), so the system clock,
+    // battery, and signal icons render in white. Style.Dark = "dark
+    // background" = light text.
+    await StatusBar.setStyle({ style: Style.Dark });
   } catch (e) {
     console.warn('StatusBar setup skipped:', e);
   }

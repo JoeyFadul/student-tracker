@@ -21,7 +21,7 @@ export function TabBar({ active, onChange, tabs }) {
 function TabButton({ tab, active, onClick }) {
   const { handlers, pressedStyle } = usePressable();
   const Icon = tab.icon;
-  const color = active ? theme.colors.accent : theme.colors.textMuted;
+  const color = active ? theme.colors.accent : theme.colors.silver;
   return (
     <button
       onClick={onClick}
@@ -40,6 +40,8 @@ function TabButton({ tab, active, onClick }) {
   );
 }
 
+// Gunmetal frosted bar with rounded top corners — dark chrome bookending
+// the canvas, pairing with the gunmetal AppHeader.
 const wrapStyle = {
   position: 'fixed',
   left: 0,
@@ -48,7 +50,9 @@ const wrapStyle = {
   background: theme.colors.surfaceTranslucent,
   backdropFilter: 'saturate(180%) blur(20px)',
   WebkitBackdropFilter: 'saturate(180%) blur(20px)',
-  borderTop: `1px solid ${theme.colors.border}`,
+  borderTop: `1px solid ${theme.colors.onDarkBorder}`,
+  borderTopLeftRadius: theme.radius.sheet,
+  borderTopRightRadius: theme.radius.sheet,
   zIndex: 50,
   paddingBottom: theme.safeBottom,
 };

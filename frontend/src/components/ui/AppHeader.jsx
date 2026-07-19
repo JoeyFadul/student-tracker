@@ -1,7 +1,8 @@
 import { theme } from '../../theme';
 
-// Light large-title header on paper — the dark navy band retired with the
-// Warm Craft pass (docs/requirements/14).
+// Gunmetal chrome header — dark band with rounded bottom corners, white
+// large-title in the rounded display face, silver subtitle. The signature
+// of the Gunmetal & Coral system (docs/design/design-system).
 export function AppHeader({ title, subtitle, action, left }) {
   return (
     <header style={wrapStyle}>
@@ -27,13 +28,15 @@ const wrapStyle = {
   position: 'sticky',
   top: 0,
   zIndex: 100,
-  background: theme.colors.bg,
+  background: theme.colors.gunmetal,
+  borderBottomLeftRadius: theme.radius.sheet,
+  borderBottomRightRadius: theme.radius.sheet,
 };
 
 const innerStyle = {
   maxWidth: 720,
   margin: '0 auto',
-  padding: '18px 20px 16px',
+  padding: '22px 20px 20px',
   display: 'flex',
   alignItems: 'center',
   gap: 12,
@@ -42,7 +45,7 @@ const innerStyle = {
 const titleStyle = {
   fontSize: 30,
   fontWeight: 800,
-  color: theme.colors.text,
+  color: theme.colors.onDark,
   margin: 0,
   letterSpacing: '-0.02em',
   lineHeight: 1.1,
@@ -51,7 +54,7 @@ const titleStyle = {
 
 const subtitleStyle = {
   fontSize: theme.font.sizes.footnote,
-  color: theme.colors.textMuted,
+  color: theme.colors.onDarkMuted,
   marginTop: 4,
   overflow: 'hidden',
   textOverflow: 'ellipsis',
