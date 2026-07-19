@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>Well Done Student</string>
+	<string>Well Done</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -25,9 +25,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Well Done Student uses the camera so you can take a photo for a student's profile.</string>
+	<string>Well Done uses the camera so you can take a photo for a student's profile.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Well Done Student accesses your photo library so you can pick a photo for a student's profile.</string>
+	<string>Well Done accesses your photo library so you can pick a photo for a student's profile.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
