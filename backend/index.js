@@ -817,6 +817,17 @@ exports.handler = async (event) => {
         if (body.photo !== undefined && !isPhotoOwnedBy(body.photo, cid, sid)) {
           return respond(403, { error: 'photo key does not belong to this student' });
         }
+        // The edit form trims client-side; enforce it here too so a raw API
+        // call can't blank a student's name (client/server limits in sync).
+        if (body.name !== undefined) {
+          if (typeof body.name !== 'string' || !body.name.trim()) {
+            return respond(400, { error: 'name must be a non-empty string' });
+          }
+          body.name = body.name.trim();
+        }
+        if (body.grade !== undefined && typeof body.grade !== 'string') {
+          return respond(400, { error: 'grade must be a string' });
+        }
         const allowed = ['name', 'grade', 'photo', 'notes'];
         const sets = [], names = {}, values = {};
         for (const k of allowed) {

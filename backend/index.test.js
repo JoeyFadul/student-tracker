@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, beforeAll, afterAll, vi } from 'vitest'
 import { mockClient } from 'aws-sdk-client-mock'
-import { DynamoDBDocumentClient, GetCommand, QueryCommand } from '@aws-sdk/lib-dynamodb'
+import { DynamoDBDocumentClient, GetCommand, QueryCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb'
 
 process.env.TABLE_NAME = 'test-table'
 process.env.PHOTO_BUCKET = 'test-bucket'
@@ -75,5 +75,35 @@ describe('handler authorization', () => {
     const res = await handler(event('GET', '/classrooms'))
     expect(res.statusCode).toBe(200)
     expect(JSON.parse(res.body).classrooms).toHaveLength(1)
+  })
+})
+
+describe('student update validation', () => {
+  const patchStudent = (body) =>
+    handler(event('PATCH', '/classrooms/c-123/students/s-1', { body }))
+
+  beforeEach(() => {
+    ddbMock.on(GetCommand).resolves({ Item: { classroomId: 'c-123', role: 'owner' } })
+  })
+
+  it('rejects a blank or non-string name', async () => {
+    expect((await patchStudent({ name: '   ' })).statusCode).toBe(400)
+    expect((await patchStudent({ name: 42 })).statusCode).toBe(400)
+  })
+
+  it('rejects a non-string grade', async () => {
+    const res = await patchStudent({ grade: 3 })
+    expect(res.statusCode).toBe(400)
+  })
+
+  it('trims the name before persisting', async () => {
+    ddbMock.on(UpdateCommand).resolves({
+      Attributes: { id: 's-1', name: 'Maya Rodriguez', grade: '4th' },
+    })
+    const res = await patchStudent({ name: '  Maya Rodriguez  ', grade: '4th' })
+    expect(res.statusCode).toBe(200)
+    const update = ddbMock.commandCalls(UpdateCommand)[0].args[0].input
+    expect(update.ExpressionAttributeValues[':name']).toBe('Maya Rodriguez')
+    expect(update.ExpressionAttributeValues[':grade']).toBe('4th')
   })
 })

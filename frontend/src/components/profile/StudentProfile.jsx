@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronLeft, Trash2 } from 'lucide-react';
+import { ChevronLeft, Pencil, Trash2 } from 'lucide-react';
 import { theme } from '../../theme';
 import { formatGrade } from '../../lib/grades';
 import { AppHeader } from '../ui/AppHeader';
@@ -9,12 +9,14 @@ import { QuickGrantRow } from './QuickGrantRow';
 import { NotesEditor } from './NotesEditor';
 import { ActivityHistory } from './ActivityHistory';
 import { DeleteConfirmModal } from '../modals/DeleteConfirmModal';
+import { EditStudentModal } from '../modals/EditStudentModal';
 
 export function StudentProfile({
   student,
   onBack,
   onGrantPoints,
   onSaveNotes,
+  onUpdateStudent,
   onDelete,
   onPhotoUpload,
   uploadingPhoto,
@@ -22,6 +24,7 @@ export function StudentProfile({
   historyLoading = false,
 }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const handleDelete = async () => {
     await onDelete(student.id);
@@ -35,7 +38,12 @@ export function StudentProfile({
         title={student.name}
         subtitle={formatGrade(student.grade)}
         left={<IconButton icon={<ChevronLeft size={22} color={theme.colors.text} />} onClick={onBack} ariaLabel="Back" />}
-        action={<IconButton icon={<Trash2 size={18} color={theme.colors.danger} />} onClick={() => setShowDeleteModal(true)} ariaLabel="Delete student" />}
+        action={
+          <div style={headerActionsStyle}>
+            <IconButton icon={<Pencil size={18} color={theme.colors.text} />} onClick={() => setShowEditModal(true)} ariaLabel="Edit student" />
+            <IconButton icon={<Trash2 size={18} color={theme.colors.danger} />} onClick={() => setShowDeleteModal(true)} ariaLabel="Delete student" />
+          </div>
+        }
       />
 
       <div style={containerStyle}>
@@ -62,6 +70,14 @@ export function StudentProfile({
         />
       </div>
 
+      {showEditModal && (
+        <EditStudentModal
+          student={student}
+          onClose={() => setShowEditModal(false)}
+          onSave={(patch) => onUpdateStudent(student.id, patch)}
+        />
+      )}
+
       {showDeleteModal && (
         <DeleteConfirmModal
           studentName={student.name}
@@ -72,6 +88,11 @@ export function StudentProfile({
     </div>
   );
 }
+
+const headerActionsStyle = {
+  display: 'flex',
+  gap: 8,
+};
 
 const pageStyle = {
   minHeight: '100vh',

@@ -5,16 +5,8 @@ import { Button } from '../ui/Button';
 import { Input, Select } from '../ui/Input';
 import { ErrorBanner } from '../ui/ErrorBanner';
 import { DEFAULT_AVATAR } from '../../lib/avatars';
+import { GRADE_OPTIONS } from '../../lib/grades';
 import { theme } from '../../theme';
-
-const GRADE_OPTIONS = [
-  { value: 'K', label: 'Kindergarten' },
-  { value: '1st', label: '1st grade' },
-  { value: '2nd', label: '2nd grade' },
-  { value: '3rd', label: '3rd grade' },
-  { value: '4th', label: '4th grade' },
-  { value: '5th', label: '5th grade' },
-];
 
 export function AddStudentModal({ onClose, onCreate }) {
   const [name, setName] = useState('');
