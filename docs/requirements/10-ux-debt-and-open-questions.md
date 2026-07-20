@@ -22,7 +22,8 @@ priority — that's the first 2.0 planning exercise.
 
 ### Flow friction
 5. **Students can't be renamed** (FR-ST-9). API supports it; no UI exposes
-   it. Same for grade changes at promotion time.
+   it. Same for grade changes at promotion time. *Fixed by 2.0 item 1.1
+   (pencil in the profile header).*
 6. **No roster import.** 25 students = 25 modal round-trips (FR-ST-3).
 7. **No select-all in bulk mode** (FR-PT-8). "Whole class earned a point"
    — the most common bulk case — is N taps.

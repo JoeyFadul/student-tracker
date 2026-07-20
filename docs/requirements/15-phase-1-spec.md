@@ -48,7 +48,7 @@ kit components in both schemes.
 
 | # | Item | Note |
 |---|---|---|
-| 1.1 | Edit student name/grade | Edit affordance on profile hero (frame 2 pencil); PATCH exists |
+| 1.1 ✅ | Edit student name/grade | Shipped: pencil in the profile header → edit modal; PATCH now validates name/grade (doc 06 FR-ST-9) |
 | 1.2 | Select-all + class point | "All" chip in select mode; dashboard shortcut chip (frame 1) |
 | 1.3 | Sort/search persistence | `wd:` localStorage, per classroom; default A–Z |
 | 1.8 | Event attribution | Backend stamps `grantedBy` (single+bulk); chip in multi-teacher rooms; ride the 1.4 row redesign |

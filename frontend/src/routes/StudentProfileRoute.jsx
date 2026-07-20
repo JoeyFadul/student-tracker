@@ -108,6 +108,15 @@ export function StudentProfileRoute() {
     }
   }, [studentsApi]);
 
+  // No catch — rejections propagate so EditStudentModal stays open and
+  // shows the failure inline. The hook has already synced the roster row.
+  const handleUpdateStudent = useCallback(async (id, patch) => {
+    const updated = await studentsApi.updateStudent(id, patch);
+    setStudent(prev => (prev && prev.id === id)
+      ? { ...prev, name: updated.name, grade: updated.grade }
+      : prev);
+  }, [studentsApi]);
+
   const handleDeleteStudent = useCallback(async (id) => {
     await studentsApi.deleteStudent(id);
   }, [studentsApi]);
@@ -139,6 +148,7 @@ export function StudentProfileRoute() {
       onBack={goBack}
       onGrantPoints={handleGrantPoints}
       onSaveNotes={handleSaveNotes}
+      onUpdateStudent={handleUpdateStudent}
       onDelete={handleDeleteStudent}
       onPhotoUpload={handlePhotoUpload}
       uploadingPhoto={uploadingPhoto}

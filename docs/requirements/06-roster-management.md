@@ -51,10 +51,13 @@
   **soft delete**: the student vanishes from the roster and current-year
   operations, but remains visible in archives of years where they had
   events (mid-year transfers stay in the record). There is no restore UI.
-- **FR-ST-9** **[Observed quirk]** Name and grade are **not editable
-  anywhere in the UI** after creation (the API supports it; no screen
-  exposes it). A typo in a student's name is permanent without deleting
-  and re-creating. Must fix in 2.0.
+- **FR-ST-9** Name and grade are editable after creation (2.0 item 1.1):
+  a pencil in the profile header opens an edit modal with the same name
+  field and grade select as Add. Name is required and trimmed on both
+  sides (the server rejects blank or non-string names; grade must be a
+  string). A legacy student with no grade gets a "No grade" option so
+  opening the editor never silently rewrites data, and Save stays
+  disabled until something actually changes.
 
 ## Notes
 
