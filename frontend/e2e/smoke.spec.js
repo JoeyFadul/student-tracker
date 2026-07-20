@@ -113,6 +113,8 @@ test('class point grants +1 to the whole class and undo reverts it', async ({ pa
   await expect(page.getByText('42', { exact: true })).toBeVisible()
 
   await page.getByRole('button', { name: 'Give the whole class a point' }).click()
+  // The reason menu opens; pick a preset to commit the grant.
+  await page.getByRole('button', { name: 'Kindness' }).click()
 
   // Optimistic +1 across the roster: Maya 42→43, Jordan 38→39.
   await expect(page.getByText('43', { exact: true })).toBeVisible()

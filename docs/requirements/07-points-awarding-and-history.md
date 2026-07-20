@@ -38,11 +38,14 @@ This is the product's heart. Speed rules everything here.
   search filter) and flips to "Deselect all"; selections outside the
   filtered view are preserved across the toggle.
 - **FR-PT-8b** Class point (2.0 item 1.2): a "＋ Class point" chip in the
-  roster action row awards **+1 to the whole class** in one tap, reason
-  "Class point". It reuses the bulk-grant path, so it carries the same
-  optimistic update and Undo toast as any other grant. It always targets
-  the full roster (not the filtered view) and is disabled while a class
-  point is in flight to prevent double-awards.
+  roster action row is the fast path to reward the whole class. Tapping it
+  opens the same quick reason menu (ReasonPrompt) used for single grants,
+  titled for the class ("Class point · N students"); picking a reason
+  awards **+1 to every student** with that reason. It reuses the bulk-grant
+  path, so it carries the same optimistic update and Undo toast as any
+  other grant, and always targets the full roster (not the filtered view).
+  Amount is fixed at +1 — the select-all path covers other amounts and
+  revoke.
 
 ## Feedback & undo
 

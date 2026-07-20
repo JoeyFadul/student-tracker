@@ -8,7 +8,6 @@ import { ActionChip } from '../ui/ActionChip';
 export function DashboardActions({
   selectMode,
   allSelected,
-  classPointBusy,
   onClassPoint,
   onEnterSelect,
   onToggleAll,
@@ -32,7 +31,6 @@ export function DashboardActions({
       <ActionChip
         icon={<Plus size={16} strokeWidth={2.6} />}
         tone="accent"
-        disabled={classPointBusy}
         onClick={onClassPoint}
         ariaLabel="Give the whole class a point"
       >

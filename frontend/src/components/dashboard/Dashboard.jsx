@@ -10,6 +10,7 @@ import { DashboardActions } from './DashboardActions';
 import { allVisibleSelected, toggleSelectAll } from './selection';
 import { BulkSelectFooter } from './BulkSelectFooter';
 import { BulkGrantSheet } from './BulkGrantSheet';
+import { ReasonPrompt } from '../profile/ReasonPrompt';
 import { NoYearEmptyState } from './NoYearEmptyState';
 import { SkeletonList } from '../ui/Skeleton';
 import { ErrorBanner } from '../ui/ErrorBanner';
@@ -18,9 +19,8 @@ import { PullIndicator } from '../ui/PullIndicator';
 import { IconButton } from '../ui/IconButton';
 import { usePullToRefresh } from '../../hooks/usePullToRefresh';
 
-// Default reason stamped on the one-tap class point (server caps reasons at
-// 50 chars; this is well under and shows up in top-reasons analytics).
-const CLASS_POINT_REASON = 'Class point';
+// A class point is always +1; picking the amount is the select-all path's job.
+const CLASS_POINT_DELTA = 1;
 
 export function Dashboard({
   students,
@@ -46,7 +46,7 @@ export function Dashboard({
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [showGrantSheet, setShowGrantSheet] = useState(false);
-  const [classPointBusy, setClassPointBusy] = useState(false);
+  const [classPointOpen, setClassPointOpen] = useState(false);
 
   const filteredAndSorted = useMemo(() => {
     const filtered = search
@@ -88,17 +88,13 @@ export function Dashboard({
 
   const handleToggleAll = () => setSelectedIds(prev => toggleSelectAll(visibleIds, prev));
 
-  // One-tap whole-class +1. Awards to every student (not just the filtered
-  // view) — the label reads "Class point" — and reuses the bulk-grant path,
-  // so it carries the same optimistic update + Undo toast as a normal grant.
-  const handleClassPoint = async () => {
-    if (classPointBusy || students.length === 0) return;
-    setClassPointBusy(true);
-    try {
-      await onBulkGrant(students.map(s => s.id), 1, CLASS_POINT_REASON);
-    } finally {
-      setClassPointBusy(false);
-    }
+  // Class point rewards the whole class (not just the filtered view). Tapping
+  // the chip opens the same reason menu as any other grant; picking a reason
+  // awards +1 to everyone via the bulk-grant path, with its optimistic update
+  // + Undo toast.
+  const handleClassPointConfirm = async (delta, reason) => {
+    setClassPointOpen(false);
+    await onBulkGrant(students.map(s => s.id), delta, reason);
   };
 
   const bottomPadding = selectMode
@@ -152,8 +148,7 @@ export function Dashboard({
           <DashboardActions
             selectMode={selectMode}
             allSelected={allSelected}
-            classPointBusy={classPointBusy}
-            onClassPoint={handleClassPoint}
+            onClassPoint={() => setClassPointOpen(true)}
             onEnterSelect={() => setSelectMode(true)}
             onToggleAll={handleToggleAll}
           />
@@ -184,6 +179,14 @@ export function Dashboard({
         selected={selectedStudents}
         onBack={() => setShowGrantSheet(false)}
         onGrant={handleGrant}
+      />
+
+      <ReasonPrompt
+        open={classPointOpen}
+        amount={CLASS_POINT_DELTA}
+        title={`Class point · ${students.length} ${students.length === 1 ? 'student' : 'students'}`}
+        onClose={() => setClassPointOpen(false)}
+        onConfirm={handleClassPointConfirm}
       />
 
       {showAddModal && (
