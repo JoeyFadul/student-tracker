@@ -50,8 +50,13 @@ Authenticated, has classroom          ← persistent bottom tab bar (64pt + safe
   reload (except auth session and active-classroom id).
 - **FR-NAV-4** Every screen change scrolls to top instantly.
 - **FR-NAV-5** Gate screens take over the entire app in priority order:
-  auth loading → login → classroom loading → create-classroom onboarding →
-  main app.
+  auth loading → login → classroom loading → **first-run wizard** → main
+  app. The first-run wizard (2.0 item 1.7) is a 3-step guided flow for a
+  user with no classroom — create classroom → start the school year →
+  paste the roster (optional) → land on a populated dashboard — so a new
+  teacher never dead-ends on an empty Students tab. It provisions via the
+  raw API client and refreshes the classroom list only at the end, so the
+  "has classroom → main app" redirect fires once everything is in place.
 - **FR-NAV-6** If the classroom has no active school year, the Students tab
   is replaced by an empty state that routes to Settings (see FR-YR-8). The
   Stats tab stays reachable but shows zeros.

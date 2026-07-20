@@ -86,6 +86,57 @@ test('login gate renders for signed-out visitors', async ({ page }) => {
   await expect(page.getByText('Sign in to your classroom')).toBeVisible()
 })
 
+test('first-run wizard provisions a classroom and lands on a populated dashboard', async ({ page }) => {
+  await signIn(page)
+  // Stateful mock: no classroom exists until the wizard creates one.
+  let created = null
+  const roster = []
+  await page.route(`${API}/**`, (route) => {
+    const { pathname } = new URL(route.request().url())
+    const method = route.request().method()
+    const json = (body, status = 200) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) })
+    if (method === 'GET' && pathname === '/classrooms')
+      return json({ classrooms: created ? [created] : [] })
+    if (method === 'POST' && pathname === '/classrooms') {
+      const { name } = route.request().postDataJSON()
+      created = { classroomId: 'c-new', classroomName: name, role: 'owner' }
+      return json({ classroomId: 'c-new', name, role: 'owner' }, 201)
+    }
+    if (method === 'GET' && pathname === '/classrooms/c-new')
+      return json({ classroomId: 'c-new', classroomName: created?.classroomName, role: 'owner', reasons: ['Kindness'] })
+    if (method === 'POST' && pathname === '/classrooms/c-new/school-years/start')
+      return json({ yearId: 'y1', label: route.request().postDataJSON().label })
+    if (method === 'GET' && pathname === '/classrooms/c-new/school-years')
+      return json({ active: { yearId: 'y1', label: '2026–2027' }, years: [{ yearId: 'y1', label: '2026–2027', startedAt: '2026-08-18T00:00:00Z', endedAt: null }] })
+    if (method === 'POST' && pathname === '/classrooms/c-new/students') {
+      const s = { id: 'st-' + roster.length, points: 0, streak: 0, notes: '', ...route.request().postDataJSON() }
+      roster.push(s)
+      return json(s, 201)
+    }
+    if (method === 'GET' && pathname === '/classrooms/c-new/students')
+      return json({ students: roster, archiveYear: null })
+    if (method === 'GET' && pathname === '/classrooms/c-new/analytics/top-reasons')
+      return json({ reasons: [], days: 30, yearId: 'y1' })
+    return json({ error: `unmocked ${method} ${pathname}` }, 500)
+  })
+
+  await page.goto('/')
+  await expect(page.getByText('Create your classroom')).toBeVisible()
+  await page.getByPlaceholder(/Mrs. Smith/).fill('Room 12')
+  await page.getByRole('button', { name: /Continue/ }).click()
+
+  await expect(page.getByText('Start the school year')).toBeVisible()
+  await page.getByRole('button', { name: /Continue/ }).click()
+
+  await expect(page.getByText('Add your students')).toBeVisible()
+  await page.getByRole('textbox').fill('Alex Kim\nPriya Patel')
+  await page.getByRole('button', { name: 'Add 2 & finish' }).click()
+
+  // Landed on the dashboard with the roster in place — no dead-end.
+  await expect(page.getByText('Alex Kim')).toBeVisible()
+  await expect(page.getByText('Priya Patel')).toBeVisible()
+})
+
 test('roster renders for a signed-in teacher', async ({ page }) => {
   await signIn(page)
   await mockApi(page)
