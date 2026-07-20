@@ -21,6 +21,7 @@ export function StudentProfile({
   onPhotoUpload,
   uploadingPhoto,
   onLoadMoreActivity,
+  onDeleteEvent,
   historyLoading = false,
   currentUserEmail,
 }) {
@@ -64,6 +65,7 @@ export function StudentProfile({
           onLoadMore={onLoadMoreActivity}
           loading={historyLoading}
           currentUserEmail={currentUserEmail}
+          onDeleteEvent={onDeleteEvent}
         />
 
         <NotesEditor

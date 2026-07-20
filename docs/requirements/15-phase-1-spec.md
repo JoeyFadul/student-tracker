@@ -52,7 +52,7 @@ kit components in both schemes.
 | 1.2 ✅ | Select-all + class point | Shipped: roster action row (Class point + Select) replaces the bulk-entry band; "Select all/Deselect all" toggle in select mode; Class point opens the shared reason menu → +1 to the whole class (doc 07 FR-PT-8/8b). Frontend-only, reuses bulk-points |
 | 1.3 ✅ | Sort/search persistence | Shipped: `useDashboardPrefs(cid)` hook persists sort + search per classroom (`wd:sort:`/`wd:search:` localStorage); default flipped to A–Z (doc 06 FR-RO-3). Frontend-only |
 | 1.8 ✅ | Event attribution | Shipped: backend stamps `grantedBy` on every grant (single + bulk); activity credits co-teacher grants inline (email local-part), viewer's own hidden so no member-count needed (doc 04 FR-CL-13). Additive backend field — v1 unaffected |
-| 1.4 | Per-event delete | Row affordance + ConfirmDialog; `DELETE /events/{ts}` exists |
+| 1.4 ✅ | Per-event delete | Shipped: per-row trash on active-year activity → ConfirmDialog → existing `DELETE /events/{ts}` (reverses points, roster + profile); archives read-only (gated on onDeleteEvent). Frontend-only (doc 07 FR-PT-9, doc 10 A8) |
 | 1.5 | Custom reasons | Classroom reason list (backend: `REASONS` item on classroom); manage UI in Settings; grant sheet + top-reasons read it |
 | 1.6 | Roster paste-import | Multi-line paste in Add flow → N creates |
 | 1.7 | Guided first-run | create classroom → start year → paste roster → dashboard; year-start roster review (B8) |
