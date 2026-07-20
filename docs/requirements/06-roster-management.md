@@ -29,8 +29,14 @@
   the photo uploads in the background and pops in when ready. Upload
   failure leaves the emoji and shows an error banner — the student is
   still created.
-- **FR-ST-3** No bulk import (CSV/paste/class-list). Teachers type 20–30
-  names one modal at a time — top quality-of-life gap for setup week.
+- **FR-ST-3** Roster paste-import (2.0 item 1.6): the Add modal has a
+  "Paste list" mode — a textarea of names (one per line, blanks dropped,
+  duplicates kept, never split on commas) plus one grade applied to all →
+  creates a student per line (default emoji, no photos). Creation is
+  sequential over the existing create path, so a partial failure still
+  lands the earlier names and surfaces the error. The single-student form
+  (with photo) is the other mode. Replaces the old one-modal-per-student
+  slog for setup week.
 
 ## Photos & avatars
 

@@ -52,6 +52,10 @@ async function mockApi(page) {
       })
     if (method === 'GET' && pathname === '/classrooms/c1/students')
       return json({ students, archiveYear: null })
+    if (method === 'POST' && pathname === '/classrooms/c1/students') {
+      const body = route.request().postDataJSON()
+      return json({ id: 'new-' + Math.random().toString(36).slice(2, 8), points: 0, streak: 0, notes: '', ...body }, 201)
+    }
     if (method === 'GET' && pathname === '/classrooms/c1/students/s1')
       return json({
         ...students[0],
@@ -89,6 +93,22 @@ test('roster renders for a signed-in teacher', async ({ page }) => {
   await expect(page.getByText('Room 12')).toBeVisible()
   await expect(page.getByText('Maya Rodriguez')).toBeVisible()
   await expect(page.getByText('Jordan Lee')).toBeVisible()
+})
+
+test('paste-import adds a student per pasted line to the roster', async ({ page }) => {
+  await signIn(page)
+  await mockApi(page)
+  await page.goto('/')
+  await expect(page.getByText('Maya Rodriguez')).toBeVisible()
+
+  await page.getByRole('button', { name: 'Add student' }).click() // FAB
+  await page.getByRole('button', { name: 'Paste list' }).click()
+  const textarea = page.getByPlaceholder(/Maya Rodriguez/)
+  await textarea.fill('Alex Kim\n\nPriya Patel')
+  await page.getByRole('button', { name: 'Add 2 students' }).click()
+
+  await expect(page.getByText('Alex Kim')).toBeVisible()
+  await expect(page.getByText('Priya Patel')).toBeVisible()
 })
 
 test('deep link straight to a student profile renders it', async ({ page }) => {

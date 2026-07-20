@@ -7,6 +7,15 @@ export function DashboardRoute() {
   const navigate = useNavigate();
   const { classrooms, studentsApi, schoolYear, showToast } = useAppData();
 
+  // Paste-import: create each pasted student in turn (sequential so a partial
+  // failure still lands the ones before it and surfaces the error). The Add
+  // modal already shaped each entry with name/grade/default photo.
+  const handleCreateMany = useCallback(async (students) => {
+    for (const data of students) {
+      await studentsApi.createStudent(data);
+    }
+  }, [studentsApi]);
+
   const handleBulkGrant = useCallback(async (ids, delta, reason) => {
     try {
       const { timestamp, yearId } = await studentsApi.bulkGrantPoints(ids, delta, reason);
@@ -42,6 +51,7 @@ export function DashboardRoute() {
       onDismissError={() => studentsApi.setError('')}
       onSelectStudent={(id) => navigate(`/students/${id}`)}
       onCreateStudent={studentsApi.createStudent}
+      onCreateMany={handleCreateMany}
       onBulkGrant={handleBulkGrant}
       onGoToSettings={() => navigate('/settings')}
       onRefresh={studentsApi.refresh}

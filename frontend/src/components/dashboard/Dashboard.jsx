@@ -34,6 +34,7 @@ export function Dashboard({
   onDismissError,
   onSelectStudent,
   onCreateStudent,
+  onCreateMany,
   onBulkGrant,
   onGoToSettings,
   onRefresh,
@@ -196,6 +197,7 @@ export function Dashboard({
         <AddStudentModal
           onClose={() => setShowAddModal(false)}
           onCreate={onCreateStudent}
+          onCreateMany={onCreateMany}
         />
       )}
     </div>
