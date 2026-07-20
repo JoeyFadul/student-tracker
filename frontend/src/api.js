@@ -23,6 +23,7 @@ export function createApiClient(idToken) {
   const get = (url) => fetch(url, { headers }).then(handleResponse);
   const post = (url, body) => fetch(url, { method: 'POST', headers, body: JSON.stringify(body ?? {}) }).then(handleResponse);
   const patch = (url, body) => fetch(url, { method: 'PATCH', headers, body: JSON.stringify(body) }).then(handleResponse);
+  const put = (url, body) => fetch(url, { method: 'PUT', headers, body: JSON.stringify(body) }).then(handleResponse);
   const del = (url) => fetch(url, { method: 'DELETE', headers }).then(handleResponse);
 
   const yearQuery = (year) => year ? `?year=${encodeURIComponent(year)}` : '';
@@ -37,6 +38,7 @@ export function createApiClient(idToken) {
     createClassroom: (name) => post(`${API_URL}/classrooms`, { name }),
     getClassroom: (cid) => get(cBase(cid)),
     renameClassroom: (cid, name) => patch(cBase(cid), { name }),
+    updateReasons: (cid, reasons) => put(`${cBase(cid)}/reasons`, { reasons }),
     deleteClassroom: (cid) => del(cBase(cid)),
 
     // Members

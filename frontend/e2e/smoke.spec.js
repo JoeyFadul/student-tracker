@@ -39,6 +39,12 @@ async function mockApi(page) {
 
     if (method === 'GET' && pathname === '/classrooms')
       return json({ classrooms: [{ classroomId: 'c1', classroomName: 'Room 12', role: 'owner' }] })
+    if (method === 'GET' && pathname === '/classrooms/c1')
+      return json({ classroomId: 'c1', classroomName: 'Room 12', role: 'owner', reasons: ['Being awesome', 'Kindness'] })
+    if (method === 'PUT' && pathname === '/classrooms/c1/reasons') {
+      const { reasons } = route.request().postDataJSON()
+      return json({ reasons })
+    }
     if (method === 'GET' && pathname === '/classrooms/c1/school-years')
       return json({
         active: { yearId: 'y1', label: '2026–2027' },
@@ -169,6 +175,28 @@ test('sort preference defaults to A–Z and persists across a reload', async ({ 
   await page.reload()
   await expect(page.getByText('Maya Rodriguez')).toBeVisible()
   await expect(page.getByLabel('Sort students')).toHaveValue('pointsDesc')
+})
+
+test('owner can open and customize the classroom reason list', async ({ page }) => {
+  await signIn(page)
+  await mockApi(page)
+  await page.goto('/#/settings')
+  await page.getByRole('button', { name: /Customize award reasons/ }).click()
+  // The custom list loaded from the classroom (not the hardcoded presets).
+  await expect(page.getByLabel('Reason 1')).toHaveValue('Being awesome')
+  await page.getByRole('button', { name: 'Add reason' }).click()
+  await page.getByPlaceholder('Reason').last().fill('Great listening')
+  await page.getByRole('button', { name: 'Save reasons' }).click()
+  // Saved → navigates back to Settings.
+  await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible()
+})
+
+test('a custom reason shows up in the grant reason menu', async ({ page }) => {
+  await signIn(page)
+  await mockApi(page)
+  await page.goto('/#/students/s1')
+  await page.getByRole('button', { name: '2', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Being awesome' })).toBeVisible()
 })
 
 test('select-all selects every student and the footer reflects the count', async ({ page }) => {

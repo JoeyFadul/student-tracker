@@ -6,9 +6,10 @@ This is the product's heart. Speed rules everything here.
 
 - **FR-PT-1** Quick amounts **1 · 2 · 5** as large buttons plus a "…"
   custom-amount option (numeric sheet, any positive integer, no upper cap).
-- **FR-PT-2** Picking an amount opens the **reason sheet**: a 2×4 grid of
-  preset reasons — *Kindness, Effort, Helping, Homework, Participation,
-  Listening, Cleanup, Teamwork* — plus "+ Other reason…" which expands an
+- **FR-PT-2** Picking an amount opens the **reason sheet**: a grid of the
+  classroom's reasons — seeded with *Kindness, Effort, Helping, Homework,
+  Participation, Listening, Cleanup, Teamwork* and editable per classroom
+  (2.0 item 1.5, see FR-PT-5) — plus "+ Other reason…" which expands an
   inline free-text field (50-char max with live counter; also enforced
   server-side).
 - **FR-PT-3** **Tapping a preset reason commits immediately** — no confirm
@@ -19,8 +20,16 @@ This is the product's heart. Speed rules everything here.
   **[Observed quirk]** A code comment says the 1/2/5 buttons were meant to
   be award-only (revoke reserved for the custom flow), but the toggle
   currently shows on both paths. Decide the intent in 2.0.
-- **FR-PT-5** Presets are hardcoded — teachers cannot add/reorder/remove
-  reasons. (Frequently-wanted customization; see doc 10.)
+- **FR-PT-5** Reasons are per-classroom and customizable (2.0 item 1.5).
+  Stored on the classroom META as `reasons` (a `PUT /classrooms/{cid}/
+  reasons` replaces the list, **owner-only**; server trims to 50 chars,
+  de-dupes case-insensitively, caps at 30). Managed in Settings → Reasons
+  (owner-only entry); the grant pickers read the classroom's list via
+  `useReasons`, falling back to the seed presets on load error. Absent
+  `reasons` = the seed presets (no migration for existing classrooms).
+  Renaming/removing a reason only changes future pickers — past events
+  keep their stored reason string (so analytics/history are never
+  rewritten).
 - **FR-PT-6** Empty reason falls back to "Points awarded" / "Points
   removed".
 

@@ -143,3 +143,49 @@ describe('event attribution (grantedBy)', () => {
     expect(puts.every(it => it.grantedBy === 'teacher@test.com')).toBe(true)
   })
 })
+
+describe('custom reasons', () => {
+  const putReasons = (body) => handler(event('PUT', '/classrooms/c-123/reasons', { body }))
+
+  it('replaces the list for the owner — trimmed, de-duped, blanks dropped, order kept', async () => {
+    ddbMock.on(GetCommand).resolves({ Item: { classroomId: 'c-123', role: 'owner' } })
+    ddbMock.on(UpdateCommand).resolves({})
+    const res = await putReasons({ reasons: ['  Kindness  ', 'kindness', '', 'Teamwork'] })
+    expect(res.statusCode).toBe(200)
+    expect(JSON.parse(res.body).reasons).toEqual(['Kindness', 'Teamwork'])
+    const upd = ddbMock.commandCalls(UpdateCommand)[0].args[0].input
+    expect(upd.ExpressionAttributeValues[':r']).toEqual(['Kindness', 'Teamwork'])
+  })
+
+  it('rejects a non-owner (members can use reasons but not edit them)', async () => {
+    ddbMock.on(GetCommand).resolves({ Item: { classroomId: 'c-123', role: 'member' } })
+    expect((await putReasons({ reasons: ['Kindness'] })).statusCode).toBe(403)
+  })
+
+  it('rejects a non-array or non-string entries', async () => {
+    ddbMock.on(GetCommand).resolves({ Item: { classroomId: 'c-123', role: 'owner' } })
+    expect((await putReasons({ reasons: 'nope' })).statusCode).toBe(400)
+    expect((await putReasons({ reasons: ['ok', 42] })).statusCode).toBe(400)
+  })
+
+  it('caps each reason at 50 characters', async () => {
+    ddbMock.on(GetCommand).resolves({ Item: { classroomId: 'c-123', role: 'owner' } })
+    ddbMock.on(UpdateCommand).resolves({})
+    const res = await putReasons({ reasons: ['x'.repeat(60)] })
+    expect(JSON.parse(res.body).reasons[0]).toHaveLength(50)
+  })
+
+  it('GET classroom returns the default reasons when none are stored', async () => {
+    ddbMock.on(GetCommand).callsFake((input) => {
+      const sk = input.Key?.sk || ''
+      if (sk.startsWith('MEMBERSHIP#') || sk.startsWith('MEMBER#')) return { Item: { classroomId: 'c-123', role: 'owner' } }
+      if (sk === 'META') return { Item: { id: 'c-123', name: 'Room 12' } }
+      return {}
+    })
+    const res = await handler(event('GET', '/classrooms/c-123'))
+    expect(res.statusCode).toBe(200)
+    const body = JSON.parse(res.body)
+    expect(body.reasons).toHaveLength(8)
+    expect(body.reasons).toContain('Kindness')
+  })
+})

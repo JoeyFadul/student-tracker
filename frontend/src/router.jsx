@@ -9,6 +9,7 @@ import { StudentProfileRoute } from './routes/StudentProfileRoute';
 import { StatsRoute } from './routes/StatsRoute';
 import { SettingsRoute } from './routes/SettingsRoute';
 import { ClassroomDetailRoute } from './routes/ClassroomDetailRoute';
+import { ReasonsRoute } from './routes/ReasonsRoute';
 import { SchoolYearDetailRoute } from './routes/SchoolYearDetailRoute';
 import { YearArchiveRoute } from './routes/YearArchiveRoute';
 import { YearStudentDetailRoute } from './routes/YearStudentDetailRoute';
@@ -35,6 +36,7 @@ export const router = createHashRouter([
               { path: 'stats', element: <StatsRoute /> },
               { path: 'settings', element: <SettingsRoute /> },
               { path: 'settings/classroom', element: <ClassroomDetailRoute /> },
+              { path: 'settings/reasons', element: <ReasonsRoute /> },
               { path: 'settings/school-year', element: <SchoolYearDetailRoute /> },
               { path: 'settings/school-year/archive/:yearId', element: <YearArchiveRoute /> },
               { path: 'settings/school-year/archive/:yearId/students/:studentId', element: <YearStudentDetailRoute /> },
