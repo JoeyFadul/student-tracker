@@ -13,7 +13,7 @@ import { theme } from '../../theme';
 export function AddStudentModal({ onClose, onCreate, onCreateMany }) {
   const [mode, setMode] = useState('single');
   return (
-    <Modal title={mode === 'paste' ? 'Add students' : 'New student'} onClose={onClose}>
+    <Modal title="Add students" onClose={onClose}>
       <ModeToggle mode={mode} setMode={setMode} />
       {mode === 'single'
         ? <SingleForm onCreate={onCreate} onClose={onClose} />
