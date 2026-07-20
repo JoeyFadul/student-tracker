@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, beforeAll, afterAll, vi } from 'vitest'
 import { mockClient } from 'aws-sdk-client-mock'
-import { DynamoDBDocumentClient, GetCommand, QueryCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb'
+import { DynamoDBDocumentClient, GetCommand, QueryCommand, UpdateCommand, TransactWriteCommand } from '@aws-sdk/lib-dynamodb'
 
 process.env.TABLE_NAME = 'test-table'
 process.env.PHOTO_BUCKET = 'test-bucket'
@@ -105,5 +105,41 @@ describe('student update validation', () => {
     const update = ddbMock.commandCalls(UpdateCommand)[0].args[0].input
     expect(update.ExpressionAttributeValues[':name']).toBe('Maya Rodriguez')
     expect(update.ExpressionAttributeValues[':grade']).toBe('4th')
+  })
+})
+
+describe('event attribution (grantedBy)', () => {
+  const eventPuts = () =>
+    ddbMock.commandCalls(TransactWriteCommand)
+      .flatMap(c => c.args[0].input.TransactItems)
+      .filter(t => t.Put)
+      .map(t => t.Put.Item)
+
+  beforeEach(() => {
+    // Membership + active year lookups both go through GetCommand; branch on
+    // the sort key so one mock serves both.
+    ddbMock.on(GetCommand).callsFake((input) => {
+      const sk = input.Key?.sk || ''
+      if (sk.startsWith('MEMBERSHIP#') || sk.startsWith('MEMBER#')) return { Item: { classroomId: 'c-123', role: 'owner' } }
+      if (sk === 'ACTIVE_YEAR') return { Item: { yearId: 'y1' } }
+      return {}
+    })
+    ddbMock.on(TransactWriteCommand).resolves({})
+  })
+
+  it('stamps grantedBy with the caller email on a single grant', async () => {
+    const res = await handler(event('POST', '/classrooms/c-123/students/s-1/points', { body: { delta: 2, reason: 'Kindness' } }))
+    expect(res.statusCode).toBe(200)
+    const puts = eventPuts()
+    expect(puts).toHaveLength(1)
+    expect(puts[0].grantedBy).toBe('teacher@test.com')
+  })
+
+  it('stamps grantedBy on every event in a bulk grant', async () => {
+    const res = await handler(event('POST', '/classrooms/c-123/students/bulk-points', { body: { ids: ['s-1', 's-2'], delta: 1, reason: 'Class point' } }))
+    expect(res.statusCode).toBe(200)
+    const puts = eventPuts()
+    expect(puts).toHaveLength(2)
+    expect(puts.every(it => it.grantedBy === 'teacher@test.com')).toBe(true)
   })
 })

@@ -22,6 +22,7 @@ export function StudentProfile({
   uploadingPhoto,
   onLoadMoreActivity,
   historyLoading = false,
+  currentUserEmail,
 }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -62,6 +63,7 @@ export function StudentProfile({
           initialCursor={student.historyCursor || null}
           onLoadMore={onLoadMoreActivity}
           loading={historyLoading}
+          currentUserEmail={currentUserEmail}
         />
 
         <NotesEditor

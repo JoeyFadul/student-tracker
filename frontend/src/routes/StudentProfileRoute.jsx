@@ -2,12 +2,13 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'react-router';
 import { StudentProfile } from '../components/profile/StudentProfile';
 import { SkeletonList } from '../components/ui/Skeleton';
-import { useAppData } from './context';
+import { useAppData, useAuthCtx } from './context';
 import { useBackOr } from '../hooks/useBackOr';
 
 export function StudentProfileRoute() {
   const { studentId } = useParams();
   const { api, classrooms, studentsApi, showToast } = useAppData();
+  const auth = useAuthCtx();
   const cid = classrooms.activeId;
   const goBack = useBackOr('/students');
   const [student, setStudent] = useState(null);
@@ -154,6 +155,7 @@ export function StudentProfileRoute() {
       uploadingPhoto={uploadingPhoto}
       onLoadMoreActivity={loadMoreActivity}
       historyLoading={historyLoading}
+      currentUserEmail={auth?.email}
     />
   );
 }

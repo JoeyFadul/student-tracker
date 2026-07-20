@@ -45,7 +45,7 @@
 //   pk = CLASSROOM#<cid>,   sk = ACTIVE_YEAR                -> { yearId, label }
 //   pk = CLASSROOM#<cid>,   sk = YEAR#<yearId>              -> { yearId, label, startedAt, endedAt }
 //   pk = CLASSROOM#<cid>,   sk = STUDENT_PROFILE#<sid>      -> { id, name, grade, points, photo, notes, createdAt }
-//   pk = CLASSROOM#<cid>,   sk = STUDENT_EVENT#<sid>#<ts>   -> { studentId, delta, reason, timestamp, yearId }
+//   pk = CLASSROOM#<cid>,   sk = STUDENT_EVENT#<sid>#<ts>   -> { studentId, delta, reason, timestamp, yearId, grantedBy }
 
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
 const {
@@ -625,7 +625,7 @@ exports.handler = async (event) => {
             {
               Put: {
                 TableName: TABLE,
-                Item: { pk: `CLASSROOM#${cid}`, sk: `STUDENT_EVENT#${sid}#${timestamp}`, studentId: sid, delta, reason, timestamp, yearId: active.yearId },
+                Item: { pk: `CLASSROOM#${cid}`, sk: `STUDENT_EVENT#${sid}#${timestamp}`, studentId: sid, delta, reason, timestamp, yearId: active.yearId, grantedBy: callerEmail },
                 ConditionExpression: 'attribute_not_exists(sk)',
               },
             },
@@ -884,7 +884,7 @@ exports.handler = async (event) => {
             {
               Put: {
                 TableName: TABLE,
-                Item: { pk: `CLASSROOM#${cid}`, sk: `STUDENT_EVENT#${sid}#${timestamp}`, studentId: sid, delta, reason, timestamp, yearId: active.yearId },
+                Item: { pk: `CLASSROOM#${cid}`, sk: `STUDENT_EVENT#${sid}#${timestamp}`, studentId: sid, delta, reason, timestamp, yearId: active.yearId, grantedBy: callerEmail },
                 ConditionExpression: 'attribute_not_exists(sk)',
               },
             },
