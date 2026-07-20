@@ -145,7 +145,7 @@ describe('event attribution (grantedBy)', () => {
 })
 
 describe('custom reasons', () => {
-  const putReasons = (body) => handler(event('PUT', '/classrooms/c-123/reasons', { body }))
+  const putReasons = (body) => handler(event('PATCH', '/classrooms/c-123/reasons', { body }))
 
   it('replaces the list for the owner — trimmed, de-duped, blanks dropped, order kept', async () => {
     ddbMock.on(GetCommand).resolves({ Item: { classroomId: 'c-123', role: 'owner' } })

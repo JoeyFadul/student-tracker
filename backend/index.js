@@ -16,7 +16,7 @@
 // Per-classroom routes (caller must be a member):
 //   GET    /classrooms/{cid}                           -> details + my role
 //   PATCH  /classrooms/{cid}                           -> rename (owner only)
-//   PUT    /classrooms/{cid}/reasons                   -> replace custom reason list (owner only)
+//   PATCH  /classrooms/{cid}/reasons                   -> replace custom reason list (owner only)
 //   DELETE /classrooms/{cid}                           -> delete (owner only)
 //
 //   GET    /classrooms/{cid}/members                   -> list members
@@ -312,7 +312,9 @@ exports.handler = async (event) => {
     const isOwner = membership.role === 'owner';
 
     // ===== Custom reasons (per-classroom picker list, 2.0 item 1.5) =====
-    if (rest === '/reasons' && method === 'PUT') {
+    // PATCH (not PUT) because the HTTP API's CORS AllowMethods omits PUT, and
+    // every WebView call is cross-origin — a PUT preflight would be blocked.
+    if (rest === '/reasons' && method === 'PATCH') {
       if (!isOwner) return respond(403, { error: 'Only the owner can edit reasons' });
       const body = JSON.parse(event.body || '{}');
       if (!Array.isArray(body.reasons)) return respond(400, { error: 'reasons must be an array' });
