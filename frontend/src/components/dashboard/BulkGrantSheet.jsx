@@ -6,10 +6,12 @@ import { CustomAmountSheet } from '../ui/CustomAmountSheet';
 import { ReasonPicker } from '../profile/ReasonPicker';
 import { Avatar } from '../ui/Avatar';
 import { usePressable } from '../../hooks/usePressable';
+import { useAppData } from '../../routes/context';
 
 const PRESET_AMOUNTS = [1, 2, 5];
 
 export function BulkGrantSheet({ open, selected, onBack, onGrant }) {
+  const { reasonsApi } = useAppData();
   const [amount, setAmount] = useState(2);
   const [busy, setBusy] = useState(false);
   const [showCustom, setShowCustom] = useState(false);
@@ -51,7 +53,7 @@ export function BulkGrantSheet({ open, selected, onBack, onGrant }) {
       </div>
 
       <div style={sectionLabelStyle}>Why?</div>
-      <ReasonPicker amount={amount} allowRevoke={true} onSubmit={submit} />
+      <ReasonPicker amount={amount} allowRevoke={true} reasons={reasonsApi.reasons} onSubmit={submit} />
 
       <CustomAmountSheet
         open={showCustom}

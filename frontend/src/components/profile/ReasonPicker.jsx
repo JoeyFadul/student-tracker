@@ -12,7 +12,7 @@ import { Button } from '../ui/Button';
 //
 // The "Other reason…" affordance expands an inline input so the default
 // view stays compact when one of the 8 presets is enough.
-export function ReasonPicker({ amount, allowRevoke = false, onSubmit }) {
+export function ReasonPicker({ amount, allowRevoke = false, onSubmit, reasons = PRESET_REASONS }) {
   const [mode, setMode] = useState('grant');
   const [customMode, setCustomMode] = useState(false);
   const [customText, setCustomText] = useState('');
@@ -79,7 +79,7 @@ export function ReasonPicker({ amount, allowRevoke = false, onSubmit }) {
     <div>
       {allowRevoke && <ModeToggle mode={mode} setMode={setMode} amount={amount} />}
       <div style={gridStyle}>
-        {PRESET_REASONS.map(r => (
+        {reasons.map(r => (
           <ReasonCard key={r} reason={r} onClick={() => submit(r)} />
         ))}
       </div>

@@ -15,6 +15,8 @@ export function SettingsRoute() {
       activeYearLabel={schoolYear.active?.label}
       onOpenClassroom={() => navigate('/settings/classroom')}
       onOpenSchoolYear={() => navigate('/settings/school-year')}
+      onOpenReasons={() => navigate('/settings/reasons')}
+      canManageReasons={classrooms.active?.role === 'owner'}
       onDeleteAccount={() => auth.deleteAccount(api)}
     />
   );

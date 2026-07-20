@@ -34,7 +34,9 @@ priority — that's the first 2.0 planning exercise.
    in activity history (ConfirmDialog → existing `DELETE /events/{ts}`).*
 9. **Reasons are hardcoded** (FR-PT-5). Every classroom economy is
    different; teachers will want custom reasons/values, and the analytics
-   only get better with reasons teachers actually mean.
+   only get better with reasons teachers actually mean. *Fixed by 2.0 item
+   1.5: per-classroom editable reason list (Settings → Reasons, owner-only;
+   grant pickers read it; seeded with the presets).*
 10. **Search/sort don't persist**, and sort default is "recently added",
     which stops being useful after setup week. *Fixed by 2.0 item 1.3:
     sort + search persist per classroom (`wd:` localStorage); default is

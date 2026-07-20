@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LogOut, School, Calendar, Trash2, FileText, ShieldCheck } from 'lucide-react';
+import { LogOut, School, Calendar, Tag, Trash2, FileText, ShieldCheck } from 'lucide-react';
 import { theme } from '../../theme';
 import { AppHeader } from '../ui/AppHeader';
 import { SettingsRow } from './SettingsRow';
@@ -14,8 +14,11 @@ export function SettingsScreen({
   activeYearLabel,
   onOpenClassroom,
   onOpenSchoolYear,
+  onOpenReasons,
+  canManageReasons,
   onDeleteAccount,
 }) {
+  const showReasons = !!activeClassroom && canManageReasons;
   const [showDelete, setShowDelete] = useState(false);
 
   return (
@@ -37,6 +40,15 @@ export function SettingsScreen({
               label="School year"
               value={activeYearLabel || 'No active year'}
               onClick={onOpenSchoolYear}
+              isLast={!showReasons}
+            />
+          )}
+          {showReasons && (
+            <SettingsRow
+              icon={<Tag size={18} color={theme.colors.slate} />}
+              label="Reasons"
+              value="Customize award reasons"
+              onClick={onOpenReasons}
               isLast
             />
           )}

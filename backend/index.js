@@ -16,6 +16,7 @@
 // Per-classroom routes (caller must be a member):
 //   GET    /classrooms/{cid}                           -> details + my role
 //   PATCH  /classrooms/{cid}                           -> rename (owner only)
+//   PUT    /classrooms/{cid}/reasons                   -> replace custom reason list (owner only)
 //   DELETE /classrooms/{cid}                           -> delete (owner only)
 //
 //   GET    /classrooms/{cid}/members                   -> list members
@@ -40,7 +41,7 @@
 //
 // Data model (single-table):
 //   pk = USER#<email>,      sk = MEMBERSHIP#<cid>           -> { classroomId, classroomName, role, joinedAt }
-//   pk = CLASSROOM#<cid>,   sk = META                       -> { id, name, ownerEmail, createdAt }
+//   pk = CLASSROOM#<cid>,   sk = META                       -> { id, name, ownerEmail, createdAt, reasons? }
 //   pk = CLASSROOM#<cid>,   sk = MEMBER#<email>             -> { email, role, joinedAt }
 //   pk = CLASSROOM#<cid>,   sk = ACTIVE_YEAR                -> { yearId, label }
 //   pk = CLASSROOM#<cid>,   sk = YEAR#<yearId>              -> { yearId, label, startedAt, endedAt }
@@ -70,6 +71,13 @@ const respond = (status, body) => ({
 });
 
 // ===== Helpers =====
+
+// Seeds the per-classroom reason picker until a teacher customizes it
+// (2.0 item 1.5). Mirrors the frontend PRESET_REASONS; kept absent from META
+// until first edit so existing classrooms need no migration.
+const DEFAULT_REASONS = ['Kindness', 'Effort', 'Helping', 'Homework', 'Participation', 'Listening', 'Cleanup', 'Teamwork'];
+const REASON_MAX_LEN = 50; // mirror the per-grant reason cap
+const REASON_MAX_COUNT = 30;
 
 const norm = (email) => (email || '').trim().toLowerCase();
 
@@ -303,12 +311,41 @@ exports.handler = async (event) => {
     if (!membership) return respond(403, { error: 'Not a member of this classroom' });
     const isOwner = membership.role === 'owner';
 
+    // ===== Custom reasons (per-classroom picker list, 2.0 item 1.5) =====
+    if (rest === '/reasons' && method === 'PUT') {
+      if (!isOwner) return respond(403, { error: 'Only the owner can edit reasons' });
+      const body = JSON.parse(event.body || '{}');
+      if (!Array.isArray(body.reasons)) return respond(400, { error: 'reasons must be an array' });
+      // Trim to the per-grant cap, drop blanks, de-dupe case-insensitively
+      // while preserving the caller's order.
+      const seen = new Set();
+      const reasons = [];
+      for (const r of body.reasons) {
+        if (typeof r !== 'string') return respond(400, { error: 'each reason must be a string' });
+        const trimmed = r.trim().slice(0, REASON_MAX_LEN);
+        if (!trimmed) continue;
+        const key = trimmed.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        reasons.push(trimmed);
+      }
+      if (reasons.length > REASON_MAX_COUNT) return respond(400, { error: `too many reasons (max ${REASON_MAX_COUNT})` });
+      await ddb.send(new UpdateCommand({
+        TableName: TABLE, Key: { pk: `CLASSROOM#${cid}`, sk: 'META' },
+        UpdateExpression: 'SET #r = :r',
+        ConditionExpression: 'attribute_exists(pk)',
+        ExpressionAttributeNames: { '#r': 'reasons' },
+        ExpressionAttributeValues: { ':r': reasons },
+      }));
+      return respond(200, { reasons });
+    }
+
     // ===== Classroom details / rename / delete =====
     if (rest === '') {
       if (method === 'GET') {
         const meta = await getClassroomMeta(cid);
         if (!meta) return respond(404, { error: 'Classroom not found' });
-        return respond(200, { ...meta, role: membership.role });
+        return respond(200, { ...meta, role: membership.role, reasons: meta.reasons || DEFAULT_REASONS });
       }
       if (method === 'PATCH') {
         if (!isOwner) return respond(403, { error: 'Only the owner can rename' });

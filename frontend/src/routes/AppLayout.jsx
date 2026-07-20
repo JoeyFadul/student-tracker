@@ -3,6 +3,7 @@ import { Outlet, ScrollRestoration, useLocation, useNavigate } from 'react-route
 import { Users, BarChart3, Settings } from 'lucide-react';
 import { useStudents } from '../hooks/useStudents';
 import { useSchoolYear } from '../hooks/useSchoolYear';
+import { useReasons } from '../hooks/useReasons';
 import { useClassroomsCtx, AppDataContext } from './context';
 import { TabBar } from '../components/ui/TabBar';
 import { Toast } from '../components/ui/Toast';
@@ -25,6 +26,7 @@ export function AppLayout() {
   const cid = classrooms.activeId;
   const studentsApi = useStudents(api, cid);
   const schoolYear = useSchoolYear(api, cid);
+  const reasonsApi = useReasons(api, cid);
   const [toast, setToast] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
@@ -48,7 +50,7 @@ export function AppLayout() {
   const showToast = useCallback((t) => setToast(t), []);
 
   return (
-    <AppDataContext.Provider value={{ api, classrooms, studentsApi, schoolYear, showToast }}>
+    <AppDataContext.Provider value={{ api, classrooms, studentsApi, schoolYear, reasonsApi, showToast }}>
       <Outlet />
       <TabBar tabs={TABS} active={activeTab} onChange={changeTab} />
       {toast && (
