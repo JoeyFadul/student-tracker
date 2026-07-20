@@ -10,7 +10,7 @@ describe('AddStudentModal — paste list', () => {
     render(<AddStudentModal onClose={onClose} onCreate={vi.fn()} onCreateMany={onCreateMany} />)
 
     await userEvent.click(screen.getByRole('button', { name: 'Many' }))
-    const textarea = screen.getByPlaceholderText(/Maya Rodriguez/)
+    const textarea = screen.getByRole('textbox')
     await userEvent.click(textarea)
     await userEvent.paste('Maya Rodriguez\n\nJordan Lee\n  Sam Okafor  ')
     await userEvent.selectOptions(screen.getByRole('combobox'), '4th')

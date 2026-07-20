@@ -164,7 +164,7 @@ function PasteForm({ onCreateMany, onClose }) {
         label="Names — one per line"
         value={text}
         onChange={e => setText(e.target.value)}
-        placeholder={'Maya Rodriguez\nJordan Lee\nSam Okafor'}
+        placeholder={'Student 1\nStudent 2\nStudent 3'}
         rows={8}
         autoFocus
       />
