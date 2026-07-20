@@ -9,7 +9,7 @@ describe('AddStudentModal — paste list', () => {
     const onClose = vi.fn()
     render(<AddStudentModal onClose={onClose} onCreate={vi.fn()} onCreateMany={onCreateMany} />)
 
-    await userEvent.click(screen.getByRole('button', { name: 'Paste list' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Many' }))
     const textarea = screen.getByPlaceholderText(/Maya Rodriguez/)
     await userEvent.click(textarea)
     await userEvent.paste('Maya Rodriguez\n\nJordan Lee\n  Sam Okafor  ')
@@ -27,7 +27,7 @@ describe('AddStudentModal — paste list', () => {
 
   it('keeps the add button disabled until there is at least one name', async () => {
     render(<AddStudentModal onClose={vi.fn()} onCreate={vi.fn()} onCreateMany={vi.fn()} />)
-    await userEvent.click(screen.getByRole('button', { name: 'Paste list' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Many' }))
     expect(screen.getByRole('button', { name: 'Add students' })).toBeDisabled()
   })
 

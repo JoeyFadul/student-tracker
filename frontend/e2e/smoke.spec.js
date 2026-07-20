@@ -102,7 +102,7 @@ test('paste-import adds a student per pasted line to the roster', async ({ page 
   await expect(page.getByText('Maya Rodriguez')).toBeVisible()
 
   await page.getByRole('button', { name: 'Add student' }).click() // FAB
-  await page.getByRole('button', { name: 'Paste list' }).click()
+  await page.getByRole('button', { name: 'Many' }).click()
   const textarea = page.getByPlaceholder(/Maya Rodriguez/)
   await textarea.fill('Alex Kim\n\nPriya Patel')
   await page.getByRole('button', { name: 'Add 2 students' }).click()

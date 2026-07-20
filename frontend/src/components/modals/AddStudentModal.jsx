@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Camera, X, User, ClipboardList } from 'lucide-react';
+import { Camera, X, User, Users } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Input, Select, Textarea } from '../ui/Input';
@@ -13,7 +13,7 @@ import { theme } from '../../theme';
 export function AddStudentModal({ onClose, onCreate, onCreateMany }) {
   const [mode, setMode] = useState('single');
   return (
-    <Modal title={mode === 'paste' ? 'Add a class list' : 'New student'} onClose={onClose}>
+    <Modal title={mode === 'paste' ? 'Add students' : 'New student'} onClose={onClose}>
       <ModeToggle mode={mode} setMode={setMode} />
       {mode === 'single'
         ? <SingleForm onCreate={onCreate} onClose={onClose} />
@@ -196,8 +196,8 @@ function ModeToggle({ mode, setMode }) {
       <ToggleButton active={mode === 'single'} onClick={() => setMode('single')} icon={<User size={15} strokeWidth={2.5} />}>
         One
       </ToggleButton>
-      <ToggleButton active={mode === 'paste'} onClick={() => setMode('paste')} icon={<ClipboardList size={15} strokeWidth={2.5} />}>
-        Paste list
+      <ToggleButton active={mode === 'paste'} onClick={() => setMode('paste')} icon={<Users size={15} strokeWidth={2.5} />}>
+        Many
       </ToggleButton>
     </div>
   );

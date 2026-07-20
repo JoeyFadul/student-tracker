@@ -25,7 +25,7 @@ priority — that's the first 2.0 planning exercise.
    it. Same for grade changes at promotion time. *Fixed by 2.0 item 1.1
    (pencil in the profile header).*
 6. **No roster import.** 25 students = 25 modal round-trips (FR-ST-3).
-   *Fixed by 2.0 item 1.6: "Paste list" mode in the Add modal → one
+   *Fixed by 2.0 item 1.6: "Many" mode in the Add modal → one
    student per line.*
 7. **No select-all in bulk mode** (FR-PT-8). "Whole class earned a point"
    — the most common bulk case — is N taps. *Fixed by 2.0 item 1.2:

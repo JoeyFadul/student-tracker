@@ -30,7 +30,7 @@
   failure leaves the emoji and shows an error banner — the student is
   still created.
 - **FR-ST-3** Roster paste-import (2.0 item 1.6): the Add modal has a
-  "Paste list" mode — a textarea of names (one per line, blanks dropped,
+  "Many" mode — a textarea of names (one per line, blanks dropped,
   duplicates kept, never split on commas) plus one grade applied to all →
   creates a student per line (default emoji, no photos). Creation is
   sequential over the existing create path, so a partial failure still
