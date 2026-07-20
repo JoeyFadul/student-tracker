@@ -6,9 +6,11 @@ import { SearchBar } from './SearchBar';
 import { SortControl, sortStudents } from './SortControl';
 import { StudentList } from './StudentList';
 import { AddStudentButton } from './AddStudentButton';
-import { BulkGrantEntry } from './BulkGrantEntry';
+import { DashboardActions } from './DashboardActions';
+import { allVisibleSelected, toggleSelectAll } from './selection';
 import { BulkSelectFooter } from './BulkSelectFooter';
 import { BulkGrantSheet } from './BulkGrantSheet';
+import { ReasonPrompt } from '../profile/ReasonPrompt';
 import { NoYearEmptyState } from './NoYearEmptyState';
 import { SkeletonList } from '../ui/Skeleton';
 import { ErrorBanner } from '../ui/ErrorBanner';
@@ -16,6 +18,9 @@ import { AddStudentModal } from '../modals/AddStudentModal';
 import { PullIndicator } from '../ui/PullIndicator';
 import { IconButton } from '../ui/IconButton';
 import { usePullToRefresh } from '../../hooks/usePullToRefresh';
+
+// A class point is always +1; picking the amount is the select-all path's job.
+const CLASS_POINT_DELTA = 1;
 
 export function Dashboard({
   students,
@@ -41,6 +46,7 @@ export function Dashboard({
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [showGrantSheet, setShowGrantSheet] = useState(false);
+  const [classPointOpen, setClassPointOpen] = useState(false);
 
   const filteredAndSorted = useMemo(() => {
     const filtered = search
@@ -48,6 +54,9 @@ export function Dashboard({
       : students;
     return sortStudents(filtered, sortKey);
   }, [students, search, sortKey]);
+
+  const visibleIds = useMemo(() => filteredAndSorted.map(s => s.id), [filteredAndSorted]);
+  const allSelected = allVisibleSelected(visibleIds, selectedIds);
 
   const selectedStudents = useMemo(
     () => students.filter(s => selectedIds.has(s.id)),
@@ -75,6 +84,17 @@ export function Dashboard({
   const handleGrant = async (delta, reason) => {
     await onBulkGrant([...selectedIds], delta, reason);
     exitSelectMode();
+  };
+
+  const handleToggleAll = () => setSelectedIds(prev => toggleSelectAll(visibleIds, prev));
+
+  // Class point rewards the whole class (not just the filtered view). Tapping
+  // the chip opens the same reason menu as any other grant; picking a reason
+  // awards +1 to everyone via the bulk-grant path, with its optimistic update
+  // + Undo toast.
+  const handleClassPointConfirm = async (delta, reason) => {
+    setClassPointOpen(false);
+    await onBulkGrant(students.map(s => s.id), delta, reason);
   };
 
   const bottomPadding = selectMode
@@ -124,8 +144,14 @@ export function Dashboard({
           <SortControl value={sortKey} onChange={setSortKey} />
         </div>
 
-        {!selectMode && students.length > 0 && (
-          <BulkGrantEntry onClick={() => setSelectMode(true)} />
+        {students.length > 0 && (
+          <DashboardActions
+            selectMode={selectMode}
+            allSelected={allSelected}
+            onClassPoint={() => setClassPointOpen(true)}
+            onEnterSelect={() => setSelectMode(true)}
+            onToggleAll={handleToggleAll}
+          />
         )}
 
         <StudentList
@@ -153,6 +179,14 @@ export function Dashboard({
         selected={selectedStudents}
         onBack={() => setShowGrantSheet(false)}
         onGrant={handleGrant}
+      />
+
+      <ReasonPrompt
+        open={classPointOpen}
+        amount={CLASS_POINT_DELTA}
+        title={`Class point · ${students.length} ${students.length === 1 ? 'student' : 'students'}`}
+        onClose={() => setClassPointOpen(false)}
+        onConfirm={handleClassPointConfirm}
       />
 
       {showAddModal && (

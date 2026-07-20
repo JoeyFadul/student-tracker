@@ -26,14 +26,26 @@ This is the product's heart. Speed rules everything here.
 
 ## Bulk grant (from roster)
 
-- **FR-PT-7** "Select students" entry on the roster switches to selection
-  mode: checkboxes on rows, header shows count, footer with
-  Cancel/Continue. Continue opens the bulk sheet: overlapping-avatar strip
-  of the selection (+N overflow), amount chips 1/2/5/custom, Award/Revoke
-  toggle, same reason grid. One event per student, all stamped with the
-  same timestamp; writes are atomic in chunks of 50 students.
-- **FR-PT-8** No "select all" and no selection-by-filter; each row is
-  tapped individually.
+- **FR-PT-7** A "Select" chip in the roster action row switches to
+  selection mode: checkboxes on rows, header shows count, footer with a
+  single "Award to N students" action (cancel is the header X). It opens
+  the bulk sheet: overlapping-avatar strip of the selection (+N overflow),
+  amount chips 1/2/5/custom, Award/Revoke toggle, same reason grid. One
+  event per student, all stamped with the same timestamp; writes are
+  atomic in chunks of 50 students.
+- **FR-PT-8** Select-all (2.0 item 1.2): in selection mode a "Select all"
+  chip selects every student currently visible (respecting an active
+  search filter) and flips to "Deselect all"; selections outside the
+  filtered view are preserved across the toggle.
+- **FR-PT-8b** Class point (2.0 item 1.2): a "＋ Class point" chip in the
+  roster action row is the fast path to reward the whole class. Tapping it
+  opens the same quick reason menu (ReasonPrompt) used for single grants,
+  titled for the class ("Class point · N students"); picking a reason
+  awards **+1 to every student** with that reason. It reuses the bulk-grant
+  path, so it carries the same optimistic update and Undo toast as any
+  other grant, and always targets the full roster (not the filtered view).
+  Amount is fixed at +1 — the select-all path covers other amounts and
+  revoke.
 
 ## Feedback & undo
 

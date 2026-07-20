@@ -5,15 +5,15 @@ import { ReasonPicker } from './ReasonPicker';
 // onConfirm is invoked with (delta, reason). For the 1/2/5 path
 // allowRevoke=false and the picker submits +amount. For the custom-amount
 // path allowRevoke=true and the picker exposes a Grant/Revoke toggle.
-export function ReasonPrompt({ amount, allowRevoke = false, open, onClose, onConfirm }) {
+export function ReasonPrompt({ amount, allowRevoke = false, open, onClose, onConfirm, title }) {
   if (!amount && open) return null;
   const unit = amount === 1 ? 'point' : 'points';
-  const title = allowRevoke
+  const computedTitle = allowRevoke
     ? (amount ? `${amount} ${unit}` : '')
     : (amount ? `Award ${amount} ${unit}` : '');
 
   return (
-    <Sheet open={open} onClose={onClose} title={title}>
+    <Sheet open={open} onClose={onClose} title={title ?? computedTitle}>
       <ReasonPicker
         amount={amount}
         allowRevoke={allowRevoke}
