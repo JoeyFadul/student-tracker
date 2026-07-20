@@ -168,11 +168,11 @@ describe('custom reasons', () => {
     expect((await putReasons({ reasons: ['ok', 42] })).statusCode).toBe(400)
   })
 
-  it('caps each reason at 50 characters', async () => {
+  it('caps each reason at 25 characters', async () => {
     ddbMock.on(GetCommand).resolves({ Item: { classroomId: 'c-123', role: 'owner' } })
     ddbMock.on(UpdateCommand).resolves({})
     const res = await putReasons({ reasons: ['x'.repeat(60)] })
-    expect(JSON.parse(res.body).reasons[0]).toHaveLength(50)
+    expect(JSON.parse(res.body).reasons[0]).toHaveLength(25)
   })
 
   it('GET classroom returns the default reasons when none are stored', async () => {

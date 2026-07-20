@@ -22,8 +22,10 @@ This is the product's heart. Speed rules everything here.
   currently shows on both paths. Decide the intent in 2.0.
 - **FR-PT-5** Reasons are per-classroom and customizable (2.0 item 1.5).
   Stored on the classroom META as `reasons` (a `PATCH /classrooms/{cid}/
-  reasons` replaces the list, **owner-only**; server trims to 50 chars,
-  de-dupes case-insensitively, caps at 30). Managed in Settings → Reasons
+  reasons` replaces the list, **owner-only**; server trims to 25 chars —
+  reason labels render as grid buttons, so they're shorter than the
+  50-char one-off grant reason — de-dupes case-insensitively, caps at 30).
+  Managed in Settings → Reasons
   (owner-only entry); the grant pickers read the classroom's list via
   `useReasons`, falling back to the seed presets on load error. Absent
   `reasons` = the seed presets (no migration for existing classrooms).
