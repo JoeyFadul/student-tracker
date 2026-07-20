@@ -47,7 +47,13 @@ async function mockApi(page) {
     if (method === 'GET' && pathname === '/classrooms/c1/students')
       return json({ students, archiveYear: null })
     if (method === 'GET' && pathname === '/classrooms/c1/students/s1')
-      return json({ ...students[0], history: [], historyCursor: null })
+      return json({
+        ...students[0],
+        history: [
+          { studentId: 's1', delta: 2, reason: 'Helping', timestamp: '2026-07-01T10:00:00.000Z', yearId: 'y1', grantedBy: 'coteacher@test.com' },
+        ],
+        historyCursor: null,
+      })
     if (method === 'POST' && pathname === '/classrooms/c1/students/s1/points')
       return json({ eventTimestamp: '2026-07-04T12:00:00.000Z', reason: 'Kindness', yearId: 'y1' })
     if (method === 'DELETE' && pathname.startsWith('/classrooms/c1/students/s1/events/'))
@@ -85,6 +91,16 @@ test('deep link straight to a student profile renders it', async ({ page }) => {
   await page.goto('/#/students/s1')
   await expect(page.getByText('points earned')).toBeVisible()
   await expect(page.getByText('Maya Rodriguez')).toBeVisible()
+})
+
+test('activity attributes a grant to the co-teacher who made it', async ({ page }) => {
+  await signIn(page)
+  await mockApi(page)
+  await page.goto('/#/students/s1')
+  await expect(page.getByText('Helping')).toBeVisible()
+  // Current viewer is teacher@test.com; the event was granted by another
+  // teacher, so their name (email local-part) is credited.
+  await expect(page.getByText(/by coteacher/)).toBeVisible()
 })
 
 test('granting 2 points updates the profile and undo reverts it', async ({ page }) => {

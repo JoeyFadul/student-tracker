@@ -3,6 +3,7 @@ import { Loader2 } from 'lucide-react';
 import { theme } from '../../theme';
 import { Card } from '../ui/Card';
 import { SkeletonBlock } from '../ui/Skeleton';
+import { attributionLabel } from '../../lib/attribution';
 
 // Activity list with cursor-based infinite scroll. Renders the initial page
 // (passed in as initialItems + initialCursor by the parent — the profile fetch
@@ -10,7 +11,7 @@ import { SkeletonBlock } from '../ui/Skeleton';
 // bottom that triggers onLoadMore the moment it scrolls into view. Server
 // uses a FilterExpression so a page can come back smaller than 30 even when
 // more events exist; we just keep walking the cursor.
-export function ActivityHistory({ initialItems, initialCursor, onLoadMore, loading: parentLoading = false }) {
+export function ActivityHistory({ initialItems, initialCursor, onLoadMore, loading: parentLoading = false, currentUserEmail }) {
   const [items, setItems] = useState(initialItems || []);
   const [cursor, setCursor] = useState(initialCursor || null);
   const [loading, setLoading] = useState(false);
@@ -72,6 +73,7 @@ export function ActivityHistory({ initialItems, initialCursor, onLoadMore, loadi
             <ActivityEntry
               key={entry.timestamp || i}
               entry={entry}
+              currentUserEmail={currentUserEmail}
               isLast={i === items.length - 1 && !cursor}
             />
           ))}
@@ -86,15 +88,18 @@ export function ActivityHistory({ initialItems, initialCursor, onLoadMore, loadi
   );
 }
 
-function ActivityEntry({ entry, isLast }) {
+function ActivityEntry({ entry, currentUserEmail, isLast }) {
   const formattedDate = formatRelativeDate(entry.timestamp);
   const isPositive = entry.delta > 0;
+  // Only set for grants by a co-teacher (not the current viewer) — see
+  // attributionLabel. Multi-teacher rooms surface it; solo rooms never do.
+  const author = attributionLabel(entry.grantedBy, currentUserEmail);
 
   return (
     <div style={{ ...entryStyle, borderBottom: isLast ? 'none' : `1px solid ${theme.colors.border}` }}>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={reasonStyle}>{entry.reason || (isPositive ? 'Points awarded' : 'Points removed')}</div>
-        <div style={dateStyle}>{formattedDate}</div>
+        <div style={dateStyle}>{formattedDate}{author ? ` · by ${author}` : ''}</div>
       </div>
       <div style={{
         ...deltaStyle,

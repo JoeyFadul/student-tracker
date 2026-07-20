@@ -66,6 +66,10 @@ non-members get 403 regardless of what they request.
   (screen entry or pull-to-refresh). Point grants are atomic server-side,
   so totals never corrupt — they can only be momentarily stale on the
   other device.
-- **FR-CL-13** There is no audit trail of *which teacher* granted points or
-  edited a student — events carry no author. Worth deciding in 2.0 now
-  that multi-teacher rooms exist.
+- **FR-CL-13** Points events carry an author (2.0 item 1.8): every grant
+  (single, bulk, class point) stamps `grantedBy` = the caller's email
+  server-side. Activity history credits a co-teacher — "· by <name>"
+  (email local-part) — only on events granted by someone *other than* the
+  current viewer, so single-teacher rooms and your own grants stay clean
+  and no member-count lookup is needed. Events written before 1.8 have no
+  `grantedBy` and show nothing. (Student *edits* still carry no author.)

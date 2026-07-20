@@ -79,11 +79,17 @@ This is the product's heart. Speed rules everything here.
 - **FR-PT-14** Profile shows the active year's events, newest first:
   reason, relative date (Today / Yesterday / N days ago / "Mar 4"), and a
   ±delta pill (green positive, red negative). 30 per page with automatic
-  infinite scroll (sentinel-based).
+  infinite scroll (sentinel-based). In multi-teacher rooms a co-teacher's
+  grant is credited inline on the date row ("· by <name>", the email
+  local-part); your own grants and single-teacher rooms show nothing
+  (2.0 item 1.8).
 - **FR-PT-15** History is year-scoped — switching/ending years changes what
   the profile shows; archives show the archived year's history.
-- **FR-PT-16** Events store: delta, reason, timestamp, yearId. No author
-  (FR-CL-13), no edit capability — events are append-and-delete only.
+- **FR-PT-16** Events store: delta, reason, timestamp, yearId, and
+  **grantedBy** (the granting teacher's email, stamped server-side — 2.0
+  item 1.8, see FR-CL-13). No edit capability — events are
+  append-and-delete only. `grantedBy` is additive: events written before
+  1.8 simply lack it and render without attribution.
 
 ## Integrity rules (server-enforced, must survive any redesign)
 
