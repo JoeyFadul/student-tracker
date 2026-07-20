@@ -41,7 +41,7 @@ async function mockApi(page) {
       return json({ classrooms: [{ classroomId: 'c1', classroomName: 'Room 12', role: 'owner' }] })
     if (method === 'GET' && pathname === '/classrooms/c1')
       return json({ classroomId: 'c1', classroomName: 'Room 12', role: 'owner', reasons: ['Being awesome', 'Kindness'] })
-    if (method === 'PUT' && pathname === '/classrooms/c1/reasons') {
+    if (method === 'PATCH' && pathname === '/classrooms/c1/reasons') {
       const { reasons } = route.request().postDataJSON()
       return json({ reasons })
     }
