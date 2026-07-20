@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Trash2 } from 'lucide-react';
 import { theme } from '../../theme';
 import { Card } from '../ui/Card';
 import { SkeletonBlock } from '../ui/Skeleton';
+import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { attributionLabel } from '../../lib/attribution';
+import { usePressable } from '../../hooks/usePressable';
 
 // Activity list with cursor-based infinite scroll. Renders the initial page
 // (passed in as initialItems + initialCursor by the parent — the profile fetch
@@ -11,10 +13,15 @@ import { attributionLabel } from '../../lib/attribution';
 // bottom that triggers onLoadMore the moment it scrolls into view. Server
 // uses a FilterExpression so a page can come back smaller than 30 even when
 // more events exist; we just keep walking the cursor.
-export function ActivityHistory({ initialItems, initialCursor, onLoadMore, loading: parentLoading = false, currentUserEmail }) {
+//
+// onDeleteEvent(timestamp, delta) is optional — when provided (active-year
+// profile) each row gets a delete affordance for corrections beyond the undo
+// toast; archives omit it and stay read-only.
+export function ActivityHistory({ initialItems, initialCursor, onLoadMore, loading: parentLoading = false, currentUserEmail, onDeleteEvent }) {
   const [items, setItems] = useState(initialItems || []);
   const [cursor, setCursor] = useState(initialCursor || null);
   const [loading, setLoading] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState(null);
   const sentinelRef = useRef(null);
 
   // Reset when the parent passes a new student (different initialItems
@@ -53,42 +60,69 @@ export function ActivityHistory({ initialItems, initialCursor, onLoadMore, loadi
     return () => observer.disconnect();
   }, [cursor, loadMore]);
 
+  // Delete goes through onDeleteEvent (reverses points server-side + in the
+  // roster); on success we drop the row locally. ConfirmDialog owns the
+  // busy/error state and only closes when the promise resolves, so a failed
+  // delete keeps the row.
+  const confirmDelete = async () => {
+    await onDeleteEvent(pendingDelete.timestamp, pendingDelete.delta);
+    setItems(prev => prev.filter(e => e.timestamp !== pendingDelete.timestamp));
+  };
+
   return (
-    <Card title="Activity">
-      {items.length === 0 && !cursor ? (
-        // While the parent is still fetching the first history page, show
-        // placeholder lines rather than flashing "No activity yet".
-        parentLoading ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 0' }}>
-            <SkeletonBlock width="70%" />
-            <SkeletonBlock width="55%" />
-            <SkeletonBlock width="62%" />
-          </div>
-        ) : (
-          <div style={emptyStyle}>No activity yet</div>
-        )
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          {items.map((entry, i) => (
-            <ActivityEntry
-              key={entry.timestamp || i}
-              entry={entry}
-              currentUserEmail={currentUserEmail}
-              isLast={i === items.length - 1 && !cursor}
-            />
-          ))}
-          {cursor && (
-            <div ref={sentinelRef} style={sentinelStyle}>
-              {loading && <Loader2 size={18} color={theme.colors.textMuted} className="spin" />}
+    <>
+      <Card title="Activity">
+        {items.length === 0 && !cursor ? (
+          // While the parent is still fetching the first history page, show
+          // placeholder lines rather than flashing "No activity yet".
+          parentLoading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 0' }}>
+              <SkeletonBlock width="70%" />
+              <SkeletonBlock width="55%" />
+              <SkeletonBlock width="62%" />
             </div>
-          )}
-        </div>
+          ) : (
+            <div style={emptyStyle}>No activity yet</div>
+          )
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {items.map((entry, i) => (
+              <ActivityEntry
+                key={entry.timestamp || i}
+                entry={entry}
+                currentUserEmail={currentUserEmail}
+                onRequestDelete={onDeleteEvent ? () => setPendingDelete(entry) : undefined}
+                isLast={i === items.length - 1 && !cursor}
+              />
+            ))}
+            {cursor && (
+              <div ref={sentinelRef} style={sentinelStyle}>
+                {loading && <Loader2 size={18} color={theme.colors.textMuted} className="spin" />}
+              </div>
+            )}
+          </div>
+        )}
+      </Card>
+
+      {pendingDelete && (
+        <ConfirmDialog
+          title="Delete this event?"
+          destructive
+          confirmLabel="Delete"
+          busyLabel="Deleting…"
+          onConfirm={confirmDelete}
+          onClose={() => setPendingDelete(null)}
+        >
+          Removing “{pendingDelete.reason || (pendingDelete.delta > 0 ? 'Points awarded' : 'Points removed')}” reverses{' '}
+          {pendingDelete.delta > 0 ? '+' : ''}{pendingDelete.delta}{' '}
+          {Math.abs(pendingDelete.delta) === 1 ? 'point' : 'points'} from the total.
+        </ConfirmDialog>
       )}
-    </Card>
+    </>
   );
 }
 
-function ActivityEntry({ entry, currentUserEmail, isLast }) {
+function ActivityEntry({ entry, currentUserEmail, onRequestDelete, isLast }) {
   const formattedDate = formatRelativeDate(entry.timestamp);
   const isPositive = entry.delta > 0;
   // Only set for grants by a co-teacher (not the current viewer) — see
@@ -108,7 +142,23 @@ function ActivityEntry({ entry, currentUserEmail, isLast }) {
       }}>
         {isPositive ? '+' : ''}{entry.delta}
       </div>
+      {onRequestDelete && <DeleteButton onClick={onRequestDelete} reason={entry.reason} />}
     </div>
+  );
+}
+
+function DeleteButton({ onClick, reason }) {
+  const { handlers, pressedStyle } = usePressable();
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      {...handlers}
+      aria-label={`Delete event${reason ? `: ${reason}` : ''}`}
+      style={{ ...deleteButtonStyle, ...pressedStyle }}
+    >
+      <Trash2 size={16} color={theme.colors.textFaint} />
+    </button>
   );
 }
 
@@ -157,6 +207,22 @@ const deltaStyle = {
   borderRadius: theme.radius.pill,
   minWidth: 38,
   textAlign: 'center',
+};
+
+const deleteButtonStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: 44,
+  height: 44,
+  flexShrink: 0,
+  marginRight: -10,
+  background: 'transparent',
+  border: 'none',
+  borderRadius: theme.radius.pill,
+  cursor: 'pointer',
+  WebkitTapHighlightColor: 'transparent',
+  transition: 'transform 0.1s ease',
 };
 
 const sentinelStyle = {

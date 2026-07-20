@@ -103,6 +103,20 @@ test('activity attributes a grant to the co-teacher who made it', async ({ page 
   await expect(page.getByText(/by coteacher/)).toBeVisible()
 })
 
+test('deleting an activity event removes it and reverses the points', async ({ page }) => {
+  await signIn(page)
+  await mockApi(page)
+  await page.goto('/#/students/s1')
+  await expect(page.getByText('Helping')).toBeVisible()
+  await expect(page.getByText('42', { exact: true })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Delete event: Helping' }).click()
+  await page.getByRole('button', { name: 'Delete', exact: true }).click()
+
+  await expect(page.getByText('Helping')).toHaveCount(0)
+  await expect(page.getByText('40', { exact: true })).toBeVisible() // 42 − 2
+})
+
 test('granting 2 points updates the profile and undo reverts it', async ({ page }) => {
   await signIn(page)
   await mockApi(page)

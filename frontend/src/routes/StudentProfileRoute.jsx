@@ -122,6 +122,16 @@ export function StudentProfileRoute() {
     await studentsApi.deleteStudent(id);
   }, [studentsApi]);
 
+  // Per-event delete (activity history). Reverses points in the roster +
+  // server, then updates the open profile's total. Errors propagate so the
+  // ConfirmDialog surfaces them and keeps the row.
+  const handleDeleteEvent = useCallback(async (timestamp, delta) => {
+    await studentsApi.deleteEvent(studentId, timestamp, delta);
+    setStudent(prev => (prev && prev.id === studentId)
+      ? { ...prev, points: prev.points - delta }
+      : prev);
+  }, [studentsApi, studentId]);
+
   const handlePhotoUpload = useCallback(async (file) => {
     if (!student || !api || !cid) return;
     setUploadingPhoto(true);
@@ -154,6 +164,7 @@ export function StudentProfileRoute() {
       onPhotoUpload={handlePhotoUpload}
       uploadingPhoto={uploadingPhoto}
       onLoadMoreActivity={loadMoreActivity}
+      onDeleteEvent={handleDeleteEvent}
       historyLoading={historyLoading}
       currentUserEmail={auth?.email}
     />

@@ -30,7 +30,8 @@ priority — that's the first 2.0 planning exercise.
    select-all chip + one-tap "Class point" shortcut on the roster.*
 8. **Undo is a ~few-seconds toast** and the only correction mechanism
    (FR-PT-9). Noticing a mistake a minute later means it's permanent
-   (backend could fix it; no UI).
+   (backend could fix it; no UI). *Fixed by 2.0 item 1.4: per-row delete
+   in activity history (ConfirmDialog → existing `DELETE /events/{ts}`).*
 9. **Reasons are hardcoded** (FR-PT-5). Every classroom economy is
    different; teachers will want custom reasons/values, and the analytics
    only get better with reasons teachers actually mean.

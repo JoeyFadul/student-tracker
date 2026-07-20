@@ -52,9 +52,11 @@ This is the product's heart. Speed rules everything here.
 - **FR-PT-9** Every grant (single or bulk) raises a toast: delta + student
   name (or "N students") + **Undo**. Undo deletes the just-written
   event(s) and restores points, including in the open profile's local
-  state. The toast is the *only* correction mechanism — activity history
-  has no per-row delete UI (the API supports deleting any event by
-  timestamp; only the toast uses it).
+  state. The toast is the *fast* correction path; for corrections noticed
+  later, each activity row also has a delete affordance (2.0 item 1.4) →
+  ConfirmDialog → `DELETE /events/{ts}`, which reverses the points when
+  the event's year is still active. Archives are read-only (no delete
+  affordance).
 - **FR-PT-10** Grants update the UI optimistically from the API response
   (points bump + history row appended locally; no refetch round-trip).
 - **FR-PT-11** Undo after a year rollover is safe by design: events are
