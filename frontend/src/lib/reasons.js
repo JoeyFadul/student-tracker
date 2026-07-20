@@ -3,7 +3,7 @@ export const PRESET_REASONS = [
   'Participation', 'Listening', 'Cleanup', 'Teamwork',
 ];
 
-export const REASON_MAX_LEN = 50; // mirror the per-grant reason cap
+export const REASON_MAX_LEN = 25; // reusable labels render as grid buttons — kept short (the one-off grant reason stays 50)
 export const REASON_MAX_COUNT = 30;
 
 // Mirror of the server's PUT /reasons normalization: trim to the cap, drop

@@ -76,7 +76,7 @@ const respond = (status, body) => ({
 // (2.0 item 1.5). Mirrors the frontend PRESET_REASONS; kept absent from META
 // until first edit so existing classrooms need no migration.
 const DEFAULT_REASONS = ['Kindness', 'Effort', 'Helping', 'Homework', 'Participation', 'Listening', 'Cleanup', 'Teamwork'];
-const REASON_MAX_LEN = 50; // mirror the per-grant reason cap
+const REASON_MAX_LEN = 25; // reason-list labels are grid buttons — shorter than the 50-char one-off grant reason
 const REASON_MAX_COUNT = 30;
 
 const norm = (email) => (email || '').trim().toLowerCase();

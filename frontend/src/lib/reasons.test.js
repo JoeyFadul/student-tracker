@@ -10,8 +10,8 @@ describe('cleanReasons', () => {
     expect(cleanReasons(['Kindness', 'kindness', 'KINDNESS', 'Effort'])).toEqual(['Kindness', 'Effort'])
   })
 
-  it('caps each reason at 50 characters', () => {
-    expect(cleanReasons(['x'.repeat(60)])[0]).toHaveLength(50)
+  it('caps each reason at 25 characters', () => {
+    expect(cleanReasons(['x'.repeat(60)])[0]).toHaveLength(25)
   })
 
   it('handles empty and nullish input', () => {
