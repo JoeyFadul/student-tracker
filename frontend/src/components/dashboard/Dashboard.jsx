@@ -6,7 +6,8 @@ import { SearchBar } from './SearchBar';
 import { SortControl, sortStudents } from './SortControl';
 import { StudentList } from './StudentList';
 import { AddStudentButton } from './AddStudentButton';
-import { BulkGrantEntry } from './BulkGrantEntry';
+import { DashboardActions } from './DashboardActions';
+import { allVisibleSelected, toggleSelectAll } from './selection';
 import { BulkSelectFooter } from './BulkSelectFooter';
 import { BulkGrantSheet } from './BulkGrantSheet';
 import { NoYearEmptyState } from './NoYearEmptyState';
@@ -16,6 +17,10 @@ import { AddStudentModal } from '../modals/AddStudentModal';
 import { PullIndicator } from '../ui/PullIndicator';
 import { IconButton } from '../ui/IconButton';
 import { usePullToRefresh } from '../../hooks/usePullToRefresh';
+
+// Default reason stamped on the one-tap class point (server caps reasons at
+// 50 chars; this is well under and shows up in top-reasons analytics).
+const CLASS_POINT_REASON = 'Class point';
 
 export function Dashboard({
   students,
@@ -41,6 +46,7 @@ export function Dashboard({
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [showGrantSheet, setShowGrantSheet] = useState(false);
+  const [classPointBusy, setClassPointBusy] = useState(false);
 
   const filteredAndSorted = useMemo(() => {
     const filtered = search
@@ -48,6 +54,9 @@ export function Dashboard({
       : students;
     return sortStudents(filtered, sortKey);
   }, [students, search, sortKey]);
+
+  const visibleIds = useMemo(() => filteredAndSorted.map(s => s.id), [filteredAndSorted]);
+  const allSelected = allVisibleSelected(visibleIds, selectedIds);
 
   const selectedStudents = useMemo(
     () => students.filter(s => selectedIds.has(s.id)),
@@ -75,6 +84,21 @@ export function Dashboard({
   const handleGrant = async (delta, reason) => {
     await onBulkGrant([...selectedIds], delta, reason);
     exitSelectMode();
+  };
+
+  const handleToggleAll = () => setSelectedIds(prev => toggleSelectAll(visibleIds, prev));
+
+  // One-tap whole-class +1. Awards to every student (not just the filtered
+  // view) — the label reads "Class point" — and reuses the bulk-grant path,
+  // so it carries the same optimistic update + Undo toast as a normal grant.
+  const handleClassPoint = async () => {
+    if (classPointBusy || students.length === 0) return;
+    setClassPointBusy(true);
+    try {
+      await onBulkGrant(students.map(s => s.id), 1, CLASS_POINT_REASON);
+    } finally {
+      setClassPointBusy(false);
+    }
   };
 
   const bottomPadding = selectMode
@@ -124,8 +148,15 @@ export function Dashboard({
           <SortControl value={sortKey} onChange={setSortKey} />
         </div>
 
-        {!selectMode && students.length > 0 && (
-          <BulkGrantEntry onClick={() => setSelectMode(true)} />
+        {students.length > 0 && (
+          <DashboardActions
+            selectMode={selectMode}
+            allSelected={allSelected}
+            classPointBusy={classPointBusy}
+            onClassPoint={handleClassPoint}
+            onEnterSelect={() => setSelectMode(true)}
+            onToggleAll={handleToggleAll}
+          />
         )}
 
         <StudentList

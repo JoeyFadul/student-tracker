@@ -52,6 +52,12 @@ async function mockApi(page) {
       return json({ eventTimestamp: '2026-07-04T12:00:00.000Z', reason: 'Kindness', yearId: 'y1' })
     if (method === 'DELETE' && pathname.startsWith('/classrooms/c1/students/s1/events/'))
       return route.fulfill({ status: 204, body: '' })
+    if (method === 'POST' && pathname === '/classrooms/c1/students/bulk-points') {
+      const { ids, delta, reason } = route.request().postDataJSON()
+      return json({ count: ids.length, delta, reason, timestamp: '2026-07-04T12:00:00.000Z', yearId: 'y1' })
+    }
+    if (method === 'POST' && pathname === '/classrooms/c1/students/bulk-revert')
+      return json({ ok: true })
     if (method === 'GET' && pathname === '/classrooms/c1/analytics/top-reasons')
       return json({ reasons: [], days: 30, yearId: 'y1' })
     return json({ error: `unmocked ${method} ${pathname}` }, 500)
@@ -97,4 +103,33 @@ test('granting 2 points updates the profile and undo reverts it', async ({ page 
 
   await page.getByRole('button', { name: 'Undo' }).click()
   await expect(page.getByText('42', { exact: true })).toBeVisible()
+})
+
+test('class point grants +1 to the whole class and undo reverts it', async ({ page }) => {
+  await signIn(page)
+  await mockApi(page)
+  await page.goto('/')
+  await expect(page.getByText('Maya Rodriguez')).toBeVisible()
+  await expect(page.getByText('42', { exact: true })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Give the whole class a point' }).click()
+
+  // Optimistic +1 across the roster: Maya 42→43, Jordan 38→39.
+  await expect(page.getByText('43', { exact: true })).toBeVisible()
+  await expect(page.getByText('39', { exact: true })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Undo' }).click()
+  await expect(page.getByText('42', { exact: true })).toBeVisible()
+  await expect(page.getByText('38', { exact: true })).toBeVisible()
+})
+
+test('select-all selects every student and the footer reflects the count', async ({ page }) => {
+  await signIn(page)
+  await mockApi(page)
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Select multiple students' }).click()
+  await page.getByRole('button', { name: 'Select all students' }).click()
+  await expect(page.getByRole('button', { name: /Award to 2 students/ })).toBeVisible()
+  // Toggle label flips once everything is selected.
+  await expect(page.getByRole('button', { name: 'Deselect all students' })).toBeVisible()
 })

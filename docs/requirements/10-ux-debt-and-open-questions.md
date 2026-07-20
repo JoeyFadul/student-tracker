@@ -26,7 +26,8 @@ priority — that's the first 2.0 planning exercise.
    (pencil in the profile header).*
 6. **No roster import.** 25 students = 25 modal round-trips (FR-ST-3).
 7. **No select-all in bulk mode** (FR-PT-8). "Whole class earned a point"
-   — the most common bulk case — is N taps.
+   — the most common bulk case — is N taps. *Fixed by 2.0 item 1.2:
+   select-all chip + one-tap "Class point" shortcut on the roster.*
 8. **Undo is a ~few-seconds toast** and the only correction mechanism
    (FR-PT-9). Noticing a mistake a minute later means it's permanent
    (backend could fix it; no UI).
