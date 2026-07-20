@@ -54,7 +54,7 @@ kit components in both schemes.
 | 1.8 ✅ | Event attribution | Shipped: backend stamps `grantedBy` on every grant (single + bulk); activity credits co-teacher grants inline (email local-part), viewer's own hidden so no member-count needed (doc 04 FR-CL-13). Additive backend field — v1 unaffected |
 | 1.4 ✅ | Per-event delete | Shipped: per-row trash on active-year activity → ConfirmDialog → existing `DELETE /events/{ts}` (reverses points, roster + profile); archives read-only (gated on onDeleteEvent). Frontend-only (doc 07 FR-PT-9, doc 10 A8) |
 | 1.5 ✅ | Custom reasons | Shipped: `reasons` on classroom META (additive, seeded with presets), owner-only `PUT /reasons`; Settings → Reasons manage screen (add/rename/remove); `useReasons` feeds the grant pickers; top-reasons needs no change (aggregates strings). Reorder deferred. Doc 07 FR-PT-5 |
-| 1.6 | Roster paste-import | Multi-line paste in Add flow → N creates |
+| 1.6 ✅ | Roster paste-import | Shipped: "Many" mode in the Add modal (textarea + shared grade) → parseRoster → sequential creates. Frontend-only (doc 06 FR-ST-3) |
 | 1.7 | Guided first-run | create classroom → start year → paste roster → dashboard; year-start roster review (B8) |
 
 ## Exit criteria
