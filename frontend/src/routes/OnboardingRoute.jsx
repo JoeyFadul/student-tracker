@@ -1,12 +1,13 @@
-import { CreateClassroomScreen } from '../components/onboarding/CreateClassroomScreen';
+import { OnboardingWizard } from '../components/onboarding/OnboardingWizard';
 import { useAuthCtx, useClassroomsCtx } from './context';
 
 export function OnboardingRoute() {
   const auth = useAuthCtx();
-  const { classrooms } = useClassroomsCtx();
+  const { api, classrooms } = useClassroomsCtx();
   return (
-    <CreateClassroomScreen
-      onCreate={classrooms.createClassroom}
+    <OnboardingWizard
+      api={api}
+      classrooms={classrooms}
       onSignOut={auth.signOut}
     />
   );

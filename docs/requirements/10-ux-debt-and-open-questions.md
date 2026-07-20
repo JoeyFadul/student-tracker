@@ -16,7 +16,7 @@ priority — that's the first 2.0 planning exercise.
 3. **Onboarding dead-ends into Settings.** New classroom → empty Students
    tab → "go to Settings to start a year" → come back. The first-run path
    should be one guided flow (create classroom → name year → add
-   students).
+   students). *Fixed by 2.0 item 1.7: 3-step guided first-run wizard.*
 4. **iPad is a stretched phone.** Single 720 px column, portrait-only.
    Teachers with iPads at their desk get no benefit from the screen.
 
