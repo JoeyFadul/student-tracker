@@ -50,7 +50,7 @@ kit components in both schemes.
 |---|---|---|
 | 1.1 ✅ | Edit student name/grade | Shipped: pencil in the profile header → edit modal; PATCH now validates name/grade (doc 06 FR-ST-9) |
 | 1.2 ✅ | Select-all + class point | Shipped: roster action row (Class point + Select) replaces the bulk-entry band; "Select all/Deselect all" toggle in select mode; Class point opens the shared reason menu → +1 to the whole class (doc 07 FR-PT-8/8b). Frontend-only, reuses bulk-points |
-| 1.3 | Sort/search persistence | `wd:` localStorage, per classroom; default A–Z |
+| 1.3 ✅ | Sort/search persistence | Shipped: `useDashboardPrefs(cid)` hook persists sort + search per classroom (`wd:sort:`/`wd:search:` localStorage); default flipped to A–Z (doc 06 FR-RO-3). Frontend-only |
 | 1.8 | Event attribution | Backend stamps `grantedBy` (single+bulk); chip in multi-teacher rooms; ride the 1.4 row redesign |
 | 1.4 | Per-event delete | Row affordance + ConfirmDialog; `DELETE /events/{ts}` exists |
 | 1.5 | Custom reasons | Classroom reason list (backend: `REASONS` item on classroom); manage UI in Settings; grant sheet + top-reasons read it |

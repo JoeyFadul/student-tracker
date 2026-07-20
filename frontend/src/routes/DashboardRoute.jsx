@@ -29,11 +29,15 @@ export function DashboardRoute() {
 
   return (
     <Dashboard
+      // Remount on classroom switch so useDashboardPrefs reloads that
+      // classroom's saved sort/search.
+      key={classrooms.activeId}
       students={studentsApi.students}
       loading={studentsApi.loading}
       yearLoading={schoolYear.loading}
       error={studentsApi.error}
       activeYear={schoolYear.active}
+      classroomId={classrooms.activeId}
       classroomName={classrooms.active?.classroomName}
       onDismissError={() => studentsApi.setError('')}
       onSelectStudent={(id) => navigate(`/students/${id}`)}

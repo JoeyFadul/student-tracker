@@ -35,7 +35,9 @@ priority — that's the first 2.0 planning exercise.
    different; teachers will want custom reasons/values, and the analytics
    only get better with reasons teachers actually mean.
 10. **Search/sort don't persist**, and sort default is "recently added",
-    which stops being useful after setup week.
+    which stops being useful after setup week. *Fixed by 2.0 item 1.3:
+    sort + search persist per classroom (`wd:` localStorage); default is
+    now A–Z.*
 
 ### Inconsistency / polish
 11. Two confirmation systems: custom modals vs. two leftover browser

@@ -7,8 +7,13 @@
   right-aligned), streak flame + count when streak > 1, chevron. (A tier
   chip slot exists but tiers are disabled — see FR-PT-12.)
 - **FR-RO-3** Live name search (case-insensitive substring) and sort:
-  **Recent** (creation date, default) · A–Z · points High · points Low.
-  Neither persists across visits.
+  **A–Z** (default) · Recent (creation date) · points High · points Low.
+  Both the sort choice and the current search persist per classroom (2.0
+  item 1.3, `wd:sort:<cid>` / `wd:search:<cid>` in localStorage), so they
+  survive navigating into a profile (the Dashboard unmounts) and app
+  restarts; they're cleared on sign-out with the other `wd:` keys. The
+  default changed from Recent to A–Z (FR-A10) because Recent aged badly
+  after setup week.
 - **FR-RO-4** Pull-to-refresh refetches the roster (custom implementation,
   spinner above content). This is the only manual sync affordance.
 - **FR-RO-5** Floating "+" button opens Add Student. Roster loading shows a

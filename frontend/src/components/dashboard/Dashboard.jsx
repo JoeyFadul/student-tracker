@@ -18,6 +18,7 @@ import { AddStudentModal } from '../modals/AddStudentModal';
 import { PullIndicator } from '../ui/PullIndicator';
 import { IconButton } from '../ui/IconButton';
 import { usePullToRefresh } from '../../hooks/usePullToRefresh';
+import { useDashboardPrefs } from '../../hooks/useDashboardPrefs';
 
 // A class point is always +1; picking the amount is the select-all path's job.
 const CLASS_POINT_DELTA = 1;
@@ -28,6 +29,7 @@ export function Dashboard({
   yearLoading,
   error,
   activeYear,
+  classroomId,
   classroomName,
   onDismissError,
   onSelectStudent,
@@ -40,8 +42,9 @@ export function Dashboard({
   // on spinnerRef directly via the DOM, no React state per touchmove. Only
   // `refreshing` is re-rendered (start/end of the actual refresh).
   const { contentRef, spinnerRef, refreshing } = usePullToRefresh(onRefresh);
-  const [search, setSearch] = useState('');
-  const [sortKey, setSortKey] = useState('recent');
+  // Sort + search persist per classroom (survives the Dashboard unmounting on
+  // every profile visit, and app restarts). Default sort is A–Z.
+  const { sortKey, setSortKey, search, setSearch } = useDashboardPrefs(classroomId);
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState(new Set());
