@@ -125,6 +125,22 @@ test('class point grants +1 to the whole class and undo reverts it', async ({ pa
   await expect(page.getByText('38', { exact: true })).toBeVisible()
 })
 
+test('sort preference defaults to A–Z and persists across a reload', async ({ page }) => {
+  await signIn(page)
+  await mockApi(page)
+  await page.goto('/')
+  await expect(page.getByText('Maya Rodriguez')).toBeVisible()
+
+  // New default is A–Z (was "recent").
+  await expect(page.getByLabel('Sort students')).toHaveValue('name')
+
+  // Change it, reload, and confirm the choice stuck (persisted per classroom).
+  await page.getByLabel('Sort students').selectOption('pointsDesc')
+  await page.reload()
+  await expect(page.getByText('Maya Rodriguez')).toBeVisible()
+  await expect(page.getByLabel('Sort students')).toHaveValue('pointsDesc')
+})
+
 test('select-all selects every student and the footer reflects the count', async ({ page }) => {
   await signIn(page)
   await mockApi(page)
