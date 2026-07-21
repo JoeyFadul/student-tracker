@@ -162,6 +162,25 @@ test('paste-import adds a student per pasted line to the roster', async ({ page 
   await expect(page.getByText('Priya Patel')).toBeVisible()
 })
 
+test('opening a modal locks the page behind it and closing restores it', async ({ page }) => {
+  await signIn(page)
+  await mockApi(page)
+  await page.goto('/')
+  await expect(page.getByText('Maya Rodriguez')).toBeVisible()
+
+  // Page scrolls normally before the modal opens.
+  await expect.poll(() => page.evaluate(() => document.body.style.position)).toBe('')
+
+  await page.getByRole('button', { name: 'Add student' }).click() // FAB
+  // Modal open → body pinned so touch scrolling can't chain through to the
+  // app view behind the sheet (iOS WKWebView scroll chaining).
+  await expect.poll(() => page.evaluate(() => document.body.style.position)).toBe('fixed')
+  await expect.poll(() => page.evaluate(() => document.body.style.overflow)).toBe('hidden')
+
+  await page.keyboard.press('Escape')
+  await expect.poll(() => page.evaluate(() => document.body.style.position)).toBe('')
+})
+
 test('deep link straight to a student profile renders it', async ({ page }) => {
   await signIn(page)
   await mockApi(page)
