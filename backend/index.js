@@ -83,7 +83,13 @@ const norm = (email) => (email || '').trim().toLowerCase();
 
 function getCallerEmail(event) {
   const claims = event.requestContext?.authorizer?.jwt?.claims || {};
-  return norm(claims.email || claims['cognito:username']);
+  // Authorization keys on the email, so only trust it once Cognito has
+  // verified it. Otherwise an attacker could self-signup, change their own
+  // email attribute to an invited-but-unregistered teacher's address, refresh
+  // their token, and inherit that classroom's membership. email_verified
+  // arrives from the JWT authorizer as the string "true"/"false".
+  if (String(claims.email_verified) !== 'true') return null;
+  return norm(claims.email);
 }
 
 async function getMembership(email, classroomId) {
