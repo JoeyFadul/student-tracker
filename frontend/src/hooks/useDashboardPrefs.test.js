@@ -3,7 +3,7 @@ import { renderHook, act } from '@testing-library/react'
 import { useDashboardPrefs, DEFAULT_SORT } from './useDashboardPrefs'
 
 describe('useDashboardPrefs', () => {
-  beforeEach(() => localStorage.clear())
+  beforeEach(() => { localStorage.clear(); sessionStorage.clear() })
 
   it('defaults to A–Z sort and empty search when nothing is stored', () => {
     const { result } = renderHook(() => useDashboardPrefs('c1'))
@@ -12,9 +12,9 @@ describe('useDashboardPrefs', () => {
     expect(result.current.search).toBe('')
   })
 
-  it('loads a previously stored sort and search for the classroom', () => {
+  it('loads a previously stored sort (localStorage) and session search', () => {
     localStorage.setItem('wd:sort:c1', 'pointsDesc')
-    localStorage.setItem('wd:search:c1', 'mia')
+    sessionStorage.setItem('wd:search:c1', 'mia')
     const { result } = renderHook(() => useDashboardPrefs('c1'))
     expect(result.current.sortKey).toBe('pointsDesc')
     expect(result.current.search).toBe('mia')
@@ -27,12 +27,13 @@ describe('useDashboardPrefs', () => {
     expect(localStorage.getItem('wd:sort:c1')).toBe('pointsAsc')
   })
 
-  it('persists search and removes the key when search is cleared', () => {
+  it('persists search to sessionStorage and removes the key when cleared', () => {
     const { result } = renderHook(() => useDashboardPrefs('c1'))
     act(() => result.current.setSearch('jordan'))
-    expect(localStorage.getItem('wd:search:c1')).toBe('jordan')
+    expect(sessionStorage.getItem('wd:search:c1')).toBe('jordan')
+    expect(localStorage.getItem('wd:search:c1')).toBe(null) // not sticky across launches
     act(() => result.current.setSearch(''))
-    expect(localStorage.getItem('wd:search:c1')).toBe(null)
+    expect(sessionStorage.getItem('wd:search:c1')).toBe(null)
   })
 
   it('keeps preferences independent per classroom', () => {

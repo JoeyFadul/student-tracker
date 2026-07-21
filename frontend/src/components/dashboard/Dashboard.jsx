@@ -133,8 +133,10 @@ export function Dashboard({
       <AppHeader
         title={selectMode ? 'Select students' : (classroomName || 'Students')}
         subtitle={selectMode
-          ? `${selectedIds.size} ${selectedIds.size === 1 ? 'selected' : 'selected'}`
-          : `${activeYear.label} · ${students.length} ${students.length === 1 ? 'student' : 'students'}`
+          ? `${selectedIds.size} selected`
+          : search
+            ? `${filteredAndSorted.length} of ${students.length} ${students.length === 1 ? 'student' : 'students'}`
+            : `${activeYear.label} · ${students.length} ${students.length === 1 ? 'student' : 'students'}`
         }
         action={selectMode ? <CancelButton onClick={exitSelectMode} /> : null}
       />
