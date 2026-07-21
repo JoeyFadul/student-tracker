@@ -8,10 +8,10 @@ process.env.PHOTO_BUCKET = 'test-bucket'
 const ddbMock = mockClient(DynamoDBDocumentClient)
 const { handler, computeStreak } = await import('./index.js')
 
-const event = (method, path, { email = 'teacher@test.com', body } = {}) => ({
+const event = (method, path, { email = 'teacher@test.com', emailVerified = 'true', body } = {}) => ({
   requestContext: {
     http: { method, path },
-    authorizer: email ? { jwt: { claims: { email } } } : undefined,
+    authorizer: email ? { jwt: { claims: { email, email_verified: emailVerified } } } : undefined,
   },
   body: body ? JSON.stringify(body) : undefined,
 })
@@ -50,6 +50,13 @@ describe('computeStreak', () => {
 describe('handler authorization', () => {
   it('rejects requests without an email claim', async () => {
     const res = await handler(event('GET', '/classrooms', { email: null }))
+    expect(res.statusCode).toBe(401)
+  })
+
+  it('rejects a caller whose email is not verified', async () => {
+    // Blocks the impersonation path: a self-signup that changes its email to an
+    // invited teacher's address carries email_verified=false.
+    const res = await handler(event('GET', '/classrooms', { emailVerified: 'false' }))
     expect(res.statusCode).toBe(401)
   })
 
