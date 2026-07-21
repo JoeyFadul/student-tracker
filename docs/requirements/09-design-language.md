@@ -45,6 +45,11 @@ design question (doc 10).
 ## Platform accommodations worth keeping
 
 - Safe-area insets respected at top/bottom (`env(safe-area-inset-*)`).
+- Modals/sheets (all via `Sheet`) are keyboard-aware: the panel is capped to
+  the band between the status bar and the soft keyboard (`100dvh` minus
+  `--kb-height` minus both safe-area insets), so a tall panel scrolls inside
+  itself instead of spilling up behind the status bar when the keyboard opens.
+  `--kb-height` is driven from Capacitor `keyboardWillShow/Hide` in `native.js`.
 - `WebkitTapHighlightColor: transparent` everywhere; no 300 ms-tap issues.
 - Photo cache-stabilization: presigned URLs are rewritten to a
   session-stable form so navigation doesn't re-download every avatar
