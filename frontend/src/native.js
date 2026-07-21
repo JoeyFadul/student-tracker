@@ -3,6 +3,7 @@
 // the native iOS/Android shells.
 
 import { Capacitor } from '@capacitor/core';
+import { installFocusScroll, scrollFocusedIntoView } from './lib/keyboardScroll';
 
 export async function setupNative() {
   if (!Capacitor.isNativePlatform()) return;
@@ -34,10 +35,18 @@ export async function setupNative() {
 
     Keyboard.addListener('keyboardWillShow', (info) => {
       document.documentElement.style.setProperty('--kb-height', `${info.keyboardHeight}px`);
+      // Body padding (index.css) grows with --kb-height, giving full-page
+      // forms room to scroll; rAF lets that reflow land before we lift the
+      // focused field above the keyboard.
+      requestAnimationFrame(() => scrollFocusedIntoView());
     });
     Keyboard.addListener('keyboardWillHide', () => {
       document.documentElement.style.setProperty('--kb-height', '0px');
     });
+
+    // Focus moving between fields while the keyboard stays open doesn't refire
+    // keyboardWillShow, so keep the focused field visible on those changes too.
+    installFocusScroll();
   } catch (e) {
     console.warn('Keyboard setup skipped:', e);
   }
