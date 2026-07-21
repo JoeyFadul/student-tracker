@@ -53,7 +53,7 @@ const {
   DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand,
   DeleteCommand, QueryCommand, TransactWriteCommand
 } = require('@aws-sdk/lib-dynamodb');
-const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, PutObjectCommand, GetObjectCommand, ListObjectsV2Command, DeleteObjectsCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const { randomUUID } = require('crypto');
 
@@ -83,7 +83,13 @@ const norm = (email) => (email || '').trim().toLowerCase();
 
 function getCallerEmail(event) {
   const claims = event.requestContext?.authorizer?.jwt?.claims || {};
-  return norm(claims.email || claims['cognito:username']);
+  // Authorization keys on the email, so only trust it once Cognito has
+  // verified it. Otherwise an attacker could self-signup, change their own
+  // email attribute to an invited-but-unregistered teacher's address, refresh
+  // their token, and inherit that classroom's membership. email_verified
+  // arrives from the JWT authorizer as the string "true"/"false".
+  if (String(claims.email_verified) !== 'true') return null;
+  return norm(claims.email);
 }
 
 async function getMembership(email, classroomId) {
@@ -126,6 +132,41 @@ async function listClassroomItems(classroomId, skPrefix) {
     KeyConditionExpression: 'pk = :pk AND begins_with(sk, :prefix)',
     ExpressionAttributeValues: { ':pk': `CLASSROOM#${classroomId}`, ':prefix': skPrefix },
   });
+}
+
+// Delete every student photo under a classroom's S3 prefix. Called on
+// classroom/account teardown so images of minors aren't left behind (the
+// account-deletion promise, FR-AU-12). Idempotent — safe to retry.
+async function deleteClassroomPhotos(classroomId) {
+  const Prefix = `classrooms/${classroomId}/students/`;
+  let ContinuationToken;
+  do {
+    const listed = await s3.send(new ListObjectsV2Command({ Bucket: PHOTO_BUCKET, Prefix, ContinuationToken }));
+    const Objects = (listed.Contents || []).map(o => ({ Key: o.Key }));
+    if (Objects.length) {
+      await s3.send(new DeleteObjectsCommand({ Bucket: PHOTO_BUCKET, Delete: { Objects, Quiet: true } }));
+    }
+    ContinuationToken = listed.IsTruncated ? listed.NextContinuationToken : undefined;
+  } while (ContinuationToken);
+}
+
+// Retry-safe deletes for wiping a classroom partition plus each member's
+// USER#/MEMBERSHIP# pointer. Order matters across chunks: the MEMBER# rows are
+// deleted LAST (after the pointers they derive, and after META), so a
+// mid-teardown failure can always re-derive the pointer set from the
+// still-present MEMBER# rows on retry. Delete on a missing key is a no-op, so
+// already-committed chunks don't re-fail.
+function classroomTeardownWrites(items, classroomId) {
+  const del = (pk, sk) => ({ Delete: { TableName: TABLE, Key: { pk, sk } } });
+  const memberRows = items.filter(i => i.sk?.startsWith('MEMBER#'));
+  const meta = items.filter(i => i.sk === 'META');
+  const content = items.filter(i => !i.sk?.startsWith('MEMBER#') && i.sk !== 'META');
+  return [
+    ...content.map(i => del(i.pk, i.sk)),
+    ...memberRows.map(m => del(`USER#${m.email}`, `MEMBERSHIP#${classroomId}`)),
+    ...memberRows.map(i => del(i.pk, i.sk)),
+    ...meta.map(i => del(i.pk, i.sk)),
+  ];
 }
 
 // Cross-tenant guard. A stored profile.photo is either an emoji/short string
@@ -274,17 +315,15 @@ exports.handler = async (event) => {
       for (const m of memberships) {
         const cid = m.classroomId;
         if (m.role === 'owner') {
-          // Same teardown pattern the classroom DELETE handler uses.
+          // Full classroom teardown (photos + partition + pointers) via the
+          // same retry-safe path as DELETE /classrooms/{cid}.
+          await deleteClassroomPhotos(cid);
           const items = await queryAllPages({
             TableName: TABLE,
             KeyConditionExpression: 'pk = :pk',
             ExpressionAttributeValues: { ':pk': `CLASSROOM#${cid}` },
           });
-          const members = items.filter(i => i.sk?.startsWith('MEMBER#'));
-          const writes = [
-            ...items.map(i => ({ Delete: { TableName: TABLE, Key: { pk: i.pk, sk: i.sk } } })),
-            ...members.map(mem => ({ Delete: { TableName: TABLE, Key: { pk: `USER#${mem.email}`, sk: `MEMBERSHIP#${cid}` } } })),
-          ];
+          const writes = classroomTeardownWrites(items, cid);
           for (let i = 0; i < writes.length; i += CHUNK) {
             await ddb.send(new TransactWriteCommand({ TransactItems: writes.slice(i, i + CHUNK) }));
           }
@@ -374,20 +413,16 @@ exports.handler = async (event) => {
       }
       if (method === 'DELETE') {
         if (!isOwner) return respond(403, { error: 'Only the owner can delete' });
-        // Wipe everything in this classroom's partition + each member's MEMBERSHIP
-        // pointer. Chunked TransactWrites give atomicity within each batch (max
-        // 100 ops). If a mid-batch fails, retrying is safe — Delete on a missing
-        // key is a no-op so prior chunks won't re-fail.
+        // Delete photos first so a DDB-teardown failure never strands images of
+        // minors; then wipe the partition + each member's MEMBERSHIP pointer in
+        // retry-safe order (classroomTeardownWrites), chunked ≤100 ops.
+        await deleteClassroomPhotos(cid);
         const items = await queryAllPages({
           TableName: TABLE,
           KeyConditionExpression: 'pk = :pk',
           ExpressionAttributeValues: { ':pk': `CLASSROOM#${cid}` },
         });
-        const members = items.filter(i => i.sk?.startsWith('MEMBER#'));
-        const writes = [
-          ...items.map(i => ({ Delete: { TableName: TABLE, Key: { pk: i.pk, sk: i.sk } } })),
-          ...members.map(m => ({ Delete: { TableName: TABLE, Key: { pk: `USER#${m.email}`, sk: `MEMBERSHIP#${cid}` } } })),
-        ];
+        const writes = classroomTeardownWrites(items, cid);
         const CHUNK = 100;
         for (let i = 0; i < writes.length; i += CHUNK) {
           await ddb.send(new TransactWriteCommand({ TransactItems: writes.slice(i, i + CHUNK) }));

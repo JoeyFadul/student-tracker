@@ -1,17 +1,19 @@
 import { describe, it, expect, beforeEach, beforeAll, afterAll, vi } from 'vitest'
 import { mockClient } from 'aws-sdk-client-mock'
 import { DynamoDBDocumentClient, GetCommand, QueryCommand, UpdateCommand, TransactWriteCommand } from '@aws-sdk/lib-dynamodb'
+import { S3Client, ListObjectsV2Command, DeleteObjectsCommand } from '@aws-sdk/client-s3'
 
 process.env.TABLE_NAME = 'test-table'
 process.env.PHOTO_BUCKET = 'test-bucket'
 
 const ddbMock = mockClient(DynamoDBDocumentClient)
+const s3Mock = mockClient(S3Client)
 const { handler, computeStreak } = await import('./index.js')
 
-const event = (method, path, { email = 'teacher@test.com', body } = {}) => ({
+const event = (method, path, { email = 'teacher@test.com', emailVerified = 'true', body } = {}) => ({
   requestContext: {
     http: { method, path },
-    authorizer: email ? { jwt: { claims: { email } } } : undefined,
+    authorizer: email ? { jwt: { claims: { email, email_verified: emailVerified } } } : undefined,
   },
   body: body ? JSON.stringify(body) : undefined,
 })
@@ -50,6 +52,13 @@ describe('computeStreak', () => {
 describe('handler authorization', () => {
   it('rejects requests without an email claim', async () => {
     const res = await handler(event('GET', '/classrooms', { email: null }))
+    expect(res.statusCode).toBe(401)
+  })
+
+  it('rejects a caller whose email is not verified', async () => {
+    // Blocks the impersonation path: a self-signup that changes its email to an
+    // invited teacher's address carries email_verified=false.
+    const res = await handler(event('GET', '/classrooms', { emailVerified: 'false' }))
     expect(res.statusCode).toBe(401)
   })
 
@@ -250,5 +259,47 @@ describe('school year start (atomic)', () => {
     expect(close).toBeTruthy()
     expect(close.Update.UpdateExpression).toMatch(/endedAt/)
     expect(items[items.length - 1].Put.Item.sk).toBe('ACTIVE_YEAR')
+  })
+})
+
+describe('classroom deletion teardown', () => {
+  beforeEach(() => {
+    s3Mock.reset()
+    ddbMock.on(GetCommand).resolves({ Item: { classroomId: 'c-123', role: 'owner' } })
+    ddbMock.on(QueryCommand).resolves({
+      Items: [
+        { pk: 'CLASSROOM#c-123', sk: 'META' },
+        { pk: 'CLASSROOM#c-123', sk: 'MEMBER#owner@test.com', email: 'owner@test.com' },
+        { pk: 'CLASSROOM#c-123', sk: 'MEMBER#coteacher@test.com', email: 'coteacher@test.com' },
+        { pk: 'CLASSROOM#c-123', sk: 'STUDENT_PROFILE#s1' },
+      ],
+    })
+    ddbMock.on(TransactWriteCommand).resolves({})
+    s3Mock.on(ListObjectsV2Command).resolves({ Contents: [{ Key: 'classrooms/c-123/students/s1/a.jpg' }], IsTruncated: false })
+    s3Mock.on(DeleteObjectsCommand).resolves({})
+  })
+
+  const teardownKeys = () =>
+    ddbMock.commandCalls(TransactWriteCommand)
+      .flatMap(c => c.args[0].input.TransactItems)
+      .map(w => `${w.Delete.Key.pk}|${w.Delete.Key.sk}`)
+
+  it('deletes the classroom photos from S3 under the classroom prefix', async () => {
+    const res = await handler(event('DELETE', '/classrooms/c-123'))
+    expect(res.statusCode).toBe(204)
+    expect(s3Mock.commandCalls(ListObjectsV2Command)[0].args[0].input.Prefix).toBe('classrooms/c-123/students/')
+    expect(s3Mock.commandCalls(DeleteObjectsCommand)).toHaveLength(1)
+  })
+
+  it('deletes each MEMBERSHIP pointer, its MEMBER# row only after it, and META last (retry-safe)', async () => {
+    await handler(event('DELETE', '/classrooms/c-123'))
+    const keys = teardownKeys()
+    expect(keys).toContain('USER#owner@test.com|MEMBERSHIP#c-123')
+    expect(keys).toContain('USER#coteacher@test.com|MEMBERSHIP#c-123')
+    // the MEMBER# row is deleted after the pointer derived from it
+    expect(keys.indexOf('CLASSROOM#c-123|MEMBER#coteacher@test.com'))
+      .toBeGreaterThan(keys.indexOf('USER#coteacher@test.com|MEMBERSHIP#c-123'))
+    // META last so the classroom stays identifiable through a retry
+    expect(keys[keys.length - 1]).toBe('CLASSROOM#c-123|META')
   })
 })

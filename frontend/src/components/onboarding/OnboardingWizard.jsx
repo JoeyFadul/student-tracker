@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { School, Calendar, Users, ChevronLeft, ArrowRight, Loader2, Sparkles } from 'lucide-react';
 import { theme } from '../../theme';
 import { Button } from '../ui/Button';
@@ -26,15 +26,29 @@ export function OnboardingWizard({ api, classrooms, onSignOut }) {
   const names = parseRoster(rosterText);
   const nameOk = !!name.trim();
 
+  // Provisioning is several sequential writes (classroom → year → each
+  // student). If one fails partway, tapping "Finish" again must resume, not
+  // start over — otherwise a retry orphans a second empty classroom. We record
+  // what already succeeded and skip past it on the next attempt.
+  const done = useRef({ classroomId: null, yearStarted: false, students: 0 });
+
   const finish = async () => {
     setBusy(true); setError('');
     try {
-      const { classroomId } = await api.createClassroom(name.trim());
-      await api.startSchoolYear(classroomId, yearLabel);
-      for (const student of names) {
-        await api.createStudent(classroomId, { name: student, grade, photo: DEFAULT_AVATAR });
+      const p = done.current;
+      if (!p.classroomId) {
+        const { classroomId } = await api.createClassroom(name.trim());
+        p.classroomId = classroomId;
       }
-      classrooms.setActiveId(classroomId);
+      if (!p.yearStarted) {
+        await api.startSchoolYear(p.classroomId, yearLabel);
+        p.yearStarted = true;
+      }
+      for (let i = p.students; i < names.length; i++) {
+        await api.createStudent(p.classroomId, { name: names[i], grade, photo: DEFAULT_AVATAR });
+        p.students = i + 1;
+      }
+      classrooms.setActiveId(p.classroomId);
       await classrooms.refresh(); // AuthedLayout now redirects to /students
     } catch (err) {
       setError(err.message);
