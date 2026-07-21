@@ -98,6 +98,11 @@ html, body {
 
 body {
   background: var(--wd-bg);
+  /* Reserve scroll room under the soft keyboard so focused fields on full-page
+     forms can lift above it (native.js scrolls them into view). --kb-height is
+     0 when the keyboard is closed, so this is inert otherwise. Modals size
+     themselves against the same variable in Sheet.jsx. */
+  padding-bottom: var(--kb-height, 0px);
 }
 
 input, textarea, select, button {

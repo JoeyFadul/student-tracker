@@ -50,6 +50,11 @@ design question (doc 10).
   session-stable form so navigation doesn't re-download every avatar
   (WKWebView cache heuristics).
 - Status bar / splash handled via Capacitor plugins.
+- Keyboard handling (Capacitor `KeyboardResize.None`, so the WebView stays
+  full-height): `native.js` publishes the keyboard height as `--kb-height`;
+  `body` reserves that much bottom padding so full-page forms can scroll, and
+  the focused field is lifted above the keyboard (`lib/keyboardScroll.js`), on
+  both keyboard-open and field-to-field focus changes.
 
 ## Accessibility state
 
