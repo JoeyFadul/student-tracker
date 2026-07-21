@@ -290,13 +290,22 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: !Ref StudentsTable
         # GetObject is needed to *sign* GET URLs even though the Lambda never
-        # reads object bytes itself; PutObject for upload presigning.
+        # reads object bytes itself; PutObject for upload presigning;
+        # DeleteObject + prefix-scoped ListBucket to purge a classroom's student
+        # photos on account/classroom deletion.
         - Statement:
             - Effect: Allow
               Action:
                 - s3:PutObject
                 - s3:GetObject
+                - s3:DeleteObject
               Resource: !Sub ${PhotoBucket.Arn}/*
+            - Effect: Allow
+              Action: s3:ListBucket
+              Resource: !GetAtt PhotoBucket.Arn
+              Condition:
+                StringLike:
+                  s3:prefix: classrooms/*
       Events:
         # Authenticated routes - JWT required
         ApiEvents:
