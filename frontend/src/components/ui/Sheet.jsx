@@ -60,6 +60,10 @@ export function Sheet({ open, onClose, title, children }) {
   );
 }
 
+// Breathing room kept between the panel and the edges of the available band
+// (status bar above, keyboard/home-indicator below) so it never touches them.
+const GUTTER = 12;
+
 const backdropStyle = {
   position: 'fixed',
   top: 0,
@@ -74,13 +78,22 @@ const backdropStyle = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
+  boxSizing: 'border-box',
+  // Pad by the safe-area insets so centering happens between the status bar
+  // and the keyboard/home-indicator, never underneath them. Horizontal 16px
+  // gives the panel its side gutters (replacing its old width calc).
+  padding: `calc(env(safe-area-inset-top) + ${GUTTER}px) 16px calc(env(safe-area-inset-bottom) + ${GUTTER}px)`,
   transition: 'opacity 0.22s ease, bottom 0.25s cubic-bezier(0.17, 0.59, 0.4, 0.77)',
 };
 
 const sheetStyle = {
-  width: 'calc(100% - 32px)',
+  width: '100%',
   maxWidth: 480,
-  maxHeight: '85dvh',
+  // Cap against the *available* band, not the whole screen: full height minus
+  // the keyboard minus both safe-area insets minus the gutters. Without the
+  // --kb-height term a keyboard-up panel overflows equally top and bottom and
+  // the top spills behind the status bar. Content scrolls inside instead.
+  maxHeight: `calc(100dvh - var(--kb-height, 0px) - env(safe-area-inset-top) - env(safe-area-inset-bottom) - ${GUTTER * 2}px)`,
   background: theme.colors.surface,
   borderRadius: 24,
   boxShadow: theme.shadow.lg,
