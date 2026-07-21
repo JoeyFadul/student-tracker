@@ -189,3 +189,66 @@ describe('custom reasons', () => {
     expect(body.reasons).toContain('Kindness')
   })
 })
+
+describe('school year start (atomic)', () => {
+  const startYear = (body = { label: '2026–2027' }) =>
+    handler(event('POST', '/classrooms/c-123/school-years/start', { body }))
+
+  const arrange = (profiles, { prev } = {}) => {
+    ddbMock.on(GetCommand).callsFake((input) => {
+      const sk = input.Key?.sk || ''
+      if (sk.startsWith('MEMBERSHIP#') || sk.startsWith('MEMBER#')) return { Item: { classroomId: 'c-123', role: 'owner' } }
+      if (sk === 'ACTIVE_YEAR') return prev ? { Item: prev } : {}
+      return {}
+    })
+    ddbMock.on(QueryCommand).resolves({ Items: profiles })
+    ddbMock.on(TransactWriteCommand).resolves({})
+  }
+
+  const lastTransactionItems = () => {
+    const calls = ddbMock.commandCalls(TransactWriteCommand)
+    return calls[calls.length - 1].args[0].input.TransactItems
+  }
+
+  it('requires a non-empty label', async () => {
+    ddbMock.on(GetCommand).resolves({ Item: { classroomId: 'c-123', role: 'owner' } })
+    expect((await startYear({ label: '   ' })).statusCode).toBe(400)
+  })
+
+  it('zeroes every student and commits ACTIVE_YEAR as the final write', async () => {
+    arrange([
+      { pk: 'CLASSROOM#c-123', sk: 'STUDENT_PROFILE#s1', points: 40 },
+      { pk: 'CLASSROOM#c-123', sk: 'STUDENT_PROFILE#s2', points: 12 },
+    ])
+    const res = await startYear()
+    expect(res.statusCode).toBe(201)
+
+    // A normal-size classroom starts in ONE transaction — all-or-nothing.
+    expect(ddbMock.commandCalls(TransactWriteCommand)).toHaveLength(1)
+    const items = lastTransactionItems()
+
+    const resets = items.filter(t => t.Update?.Key.sk.startsWith('STUDENT_PROFILE#'))
+    expect(resets).toHaveLength(2)
+    for (const r of resets) expect(r.Update.ExpressionAttributeValues[':z']).toBe(0)
+
+    // ACTIVE_YEAR is the marker that makes the year live — it must land last so
+    // a failed start never leaves the classroom pointing at a half-built year.
+    const last = items[items.length - 1]
+    expect(last.Put.Item.sk).toBe('ACTIVE_YEAR')
+    expect(last.Put.Item.yearId).toBe(JSON.parse(res.body).yearId)
+  })
+
+  it('closes the prior year within the same transaction', async () => {
+    arrange(
+      [{ pk: 'CLASSROOM#c-123', sk: 'STUDENT_PROFILE#s1', points: 5 }],
+      { prev: { yearId: 'y-old', label: '2025–2026' } }
+    )
+    const res = await startYear()
+    expect(res.statusCode).toBe(201)
+    const items = lastTransactionItems()
+    const close = items.find(t => t.Update?.Key.sk === 'YEAR#y-old')
+    expect(close).toBeTruthy()
+    expect(close.Update.UpdateExpression).toMatch(/endedAt/)
+    expect(items[items.length - 1].Put.Item.sk).toBe('ACTIVE_YEAR')
+  })
+})

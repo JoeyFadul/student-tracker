@@ -460,35 +460,52 @@ exports.handler = async (event) => {
 
       const yearId = randomUUID();
       const now = new Date().toISOString();
-      const prev = await getActiveYear(cid);
+      const [prev, profiles] = await Promise.all([
+        getActiveYear(cid),
+        listClassroomItems(cid, 'STUDENT_PROFILE#'),
+      ]);
 
-      if (prev?.yearId) {
-        await ddb.send(new UpdateCommand({
-          TableName: TABLE, Key: { pk: `CLASSROOM#${cid}`, sk: `YEAR#${prev.yearId}` },
-          UpdateExpression: 'SET endedAt = :now',
-          ExpressionAttributeValues: { ':now': now },
-        }));
-      }
-
-      const profiles = await listClassroomItems(cid, 'STUDENT_PROFILE#');
-      await Promise.all(profiles.map(p =>
-        ddb.send(new UpdateCommand({
+      // Starting a year zeroes every student's running total, closes the prior
+      // year, and flips ACTIVE_YEAR to the new one. Do it as chunked
+      // transactions with the three structural writes — close-prev, new YEAR
+      // meta, and the ACTIVE_YEAR marker that makes the year live — kept
+      // together at the TAIL so they land in the final chunk and commit last.
+      // If an earlier reset chunk fails, ACTIVE_YEAR still points at the old
+      // year (untouched) and the whole start is safely retryable, since setting
+      // points to 0 is idempotent.
+      const writes = profiles.map(p => ({
+        Update: {
           TableName: TABLE, Key: { pk: p.pk, sk: p.sk },
           UpdateExpression: 'SET points = :z',
           ExpressionAttributeValues: { ':z': 0 },
-        }))
-      ));
-
-      await Promise.all([
-        ddb.send(new PutCommand({
+        },
+      }));
+      if (prev?.yearId) {
+        writes.push({
+          Update: {
+            TableName: TABLE, Key: { pk: `CLASSROOM#${cid}`, sk: `YEAR#${prev.yearId}` },
+            UpdateExpression: 'SET endedAt = :now',
+            ExpressionAttributeValues: { ':now': now },
+          },
+        });
+      }
+      writes.push({
+        Put: {
           TableName: TABLE,
           Item: { pk: `CLASSROOM#${cid}`, sk: `YEAR#${yearId}`, yearId, label, startedAt: now, endedAt: null },
-        })),
-        ddb.send(new PutCommand({
+        },
+      });
+      writes.push({
+        Put: {
           TableName: TABLE,
           Item: { pk: `CLASSROOM#${cid}`, sk: 'ACTIVE_YEAR', yearId, label },
-        })),
-      ]);
+        },
+      });
+
+      const CHUNK = 100;
+      for (let i = 0; i < writes.length; i += CHUNK) {
+        await ddb.send(new TransactWriteCommand({ TransactItems: writes.slice(i, i + CHUNK) }));
+      }
 
       return respond(201, { yearId, label, startedAt: now });
     }

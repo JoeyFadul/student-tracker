@@ -13,7 +13,11 @@ year; ending a year freezes its data into a read-only archive.
 - **FR-YR-3** Starting a new year while one is active: auto-ends the current
   year and **resets every student's points to 0**. The start sheet shows an
   explicit warning ("…will end 2025–2026 and reset every student's points
-  to 0. Past points will stay viewable as an archive.").
+  to 0. Past points will stay viewable as an archive."). Applied atomically:
+  the point resets, prior-year close, and new-year meta are one transaction
+  (chunked at 100 ops for very large rosters) with the `ACTIVE_YEAR` marker
+  committed **last**, so a failed start never leaves a half-reset roster on a
+  live new year — it stays on the old year and is safely retryable.
 - **FR-YR-4** Ending a year (without starting a new one) stamps `endedAt`
   and leaves the classroom with **no active year**. Students and their
   lifetime records persist; the roster carries over into whatever year is
