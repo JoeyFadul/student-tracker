@@ -1,4 +1,4 @@
-import { Search } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { theme } from '../../theme';
 
 export function SearchBar({ value, onChange, placeholder = 'Search students…' }) {
@@ -10,8 +10,13 @@ export function SearchBar({ value, onChange, placeholder = 'Search students…' 
         placeholder={placeholder}
         value={value}
         onChange={e => onChange(e.target.value)}
-        style={inputStyle}
+        style={{ ...inputStyle, paddingRight: value ? 44 : 14 }}
       />
+      {value && (
+        <button type="button" onClick={() => onChange('')} aria-label="Clear search" style={clearStyle}>
+          <X size={16} color={theme.colors.textMuted} />
+        </button>
+      )}
     </div>
   );
 }
@@ -42,4 +47,21 @@ const inputStyle = {
   fontFamily: theme.font.family,
   minHeight: 44,
   WebkitAppearance: 'none',
+};
+
+const clearStyle = {
+  position: 'absolute',
+  right: 0,
+  top: 0,
+  height: '100%',
+  width: 42,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  background: 'transparent',
+  border: 'none',
+  cursor: 'pointer',
+  padding: 0,
+  borderRadius: theme.radius.pill,
+  WebkitTapHighlightColor: 'transparent',
 };

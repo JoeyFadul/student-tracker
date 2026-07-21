@@ -1,31 +1,30 @@
 import { useState, useCallback } from 'react';
 
-// Per-classroom roster view preferences (sort + search), persisted under the
-// wd: localStorage prefix. The Dashboard unmounts on every profile visit
-// (the router swaps it out of the Outlet), so without this the sort and
-// search reset constantly; persisting also survives app restarts. Keys live
-// under wd: so useAuth clears them on sign-out with the rest.
-//
-// Read once per mount from the classroom's keys — callers pass a per-classroom
-// `key` on the Dashboard so switching the active classroom loads the right
-// prefs. Storage failures (private mode, quota) fall back to defaults.
+// Per-classroom roster view preferences, keyed by classroom under the wd:
+// prefix. The Dashboard unmounts on every profile visit (the router swaps it
+// out of the Outlet), so both survive that round-trip. They differ in scope:
+//   - sort  -> localStorage: a sticky preference that persists across launches.
+//   - search-> sessionStorage: survives in-app navigation but is cleared on a
+//     cold launch, so a teacher never reopens the app to a mysteriously
+//     filtered roster (the search text + a clear button keep it recoverable
+//     within a session).
 export const DEFAULT_SORT = 'name'; // A–Z; the old "recent" default aged badly
 
 const sortStorageKey = (cid) => `wd:sort:${cid}`;
 const searchStorageKey = (cid) => `wd:search:${cid}`;
 
-function readPref(key) {
+function read(store, key) {
   try {
-    return localStorage.getItem(key);
+    return store.getItem(key);
   } catch {
     return null;
   }
 }
 
-function writePref(key, value) {
+function write(store, key, value) {
   try {
-    if (value) localStorage.setItem(key, value);
-    else localStorage.removeItem(key);
+    if (value) store.setItem(key, value);
+    else store.removeItem(key);
   } catch {
     /* storage unavailable (private mode, quota) — preference just won't stick */
   }
@@ -33,20 +32,20 @@ function writePref(key, value) {
 
 export function useDashboardPrefs(classroomId) {
   const [sortKey, setSortKeyState] = useState(
-    () => (classroomId && readPref(sortStorageKey(classroomId))) || DEFAULT_SORT
+    () => (classroomId && read(localStorage, sortStorageKey(classroomId))) || DEFAULT_SORT
   );
   const [search, setSearchState] = useState(
-    () => (classroomId && readPref(searchStorageKey(classroomId))) || ''
+    () => (classroomId && read(sessionStorage, searchStorageKey(classroomId))) || ''
   );
 
   const setSortKey = useCallback((value) => {
     setSortKeyState(value);
-    if (classroomId) writePref(sortStorageKey(classroomId), value);
+    if (classroomId) write(localStorage, sortStorageKey(classroomId), value);
   }, [classroomId]);
 
   const setSearch = useCallback((value) => {
     setSearchState(value);
-    if (classroomId) writePref(searchStorageKey(classroomId), value);
+    if (classroomId) write(sessionStorage, searchStorageKey(classroomId), value);
   }, [classroomId]);
 
   return { sortKey, setSortKey, search, setSearch };
