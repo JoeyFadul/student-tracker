@@ -11,8 +11,17 @@ export function DashboardRoute() {
   // failure still lands the ones before it and surfaces the error). The Add
   // modal already shaped each entry with name/grade/default photo.
   const handleCreateMany = useCallback(async (students) => {
-    for (const data of students) {
-      await studentsApi.createStudent(data);
+    // Tag the error with how many were created so the modal can drop those
+    // names and let a retry add only the remainder (no duplicates).
+    let created = 0;
+    try {
+      for (const data of students) {
+        await studentsApi.createStudent(data);
+        created += 1;
+      }
+    } catch (err) {
+      err.createdCount = created;
+      throw err;
     }
   }, [studentsApi]);
 

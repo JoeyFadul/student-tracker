@@ -153,6 +153,11 @@ function PasteForm({ onCreateMany, onClose }) {
       await onCreateMany(names.map(name => ({ name, grade, photo: DEFAULT_AVATAR })));
       onClose();
     } catch (err) {
+      // onCreateMany adds students sequentially; on a mid-list failure it
+      // reports how many landed so we can drop those names and let a retry add
+      // only the rest — re-submitting the whole list would duplicate them.
+      const created = err.createdCount || 0;
+      if (created > 0) setText(names.slice(created).join('\n'));
       setError(err.message);
       setBusy(false);
     }
