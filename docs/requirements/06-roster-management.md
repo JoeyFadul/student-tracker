@@ -23,7 +23,11 @@
 
 - **FR-ST-1** Fields: **name (required)** — single free-text field, no
   first/last split; **grade** — dropdown K, 1st–5th, defaults 3rd;
-  **photo (optional)** — camera or library, previewed in the modal.
+  **photo (optional)** — camera or library, previewed in the modal. The
+  photo affordance is a compact 44px row (thumb + "Add photo"), not a hero
+  block: photos are optional (default avatar always seeded, profile hero
+  edits them later) and the compact form keeps the whole modal inside the
+  keyboard-up band without scrolling.
 - **FR-ST-2** Creation is optimistic about photos: the record is created
   immediately with the default 🌱 emoji avatar and appears in the roster;
   the photo uploads in the background and pops in when ready. Upload
