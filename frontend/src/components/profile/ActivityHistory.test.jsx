@@ -21,6 +21,19 @@ describe('ActivityHistory', () => {
     expect(screen.getByText('+2')).toBeInTheDocument()
   })
 
+  it('colors grants coral (success) and revokes slate, not two warm pills', () => {
+    const items = [
+      { delta: 2, reason: 'Kindness', timestamp: '2026-07-05T10:00:00.000Z' },
+      { delta: -1, reason: 'Talking out', timestamp: '2026-07-04T10:00:00.000Z' },
+    ]
+    render(<ActivityHistory initialItems={items} initialCursor={null} loading={false} />)
+    // Both danger and success are coral-family in Gunmetal & Coral, which made
+    // ± pills indistinguishable — revokes must use the cool slate tokens.
+    expect(screen.getByText('+2').style.background).toBe('var(--wd-success-soft)')
+    expect(screen.getByText('-1').style.background).toBe('var(--wd-slate-soft)')
+    expect(screen.getByText('-1').style.color).toBe('var(--wd-slate)')
+  })
+
   it('has no delete affordance without onDeleteEvent (read-only archives)', () => {
     const items = [{ delta: 2, reason: 'Kindness', timestamp: '2026-07-05T10:00:00.000Z' }]
     render(<ActivityHistory initialItems={items} initialCursor={null} loading={false} />)

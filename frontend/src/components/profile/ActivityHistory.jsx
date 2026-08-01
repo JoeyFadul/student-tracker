@@ -135,10 +135,13 @@ function ActivityEntry({ entry, currentUserEmail, onRequestDelete, isLast }) {
         <div style={reasonStyle}>{entry.reason || (isPositive ? 'Points awarded' : 'Points removed')}</div>
         <div style={dateStyle}>{formattedDate}{author ? ` · by ${author}` : ''}</div>
       </div>
+      {/* Grants coral, revokes slate — the palette's warm-positive /
+          cool-negative semantic. Danger (coral-red) reads identical to
+          success at pill size, which made ± indistinguishable in a list. */}
       <div style={{
         ...deltaStyle,
-        color: isPositive ? theme.colors.success : theme.colors.danger,
-        background: isPositive ? theme.colors.successSoft : theme.colors.dangerSoft,
+        color: isPositive ? theme.colors.success : theme.colors.slate,
+        background: isPositive ? theme.colors.successSoft : theme.colors.slateSoft,
       }}>
         {isPositive ? '+' : ''}{entry.delta}
       </div>

@@ -39,6 +39,11 @@ design question (doc 10).
   two legacy browser `confirm()` calls (end year, remove member).
 - **Skeleton** for roster loading; spinners elsewhere; custom
   pull-to-refresh with GPU-driven transform.
+- **Signed deltas** (activity rows, toast badge) render coral for grants
+  and **slate for revokes** — Gunmetal & Coral's success *and* danger are
+  both coral-family, so at pill size ± looked identical. Danger stays
+  reserved for destructive UI (delete), matching the tokens' stated
+  "positive = coral, negative = slate" semantic.
 - Emoji as data (avatars 🌱, flame icon for streaks via lucide icons).
 - Icons: lucide-react throughout.
 
