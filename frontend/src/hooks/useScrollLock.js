@@ -12,6 +12,25 @@ import { useEffect } from 'react';
 let lockCount = 0;
 let savedScrollY = 0;
 
+// Pinning the body stops DOM scrolling, but iOS WKWebView still has native
+// touch-pan paths CSS can't reach (e.g. the keyboard-avoidance content inset
+// makes the whole web layer draggable while the keyboard is up). A cancelled
+// touchmove is the one veto WebKit always honors, so while locked we kill any
+// touch gesture that isn't inside a scroller sitting above the lock (the
+// sheet panel, an overflowing textarea) — those keep their native scroll, and
+// their overscroll-behavior: contain stops chaining at the edges.
+function onLockedTouchMove(e) {
+  let el = e.target instanceof Element ? e.target : null;
+  while (el && el !== document.body) {
+    if (el.scrollHeight > el.clientHeight) {
+      const { overflowY } = getComputedStyle(el);
+      if (overflowY === 'auto' || overflowY === 'scroll') return;
+    }
+    el = el.parentElement;
+  }
+  e.preventDefault();
+}
+
 function applyLock() {
   if (lockCount === 0) {
     savedScrollY = window.scrollY;
@@ -22,6 +41,9 @@ function applyLock() {
     s.right = '0';
     s.width = '100%';
     s.overflow = 'hidden';
+    // Must be non-passive: document-level touchmove listeners default to
+    // passive, and a passive listener can't preventDefault.
+    document.addEventListener('touchmove', onLockedTouchMove, { passive: false });
   }
   lockCount += 1;
 }
@@ -36,6 +58,7 @@ function releaseLock() {
     s.right = '';
     s.width = '';
     s.overflow = '';
+    document.removeEventListener('touchmove', onLockedTouchMove);
     window.scrollTo(0, savedScrollY);
   }
 }

@@ -53,6 +53,11 @@ design question (doc 10).
   While a sheet is open the page behind it is scroll-locked
   (`useScrollLock`, ref-counted for nested sheets) — a fixed backdrop alone
   doesn't stop iOS WKWebView from scroll-chaining the app view underneath.
+  The lock also cancels `touchmove` outside genuinely scrollable sheet
+  content (a pinned body can't stop WKWebView's native keyboard-inset pan;
+  a cancelled touch can), and the dashboard's pull-to-refresh only arms for
+  touches starting inside the roster content, so drags on a portaled sheet
+  can no longer drive its translate transform behind the modal.
 - `WebkitTapHighlightColor: transparent` everywhere; no 300 ms-tap issues.
 - Photo cache-stabilization: presigned URLs are rewritten to a
   session-stable form so navigation doesn't re-download every avatar

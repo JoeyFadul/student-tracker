@@ -40,6 +40,13 @@ export function usePullToRefresh(onRefresh, enabled = true) {
     const onStart = (e) => {
       if (isRefreshing) return;
       if (window.scrollY > 0) return;
+      // Only arm for touches that start inside the content this hook
+      // refreshes. Listeners live on window, so without this a drag on a
+      // portaled overlay (Sheet renders into document.body) armed the pull
+      // and dragged the dashboard around behind the open modal — worse once
+      // the sheet scroll-lock pinned the body, which zeroes scrollY and
+      // defeats the guard above.
+      if (!contentRef.current?.contains(e.target)) return;
       startY = e.touches[0].clientY;
     };
 
