@@ -33,6 +33,13 @@ export async function setupNative() {
     // easing curve will run in sync with the keyboard.
     await Keyboard.setResizeMode({ mode: KeyboardResize.None });
 
+    // Show the input accessory bar (the "Done" bar above the iPhone keyboard).
+    // Capacitor hides it by default on iPhone, which left users with no obvious
+    // way to dismiss the keyboard. keyboardWillShow reports keyboardHeight
+    // *including* this bar, so --kb-height (and the scroll/modal sizing built on
+    // it) absorb the extra height automatically.
+    await Keyboard.setAccessoryBarVisible({ isVisible: true });
+
     Keyboard.addListener('keyboardWillShow', (info) => {
       document.documentElement.style.setProperty('--kb-height', `${info.keyboardHeight}px`);
       // Body padding (index.css) grows with --kb-height, giving full-page

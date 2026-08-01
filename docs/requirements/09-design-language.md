@@ -62,7 +62,10 @@ design question (doc 10).
   full-height): `native.js` publishes the keyboard height as `--kb-height`;
   `body` reserves that much bottom padding so full-page forms can scroll, and
   the focused field is lifted above the keyboard (`lib/keyboardScroll.js`), on
-  both keyboard-open and field-to-field focus changes.
+  both keyboard-open and field-to-field focus changes. The iPhone input
+  accessory bar (the "Done" dismiss bar) is enabled via
+  `setAccessoryBarVisible` — Capacitor hides it by default, which left no
+  obvious way to collapse the keyboard.
 
 ## Accessibility state
 
