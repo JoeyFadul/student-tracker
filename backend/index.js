@@ -26,7 +26,7 @@
 //   GET    /classrooms/{cid}/students                  -> list students (?year= for archive)
 //   POST   /classrooms/{cid}/students                  -> create student
 //   GET    /classrooms/{cid}/students/{sid}            -> student with history (?year=)
-//   PATCH  /classrooms/{cid}/students/{sid}            -> update
+//   PATCH  /classrooms/{cid}/students/{sid}            -> update (replacing a photo deletes the old S3 object)
 //   DELETE /classrooms/{cid}/students/{sid}            -> delete
 //   POST   /classrooms/{cid}/students/{sid}/points     -> grant points (active year required)
 //   GET    /classrooms/{cid}/students/{sid}/photo-upload -> presigned URL
@@ -927,6 +927,15 @@ exports.handler = async (event) => {
           }
         }
         if (!sets.length) return respond(400, { error: 'No valid fields' });
+        // Capture the photo being replaced (extra read only when the photo is
+        // actually changing) so the old S3 object can be cleaned up below —
+        // otherwise every replacement strands the previous image in the
+        // bucket until classroom teardown.
+        let replacedPhotoKey = null;
+        if (body.photo !== undefined) {
+          const current = await ddb.send(new GetCommand({ TableName: TABLE, Key: profileKey }));
+          replacedPhotoKey = photoKeyFromStored(current.Item?.photo);
+        }
         const result = await ddb.send(new UpdateCommand({
           TableName: TABLE, Key: profileKey,
           UpdateExpression: `SET ${sets.join(', ')}`,
@@ -934,6 +943,23 @@ exports.handler = async (event) => {
           ReturnValues: 'ALL_NEW',
         }));
         const attrs = result.Attributes || {};
+        // Delete the replaced object only after the new value is committed,
+        // only from this student's own namespace (never a foreign key that
+        // slipped into legacy data), and never at the cost of the PATCH
+        // itself — cleanup failure is logged, not surfaced.
+        if (replacedPhotoKey
+            && replacedPhotoKey !== body.photo
+            && replacedPhotoKey.startsWith(`classrooms/${cid}/students/${sid}/`)) {
+          try {
+            await s3.send(new DeleteObjectsCommand({
+              Bucket: PHOTO_BUCKET,
+              Delete: { Objects: [{ Key: replacedPhotoKey }], Quiet: true },
+            }));
+          } catch (err) {
+            const requestId = event.requestContext?.requestId;
+            console.error('Replaced-photo cleanup failed:', { requestId, key: replacedPhotoKey, err });
+          }
+        }
         return respond(200, { ...attrs, photo: await resolvePhoto(attrs.photo) });
       }
 

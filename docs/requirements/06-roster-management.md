@@ -48,7 +48,11 @@
   ~80–200 KB JPEG) then uploaded straight to S3 via presigned URL; the
   student record stores only the S3 key. Served back as presigned GETs
   (8 h TTL) with 24 h immutable browser caching; each new upload gets a
-  fresh random key so URLs never go stale-but-wrong.
+  fresh random key so URLs never go stale-but-wrong. Replacing a photo
+  deletes the previous S3 object once the new key is committed (own-
+  namespace keys only; a failed cleanup logs server-side and never fails
+  the update) — replaced photos of students must not linger in the
+  bucket. Classroom teardown's prefix purge remains the backstop.
 - **FR-ST-5** Every student always renders *something*: photo if set, else
   their emoji, else the default 🌱. Changing a photo: tap the profile hero
   avatar (camera overlay on hover/tap; spinner while uploading). Photos
