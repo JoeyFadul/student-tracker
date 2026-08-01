@@ -36,4 +36,12 @@ describe('Sheet', () => {
     const backdrop = screen.getByText('Keyboard test').parentElement.parentElement
     expect(backdrop.style.padding).toContain('safe-area-inset-top')
   })
+
+  it('blocks touch panning from the backdrop while the panel keeps vertical pan', () => {
+    openSheet()
+    const panel = screen.getByText('Keyboard test').parentElement
+    const backdrop = panel.parentElement
+    expect(backdrop.style.touchAction).toBe('none')
+    expect(panel.style.touchAction).toBe('pan-y')
+  })
 })

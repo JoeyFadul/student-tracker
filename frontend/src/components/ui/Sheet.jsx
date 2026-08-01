@@ -88,6 +88,9 @@ const backdropStyle = {
   // and the keyboard/home-indicator, never underneath them. Horizontal 16px
   // gives the panel its side gutters (replacing its old width calc).
   padding: `calc(env(safe-area-inset-top) + ${GUTTER}px) 16px calc(env(safe-area-inset-bottom) + ${GUTTER}px)`,
+  // Touches starting on the backdrop must never initiate a pan of the page
+  // behind it (the panel declares its own pan-y, so its scroll is unaffected).
+  touchAction: 'none',
   transition: 'opacity 0.22s ease, bottom 0.25s cubic-bezier(0.17, 0.59, 0.4, 0.77)',
 };
 
@@ -106,6 +109,7 @@ const sheetStyle = {
   // Keep the panel's own scroll from rubber-banding into the (now locked) page.
   overscrollBehavior: 'contain',
   WebkitOverflowScrolling: 'touch',
+  touchAction: 'pan-y',
   transition: 'opacity 0.18s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
 };
 
