@@ -34,6 +34,19 @@ describe('ActivityHistory', () => {
     expect(screen.getByText('-1').style.color).toBe('var(--wd-slate)')
   })
 
+  it('credits the viewer’s own grant as “by you” and a co-teacher by name', () => {
+    const items = [
+      { delta: 2, reason: 'Kindness', timestamp: '2026-07-05T10:00:00.000Z', grantedBy: 'me@x.com' },
+      { delta: 3, reason: 'Teamwork', timestamp: '2026-07-04T10:00:00.000Z', grantedBy: 'jlee@school.edu' },
+      { delta: 1, reason: 'Legacy', timestamp: '2026-07-03T10:00:00.000Z' }, // pre-1.8, no granter
+    ]
+    render(<ActivityHistory initialItems={items} initialCursor={null} loading={false} currentUserEmail="me@x.com" />)
+    expect(screen.getByText(/· by you/)).toBeInTheDocument()
+    expect(screen.getByText(/· by jlee/)).toBeInTheDocument()
+    // legacy row renders its date with no attribution
+    expect(screen.getAllByText(/· by /)).toHaveLength(2)
+  })
+
   it('has no delete affordance without onDeleteEvent (read-only archives)', () => {
     const items = [{ delta: 2, reason: 'Kindness', timestamp: '2026-07-05T10:00:00.000Z' }]
     render(<ActivityHistory initialItems={items} initialCursor={null} loading={false} />)

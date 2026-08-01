@@ -68,8 +68,11 @@ non-members get 403 regardless of what they request.
   other device.
 - **FR-CL-13** Points events carry an author (2.0 item 1.8): every grant
   (single, bulk, class point) stamps `grantedBy` = the caller's email
-  server-side. Activity history credits a co-teacher — "· by <name>"
-  (email local-part) — only on events granted by someone *other than* the
-  current viewer, so single-teacher rooms and your own grants stay clean
-  and no member-count lookup is needed. Events written before 1.8 have no
-  `grantedBy` and show nothing. (Student *edits* still carry no author.)
+  server-side. Activity history credits **every** attributed event —
+  "· by <name>" (email local-part) for a co-teacher, "· by you" for the
+  viewer's own grants — so history reads as a consistent ledger (policy
+  changed 2026-08 from co-teacher-only, which made a fresh own-grant look
+  different from its refetched self). The freshly granted row is stamped
+  optimistically client-side so attribution shows immediately, not after
+  a refetch. Events written before 1.8 have no `grantedBy` and show
+  nothing. (Student *edits* still carry no author.)

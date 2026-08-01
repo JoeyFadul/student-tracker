@@ -1,7 +1,8 @@
 // useAuth: manages the user's authentication state.
 // Restores the session on mount, exposes login/logout, and persists across reloads.
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { decodeJwtPayload } from '../lib/jwt';
 import {
   signIn as signInApi,
   completeNewPassword,
@@ -18,12 +19,8 @@ import {
 // JWT exp is seconds-since-epoch; we use milliseconds throughout the hook.
 // Returns the expiry timestamp in ms, or null if the token can't be decoded.
 function getTokenExpMs(token) {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return payload.exp ? payload.exp * 1000 : null;
-  } catch {
-    return null;
-  }
+  const payload = decodeJwtPayload(token);
+  return payload?.exp ? payload.exp * 1000 : null;
 }
 
 // Refresh 5 minutes before expiry, but never schedule sooner than 5 seconds
@@ -171,9 +168,19 @@ export function useAuth() {
     setCognitoUser(null);
   }, [cognitoUser]);
 
+  // The email must come from the token's claims — the same source the server
+  // stamps into grantedBy — not getUsername(): after an SRP sign-in Cognito
+  // sets the username to the pool's internal id, so comparing it against
+  // claim emails silently fails ("by you" became the raw email on refetch,
+  // and Settings displayed the internal id).
+  const email = useMemo(
+    () => decodeJwtPayload(idToken)?.email || cognitoUser?.getUsername?.() || null,
+    [idToken, cognitoUser]
+  );
+
   return {
     idToken,
-    email: cognitoUser?.getUsername?.() || null,
+    email,
     isAuthenticated: !!idToken,
     initializing,
     signIn,
