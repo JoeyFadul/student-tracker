@@ -1,7 +1,13 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { AddStudentModal } from './AddStudentModal'
+
+// jsdom lacks object URLs; the preview only needs a stable string.
+beforeEach(() => {
+  URL.createObjectURL = vi.fn(() => 'blob:preview')
+  URL.revokeObjectURL = vi.fn()
+})
 
 describe('AddStudentModal — paste list', () => {
   it('creates one student per pasted line with the shared grade', async () => {
@@ -63,5 +69,38 @@ describe('AddStudentModal — paste list', () => {
     render(<AddStudentModal onClose={vi.fn()} onCreate={vi.fn()} onCreateMany={vi.fn()} />)
     expect(screen.getByPlaceholderText('First and last name')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Add student' })).toBeInTheDocument()
+  })
+})
+
+describe('AddStudentModal — single form photo row', () => {
+  const pickFile = async () => {
+    const file = new File(['x'], 'kid.png', { type: 'image/png' })
+    await userEvent.upload(document.querySelector('input[type="file"]'), file)
+    return file
+  }
+
+  it('picking a photo flips the row to change/remove, and remove reverts it', async () => {
+    render(<AddStudentModal onClose={vi.fn()} onCreate={vi.fn()} onCreateMany={vi.fn()} />)
+    expect(screen.getByRole('button', { name: 'Add photo' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Remove photo' })).toBeNull()
+
+    await pickFile()
+    expect(screen.getByRole('button', { name: 'Change photo' })).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Remove photo' }))
+    expect(screen.getByRole('button', { name: 'Add photo' })).toBeInTheDocument()
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:preview')
+  })
+
+  it('passes the picked file through to onCreate alongside the default avatar seed', async () => {
+    const onCreate = vi.fn().mockResolvedValue()
+    render(<AddStudentModal onClose={vi.fn()} onCreate={onCreate} onCreateMany={vi.fn()} />)
+    await userEvent.type(screen.getByPlaceholderText('First and last name'), 'Maya Rodriguez')
+    const file = await pickFile()
+    await userEvent.click(screen.getByRole('button', { name: 'Add student' }))
+    expect(onCreate).toHaveBeenCalledExactlyOnceWith(
+      { name: 'Maya Rodriguez', grade: '3rd', photo: expect.any(String) },
+      file,
+    )
   })
 })
