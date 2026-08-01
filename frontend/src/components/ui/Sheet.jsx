@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { theme } from '../../theme';
+import { useScrollLock } from '../../hooks/useScrollLock';
 
 // All popups in the app render through here. Layout is a centered modal —
 // vertically centered between the top of the screen and either the bottom
@@ -10,6 +11,10 @@ import { theme } from '../../theme';
 export function Sheet({ open, onClose, title, children }) {
   const [mounted, setMounted] = useState(open);
   const [visible, setVisible] = useState(false);
+
+  // Lock the page behind the sheet: a fixed backdrop alone doesn't stop iOS
+  // WKWebView from scrolling the app view underneath on touchmove.
+  useScrollLock(open);
 
   useEffect(() => {
     if (open) {
@@ -98,6 +103,9 @@ const sheetStyle = {
   borderRadius: 24,
   boxShadow: theme.shadow.lg,
   overflowY: 'auto',
+  // Keep the panel's own scroll from rubber-banding into the (now locked) page.
+  overscrollBehavior: 'contain',
+  WebkitOverflowScrolling: 'touch',
   transition: 'opacity 0.18s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
 };
 

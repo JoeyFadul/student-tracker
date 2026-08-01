@@ -1,7 +1,10 @@
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest'
 import { render, screen, cleanup } from '@testing-library/react'
 import { Sheet } from './Sheet'
 
+// Sheet locks body scroll while open; releasing it calls window.scrollTo,
+// which jsdom doesn't implement. Stub it so unmount stays quiet.
+beforeEach(() => { window.scrollTo = vi.fn() })
 afterEach(cleanup)
 
 // The keyboard-clipping fix lives entirely in the panel's height cap and the

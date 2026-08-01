@@ -50,6 +50,9 @@ design question (doc 10).
   `--kb-height` minus both safe-area insets), so a tall panel scrolls inside
   itself instead of spilling up behind the status bar when the keyboard opens.
   `--kb-height` is driven from Capacitor `keyboardWillShow/Hide` in `native.js`.
+  While a sheet is open the page behind it is scroll-locked
+  (`useScrollLock`, ref-counted for nested sheets) — a fixed backdrop alone
+  doesn't stop iOS WKWebView from scroll-chaining the app view underneath.
 - `WebkitTapHighlightColor: transparent` everywhere; no 300 ms-tap issues.
 - Photo cache-stabilization: presigned URLs are rewritten to a
   session-stable form so navigation doesn't re-download every avatar
