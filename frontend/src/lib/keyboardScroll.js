@@ -29,3 +29,24 @@ export function installFocusScroll(doc = document) {
   doc.addEventListener('focusin', onFocusIn);
   return () => doc.removeEventListener('focusin', onFocusIn);
 }
+
+// With the accessory bar hidden there's no Done button, so make tap-outside
+// dismissal deterministic: any tap that lands outside the focused field (and
+// isn't another editable/select, which manage focus themselves) blurs it and
+// drops the keyboard. WebKit sometimes does this on its own for clickable
+// targets, but not reliably for plain containers — this makes it a rule.
+// Capture phase so a sheet's stopPropagation can't shield it.
+export function installTapDismiss(doc = document) {
+  const onTouchEnd = (e) => {
+    if (!keyboardOpen(doc)) return;
+    const focused = doc.activeElement;
+    if (!focused || !EDITABLE.test(focused.tagName)) return;
+    const t = e.target;
+    if (!(t instanceof Element)) return;
+    if (focused.contains(t)) return; // caret repositioning inside the field
+    if (t.closest('input, textarea, select, label')) return; // focus moves itself
+    focused.blur();
+  };
+  doc.addEventListener('touchend', onTouchEnd, true);
+  return () => doc.removeEventListener('touchend', onTouchEnd, true);
+}

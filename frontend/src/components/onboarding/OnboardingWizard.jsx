@@ -75,6 +75,7 @@ export function OnboardingWizard({ api, classrooms, onSignOut }) {
             onChange={e => setName(e.target.value)}
             placeholder="Mrs. Smith's 3rd Grade"
             autoFocus
+            enterKeyHint="next"
           />
           <Button type="submit" variant="primary" size="lg" fullWidth disabled={!nameOk} iconRight={<ArrowRight size={18} strokeWidth={2.5} />}>
             Continue
