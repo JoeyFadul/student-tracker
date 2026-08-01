@@ -44,6 +44,7 @@ export function EditStudentModal({ student, onClose, onSave }) {
           placeholder="First and last name"
           required
           autoFocus
+          enterKeyHint="done"
         />
 
         <Select

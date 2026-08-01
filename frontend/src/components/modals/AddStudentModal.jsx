@@ -117,6 +117,7 @@ function SingleForm({ onCreate, onClose }) {
         placeholder="First and last name"
         required
         autoFocus
+        enterKeyHint="done"
       />
 
       <Select

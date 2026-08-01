@@ -10,6 +10,10 @@ export function SearchBar({ value, onChange, placeholder = 'Search students…' 
         placeholder={placeholder}
         value={value}
         onChange={e => onChange(e.target.value)}
+        // Search is live, so the return key's only job is dropping the
+        // keyboard (no accessory bar to do it since it's hidden).
+        enterKeyHint="search"
+        onKeyDown={e => { if (e.key === 'Enter') e.target.blur(); }}
         style={{ ...inputStyle, paddingRight: value ? 44 : 14 }}
       />
       {value && (

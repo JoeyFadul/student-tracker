@@ -67,10 +67,12 @@ design question (doc 10).
   full-height): `native.js` publishes the keyboard height as `--kb-height`;
   `body` reserves that much bottom padding so full-page forms can scroll, and
   the focused field is lifted above the keyboard (`lib/keyboardScroll.js`), on
-  both keyboard-open and field-to-field focus changes. The iPhone input
-  accessory bar (the "Done" dismiss bar) is enabled via
-  `setAccessoryBarVisible` — Capacitor hides it by default, which left no
-  obvious way to collapse the keyboard.
+  both keyboard-open and field-to-field focus changes. The input accessory
+  bar stays hidden (Capacitor's default; briefly enabled, then reverted —
+  it costs ~44px and the iPhone keyboard has no built-in dismiss key, that's
+  iPad-only). Keyboard dismissal is space-free instead: `enterKeyHint` makes
+  the return key the action (done/search/next), and `installTapDismiss`
+  blurs the field on any tap outside it while the keyboard is open.
 
 ## Accessibility state
 

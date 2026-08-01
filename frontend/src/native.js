@@ -3,7 +3,7 @@
 // the native iOS/Android shells.
 
 import { Capacitor } from '@capacitor/core';
-import { installFocusScroll, scrollFocusedIntoView } from './lib/keyboardScroll';
+import { installFocusScroll, installTapDismiss, scrollFocusedIntoView } from './lib/keyboardScroll';
 
 export async function setupNative() {
   if (!Capacitor.isNativePlatform()) return;
@@ -33,12 +33,13 @@ export async function setupNative() {
     // easing curve will run in sync with the keyboard.
     await Keyboard.setResizeMode({ mode: KeyboardResize.None });
 
-    // Show the input accessory bar (the "Done" bar above the iPhone keyboard).
-    // Capacitor hides it by default on iPhone, which left users with no obvious
-    // way to dismiss the keyboard. keyboardWillShow reports keyboardHeight
-    // *including* this bar, so --kb-height (and the scroll/modal sizing built on
-    // it) absorb the extra height automatically.
-    await Keyboard.setAccessoryBarVisible({ isVisible: true });
+    // Keep the input accessory bar hidden (Capacitor's default). We briefly
+    // enabled it for a Done/dismiss affordance, but it costs ~44px of every
+    // keyboard-up screen and the iPhone keyboard has no built-in dismiss key
+    // (that's iPad-only). Dismissal is space-free instead: enterKeyHint turns
+    // the return key into the action, and installTapDismiss below drops the
+    // keyboard on any tap outside the focused field.
+    await Keyboard.setAccessoryBarVisible({ isVisible: false });
 
     Keyboard.addListener('keyboardWillShow', (info) => {
       document.documentElement.style.setProperty('--kb-height', `${info.keyboardHeight}px`);
@@ -54,6 +55,7 @@ export async function setupNative() {
     // Focus moving between fields while the keyboard stays open doesn't refire
     // keyboardWillShow, so keep the focused field visible on those changes too.
     installFocusScroll();
+    installTapDismiss();
   } catch (e) {
     console.warn('Keyboard setup skipped:', e);
   }

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { scrollFocusedIntoView, installFocusScroll } from './keyboardScroll'
+import { scrollFocusedIntoView, installFocusScroll, installTapDismiss } from './keyboardScroll'
 
 // jsdom doesn't implement scrollIntoView; stub it on the prototype so we can
 // assert whether the focused field would be lifted above the keyboard.
@@ -60,5 +60,50 @@ describe('installFocusScroll', () => {
     const el = addInput()
     el.focus()
     expect(el.scrollIntoView).not.toHaveBeenCalled()
+  })
+})
+
+describe('installTapDismiss', () => {
+  const tapOn = (el) => el.dispatchEvent(new Event('touchend', { bubbles: true }))
+  const openKeyboard = () => document.documentElement.style.setProperty('--kb-height', '320px')
+
+  it('blurs the focused field on a tap outside it while the keyboard is open', () => {
+    openKeyboard()
+    const uninstall = installTapDismiss()
+    const input = addInput()
+    const elsewhere = document.createElement('div')
+    document.body.appendChild(elsewhere)
+    input.focus()
+    tapOn(elsewhere)
+    expect(document.activeElement).not.toBe(input)
+    uninstall()
+  })
+
+  it('keeps focus when tapping the field itself or another editable control', () => {
+    openKeyboard()
+    const uninstall = installTapDismiss()
+    const input = addInput()
+    input.focus()
+    tapOn(input) // caret reposition
+    expect(document.activeElement).toBe(input)
+    const select = document.createElement('select')
+    document.body.appendChild(select)
+    tapOn(select) // control moves focus itself
+    expect(document.activeElement).toBe(input)
+    uninstall()
+  })
+
+  it('is inert when the keyboard is closed and after uninstall', () => {
+    const uninstall = installTapDismiss()
+    const input = addInput()
+    const elsewhere = document.createElement('div')
+    document.body.appendChild(elsewhere)
+    input.focus()
+    tapOn(elsewhere) // keyboard closed → no blur
+    expect(document.activeElement).toBe(input)
+    openKeyboard()
+    uninstall()
+    tapOn(elsewhere) // uninstalled → no blur
+    expect(document.activeElement).toBe(input)
   })
 })
