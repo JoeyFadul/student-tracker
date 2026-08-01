@@ -226,6 +226,9 @@ test('granting 2 points updates the profile and undo reverts it', async ({ page 
   await page.getByRole('button', { name: 'Kindness' }).click()
 
   await expect(page.getByText('44', { exact: true })).toBeVisible()
+  // The fresh row is attributed immediately — "by you" must not wait for a
+  // refetch (it used to appear only after navigating away and back).
+  await expect(page.getByText(/· by you/)).toBeVisible()
 
   await page.getByRole('button', { name: 'Undo' }).click()
   await expect(page.getByText('42', { exact: true })).toBeVisible()

@@ -68,7 +68,10 @@ export function StudentProfileRoute() {
       setStudent(prev => {
         if (!prev || prev.id !== id) return prev;
         snapshotName = prev.name;
-        const newEvent = { studentId: id, delta, reason: storedReason, timestamp: eventTimestamp, yearId };
+        // Mirror what the server stored — it stamps grantedBy from the JWT.
+        // Without this the fresh row rendered unattributed ("by you" only
+        // appeared after navigating away and back forced a refetch).
+        const newEvent = { studentId: id, delta, reason: storedReason, timestamp: eventTimestamp, yearId, grantedBy: auth?.email };
         return {
           ...prev,
           points: prev.points + delta,
@@ -98,7 +101,7 @@ export function StudentProfileRoute() {
     } catch (err) {
       studentsApi.setError(err.message);
     }
-  }, [studentsApi, showToast]);
+  }, [studentsApi, showToast, auth?.email]);
 
   const handleSaveNotes = useCallback(async (id, notes) => {
     try {

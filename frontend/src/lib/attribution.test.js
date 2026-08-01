@@ -7,9 +7,9 @@ describe('attributionLabel', () => {
     expect(attributionLabel('', 'me@x.com')).toBe(null)
   })
 
-  it("hides attribution for the viewer's own grants (case-insensitive)", () => {
-    expect(attributionLabel('me@x.com', 'me@x.com')).toBe(null)
-    expect(attributionLabel('Me@X.com', 'me@x.com')).toBe(null)
+  it("labels the viewer's own grants as “you” (case-insensitive)", () => {
+    expect(attributionLabel('me@x.com', 'me@x.com')).toBe('you')
+    expect(attributionLabel('Me@X.com', 'me@x.com')).toBe('you')
   })
 
   it('shows the local-part for a co-teacher grant', () => {
