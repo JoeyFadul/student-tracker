@@ -45,11 +45,12 @@ export function Toast({ message, delta, actionLabel, onAction, onDismiss, durati
         opacity: (entered && !exiting) ? 1 : 0,
       }}
     >
+      {/* Same ± semantic as ActivityHistory: coral grants, slate revokes. */}
       {showBadge && (
         <div style={{
           ...badgeStyle,
-          color: isPositive ? theme.colors.success : theme.colors.danger,
-          background: isPositive ? theme.colors.successSoft : theme.colors.dangerSoft,
+          color: isPositive ? theme.colors.success : theme.colors.slate,
+          background: isPositive ? theme.colors.successSoft : theme.colors.slateSoft,
         }}>
           {isPositive ? '+' : ''}{delta}
         </div>
