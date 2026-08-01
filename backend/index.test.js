@@ -117,6 +117,61 @@ describe('student update validation', () => {
   })
 })
 
+describe('replaced-photo S3 cleanup', () => {
+  const OLD_KEY = 'classrooms/c-123/students/s-1/old-photo.jpg'
+  const NEW_KEY = 'classrooms/c-123/students/s-1/new-photo.jpg'
+  const profileKey = { pk: 'CLASSROOM#c-123', sk: 'STUDENT_PROFILE#s-1' }
+  const patchStudent = (body) =>
+    handler(event('PATCH', '/classrooms/c-123/students/s-1', { body }))
+
+  beforeEach(() => {
+    s3Mock.reset()
+    ddbMock.on(GetCommand).resolves({ Item: { classroomId: 'c-123', role: 'owner' } })
+    ddbMock.on(UpdateCommand).resolves({ Attributes: { id: 's-1', photo: '🌱' } })
+    s3Mock.on(DeleteObjectsCommand).resolves({})
+  })
+
+  it('deletes the old S3 object when the photo is replaced', async () => {
+    ddbMock.on(GetCommand, { Key: profileKey }).resolves({ Item: { photo: OLD_KEY } })
+    const res = await patchStudent({ photo: NEW_KEY })
+    expect(res.statusCode).toBe(200)
+    const dels = s3Mock.commandCalls(DeleteObjectsCommand)
+    expect(dels).toHaveLength(1)
+    expect(dels[0].args[0].input.Delete.Objects).toEqual([{ Key: OLD_KEY }])
+  })
+
+  it('leaves S3 alone when the old value was an emoji or the same key is re-sent', async () => {
+    ddbMock.on(GetCommand, { Key: profileKey }).resolves({ Item: { photo: '🌱' } })
+    await patchStudent({ photo: NEW_KEY })
+    ddbMock.on(GetCommand, { Key: profileKey }).resolves({ Item: { photo: NEW_KEY } })
+    await patchStudent({ photo: NEW_KEY }) // same key — still referenced, must survive
+    expect(s3Mock.commandCalls(DeleteObjectsCommand)).toHaveLength(0)
+  })
+
+  it('does not read the profile or touch S3 on a notes-only PATCH (v1 path)', async () => {
+    await patchStudent({ notes: 'quiet in class' })
+    expect(s3Mock.commandCalls(DeleteObjectsCommand)).toHaveLength(0)
+    const profileReads = ddbMock.commandCalls(GetCommand)
+      .filter(c => c.args[0].input.Key?.sk === 'STUDENT_PROFILE#s-1')
+    expect(profileReads).toHaveLength(0)
+  })
+
+  it('never deletes a key outside this student’s namespace', async () => {
+    ddbMock.on(GetCommand, { Key: profileKey })
+      .resolves({ Item: { photo: 'classrooms/other-cid/students/x/pic.jpg' } })
+    const res = await patchStudent({ photo: NEW_KEY })
+    expect(res.statusCode).toBe(200)
+    expect(s3Mock.commandCalls(DeleteObjectsCommand)).toHaveLength(0)
+  })
+
+  it('still returns 200 when the S3 cleanup fails', async () => {
+    ddbMock.on(GetCommand, { Key: profileKey }).resolves({ Item: { photo: OLD_KEY } })
+    s3Mock.on(DeleteObjectsCommand).rejects(new Error('s3 down'))
+    const res = await patchStudent({ photo: NEW_KEY })
+    expect(res.statusCode).toBe(200)
+  })
+})
+
 describe('event attribution (grantedBy)', () => {
   const eventPuts = () =>
     ddbMock.commandCalls(TransactWriteCommand)
